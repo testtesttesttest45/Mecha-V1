@@ -2,39 +2,51 @@ body,
 html {
     margin: 0;
     padding: 0;
-    height: 100%;
+    height: 100vh;
+    width: 100vw;
     font-family: 'Arial, sans-serif';
-    background: radial-gradient(circle, rgba(0, 0, 0, 1) 0%, rgba(30, 30, 30, 1) 100%);
     color: #0ff;
     overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #000;
+}
+
+.container {
+    position: relative;
+    width: 80vw;
+    height: 40vw;
+    /* Adjusted to maintain a 16:9 aspect ratio */
+    cursor: url('../assets/images/mouse_cursor.png'), auto !important;
+}
+
+button {
+    cursor: url('../assets/images/mouse_cursor.png'), auto !important;
+}
+
+.game-screen,
+.battle-scene {
+    position: relative;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border: 0.2vw solid #00f3ff;
+    border-radius: 2vw;
 }
 
 .game-screen {
-    margin: 60px;
-    position: relative;
-    height: calc(100% - 120px);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
     background: url('../assets/images/background.png') no-repeat center center fixed;
     background-size: cover;
-    border: 2px solid #00f3ff;
-    border-radius: 20px;
-}
-
-.start-screen {
-    width: 100%;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    /* vw for the background image */
+    background-size: 100vw;
 }
 
 .title {
     font-family: 'Orbitron', sans-serif;
-    font-size: 5em;
+    font-size: 5vw;
     text-transform: uppercase;
     letter-spacing: 4px;
     text-shadow:
@@ -50,14 +62,14 @@ html {
 .play-button,
 .collections-button {
     font-family: 'Orbitron', sans-serif;
-    margin-top: 20px;
-    padding: 10px 40px;
-    font-size: 1.5em;
+    margin-top: 2vw;
+    padding: 1vw 4vw;
+    font-size: 1.5vw;
     cursor: pointer;
-    border: 2px solid #00f3ff;
+    border: 0.2vw solid #00f3ff;
     background: rgba(30, 144, 255, 0.2);
     color: #00f3ff;
-    border-radius: 5px;
+    border-radius: 1vw;
     box-shadow:
         0 0 5px #076bf8,
         0 0 10px #076bf8,
@@ -68,19 +80,19 @@ html {
         0 0 5px #076bf8,
         0 0 10px #076bf8,
         0 0 20px #076bf8;
-    width: 300px;
+    width: 35vw;
     text-align: center;
 }
 
 .play-button {
-    margin-top: 90px;
+    margin-top: 9vw;
 }
 
 .play-button:hover,
 .collections-button:hover {
     background: rgba(53, 129, 235, 0.8);
     color: #00e6e6;
-    border: 2px solid #00e6e6;
+    border: 0.2vw solid #00e6e6;
     box-shadow:
         0 0 8px #076bf8,
         0 0 15px #076bf8,
@@ -97,13 +109,12 @@ html {
     position: absolute;
     top: 20px;
     right: 20px;
-    padding: 10px;
+    padding: 0.1vw;
     background: transparent;
     border: none;
     color: #00f3ff;
-    font-size: 1.5em;
+    font-size: 1.5vw;
     cursor: pointer;
-    border-radius: 5px;
 }
 
 .settings-button:hover {
@@ -115,14 +126,14 @@ html {
 .chapter-level {
     position: absolute;
     top: 20%;
-    left: 20px;
+    left: 2vw;
     font-family: 'Orbitron', sans-serif;
     color: #00f3ff;
     text-shadow:
         0 0 5px #076bf8,
         0 0 10px #076bf8,
         0 0 20px #076bf8;
-    font-size: 1.2em;
+    font-size: 1.2vw;
     display: flex;
     align-items: center;
     justify-content: flex-start;
@@ -131,11 +142,10 @@ html {
 .level-star {
     background: url('../assets/images/yellow_star.png') no-repeat center center;
     background-size: contain;
-    padding: 10px;
-    border-radius: 5px;
-    margin-left: 10px;
-    width: 60px;
-    height: 60px;
+    padding: 1vw;
+    border-radius: 0.5vw;
+    width: 6vw;
+    height: 6vw;
     transform: rotate(62deg);
     display: flex;
     align-items: center;
@@ -143,14 +153,25 @@ html {
 }
 
 .level-number {
-    font-size: 1.5em;
-    line-height: 1;
+    font-size: 1.5vw;
     transform: rotate(-62deg);
+    margin-top: 0.1vw;
+    margin-right: 0.6vw;
 }
+
 .robot-image {
     position: absolute;
     top: 40%;
-    left: 20px;
+    left: 2vw;
     width: 25%;
-    height: auto;
+    height: 50%;
+}
+
+#game-canvas {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80%;
+    height: 80%;
 }

@@ -1,5 +1,10 @@
+document.addEventListener('DOMContentLoaded', (event) => {
+    const gameScreen = document.getElementById('game-screen');
+    const battleScene = document.getElementById('battle-scene');
+    const playButton = document.querySelector('.play-button');
 
-document.getElementById("myCanvas").addEventListener("click", function(e) {
-    console.log("Clicked the canvas!");
-    }
-);
+    playButton.addEventListener('click', () => {
+        gameScreen.style.display = 'none';
+        battleScene.style.display = 'flex';
+    });
+});
