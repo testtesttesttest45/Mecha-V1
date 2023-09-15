@@ -3,9 +3,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const gameScreen = document.getElementById('game-screen');
     const battleScene = document.getElementById('battle-scene');
     const playButton = document.querySelector('.play-button');
+    const resumeButton = document.querySelector('.resume-button');
 
     let game;
     let redCube;
+    let resumeButtonPressed = false;
 
     function preload() {
         this.load.image('land', 'assets/images/land.png');
@@ -83,7 +85,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
                 if (color.alpha !== 0) {
                     const hexColor = rgbToHex(color.red, color.green, color.blue);
-                    console.log('Hex color:', hexColor);
+                    // console.log('Hex color:', hexColor);
 
                     if (color.blue > 155) {
                         console.log("This area is ocean");
@@ -110,7 +112,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                         });
                     } else {
                         console.log("This area is land");
-                        console.log('x:', x, 'y:', y); // coordinates of the pixel
+                        // console.log('x:', x, 'y:', y); // coordinates of the pixel
                         // Convert game coordinates to pixel coordinates for the cube
                         const cubeX = (x * width) / originalWidth;
                         const cubeY = (y * height) / originalHeight;
@@ -120,7 +122,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                             const distance = Phaser.Math.Distance.Between(redCubePosition.x, redCubePosition.y, targetPosition.x, targetPosition.y);
                             const speed = 150; // Adjust the speed value as necessary; units are pixels per second
                             const duration = (distance / speed) * 1000; // Convert from seconds to milliseconds
-                    
+
                             this.tweens.add({
                                 targets: redCubePosition,
                                 x: targetPosition.x,
@@ -143,24 +145,28 @@ document.addEventListener('DOMContentLoaded', (event) => {
             }
         }, this);
 
+        this.pauseText = this.add.text(width / 2, (height / 2) - 100, 'Pause', {
+            font: '74px Orbitron',
+            fill: '#ff0000',
+            align: 'center',
+
+        });
+        this.pauseText.setOrigin(0.5, 0.5);
+        this.pauseText.setVisible(false); // Hide the text initially
+
+        this.input.enabled = true; // Ensure the input is enabled at the beginning
+
+        this.sceneName = "battle-scene"; // Add a custom property to identify the scene
+
+
     }
 
-    // function rgbToHex(r, g, b) {
-    //     r = r.toString(16);
-    //     g = g.toString(16);
-    //     b = b.toString(16);
-
-    //     if (r.length == 1)
-    //         r = "0" + r;
-    //     if (g.length == 1)
-    //         g = "0" + g;
-    //     if (b.length == 1)
-    //         b = "0" + b;
-
-    //     return "#" + r + g + b;
-    // }
-
-
+    document.addEventListener('visibilitychange', () => {
+        if (resumeButtonPressed || document.hidden) {
+            gamePause(document.hidden);
+        }
+        resumeButtonPressed = false;
+    });
 
     function startGame() {
         const config = {
@@ -205,4 +211,44 @@ document.addEventListener('DOMContentLoaded', (event) => {
         battleScene.style.display = 'flex';
         startGame();
     });
+
+    function gamePause(isPaused) {
+        const resumeButton = document.querySelector('.resume-button');
+        
+        if (!game || game.scene.scenes[0].sceneName !== "battle-scene") {
+            console.warn('Pause function is not applicable for the current scene');
+            return;
+        }
+    
+        if (isPaused) {
+            game.loop.pause();
+            if (game.scene.scenes[0].scene.isActive()) {  // Ensure the scene is active before pausing
+                game.scene.scenes[0].scene.pause();
+            }
+            game.scene.scenes[0].tweens.pauseAll();  // Pause all active tweens
+            game.scene.scenes[0].pauseText.setVisible(true);
+            game.scene.scenes[0].input.enabled = false;
+            resumeButton.style.display = 'block';
+        } else {
+            game.loop.resume();
+            if (!game.scene.scenes[0].scene.isActive()) {  // Ensure the scene is paused before resuming
+                game.scene.scenes[0].scene.resume();
+            }
+            game.scene.scenes[0].tweens.resumeAll();  // Resume all active tweens
+            game.scene.scenes[0].input.enabled = true;
+        }
+    }
+
+    resumeButton.addEventListener('click', () => {
+    resumeButtonPressed = true; // Set the flag to true when the resume button is clicked
+    game.scene.scenes[0].pauseText.setVisible(false);
+    game.scene.scenes[0].input.enabled = true;
+    if (!game.scene.scenes[0].scene.isActive()) {  // Ensure the scene is paused before resuming
+        game.scene.scenes[0].scene.resume();  // Resuming the scene when resume button is clicked
+    }
+    game.scene.scenes[0].tweens.resumeAll();  // Resume all active tweens
+    game.loop.resume();
+    resumeButton.style.display = 'none';
+});
+
 });

@@ -59,7 +59,8 @@ button {
 }
 
 .play-button,
-.collections-button {
+.collections-button,
+.resume-button {
     font-family: 'Orbitron', sans-serif;
     margin-top: 2vw;
     padding: 1vw 4vw;
@@ -87,7 +88,8 @@ button {
 }
 
 .play-button:hover,
-.collections-button:hover {
+.collections-button:hover,
+.resume-button:hover {
     background: rgba(53, 129, 235, 0.8);
     color: #00e6e6;
     border: 0.2vw solid #00e6e6;
@@ -168,5 +170,12 @@ button {
 #battle-canvas {
     border: 0.2vw solid #00f3ff;
     border-radius: 2vw;
+}
+
+.resume-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
