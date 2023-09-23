@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let redCube;
     let resumeButtonPressed = false;
     let gameGrid = null;  // Will hold the grid data once computed
-
+    let isLoading = false;
 
     function preload() {
         this.load.image('land', 'assets/images/land.png');
@@ -39,6 +39,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         let currentProgress = 0;
 
         let updateInterval = setInterval(() => {
+            console.log("called")
             currentProgress += 10; // 2.5% per 100ms to get to 100% in 4s
             this.loadingText.setText(`Loading... ${Math.round(currentProgress)}%`);
             if (currentProgress >= 100) {
@@ -200,7 +201,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     document.addEventListener('visibilitychange', () => {
         if (resumeButtonPressed || document.hidden) {
-            gamePause(document.hidden, game);
+            gamePause(document.hidden, game, isLoading);
         }
         resumeButtonPressed = false;
     });
@@ -263,6 +264,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     function createGrid(width, height, textures) {
+        isLoading = true;
         let grid = new Array(height).fill(null).map(() => new Array(width).fill(0));
 
         let y = 0;
@@ -277,6 +279,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
             if (y < height) {
                 requestAnimationFrame(chunkProcessing);
+            } else {
+                isLoading = false;  // Reset the flag when processing is completely done
             }
         };
 

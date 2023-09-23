@@ -27,9 +27,10 @@ export function resize(game) {
     game.canvas.style.marginLeft = '0px';
 }
 
-export function gamePause(isPaused, game) {
+export function gamePause(isPaused, game, isLoading) {
     const resumeButton = document.querySelector('.resume-button');
-    
+    if (isLoading) return;  // Skip if the game is loading
+
     if (!game || game.scene.scenes[0].sceneName !== "battle-scene") {
         console.warn('Pause function is not applicable for the current scene');
         return;
