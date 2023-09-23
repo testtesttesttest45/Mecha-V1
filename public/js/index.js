@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let game;
     let redCube;
     let resumeButtonPressed = false;
+    let gameGrid = null;  // Will hold the grid data once computed
+
 
     function preload() {
         this.load.image('land', 'assets/images/land.png');
@@ -17,13 +19,46 @@ document.addEventListener('DOMContentLoaded', (event) => {
         const width = this.sys.game.config.width;
         const height = this.sys.game.config.height;
 
+        this.loadingText = this.add.text(width / 2, (height / 2) - 100, 'Loading... 0%', {
+            font: '74px Orbitron',
+            fill: '#fff',
+            align: 'center'
+        });
+        this.loadingText.setOrigin(0.5, 0.5);
+        this.loadingText.setVisible(true);
+
         const land = this.add.image(width / 2, height / 2, 'land').setInteractive();
-        land.setScale(2);  // Adjust the scale value to maintain the image quality
+        land.setScale(2);
         land.setOrigin(0.5, 0.5);
         const originalWidth = land.width;
         const originalHeight = land.height;
-
         land.setDisplaySize(width, height);
+        land.setVisible(false);
+
+        const totalDuration = 100;
+        let currentProgress = 0;
+
+        let updateInterval = setInterval(() => {
+            currentProgress += 10; // 2.5% per 100ms to get to 100% in 4s
+            this.loadingText.setText(`Loading... ${Math.round(currentProgress)}%`);
+            if (currentProgress >= 100) {
+                clearInterval(updateInterval);
+                this.loadingText.setVisible(false);
+                land.setVisible(true);
+
+                redCube = this.add.graphics();
+                redCube.fillStyle(0xff0000);
+                redCube.fillRect(redCubePosition.x, redCubePosition.y, 50, 50);
+            }
+        }, 100);
+
+        const scaleX = width / originalWidth;
+        const scaleY = height / originalHeight;
+        let redCubePosition = { x: 61 * scaleX, y: 387 * scaleY };
+
+        if (!gameGrid) {
+            gameGrid = createGrid(originalWidth, originalHeight, this.textures);
+        }
 
         this.messageText = this.add.text(width / 2, height / 2, '', {
             font: '24px Orbitron',
@@ -32,15 +67,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         });
         this.messageText.setOrigin(0.5, 0.5);
         this.messageText.setVisible(false);
-
-        redCube = this.add.graphics();
-        redCube.fillStyle(0xff0000);
-        const scaleX = width / originalWidth;
-        const scaleY = height / originalHeight;
-
-        let redCubePosition = { x: 61 * scaleX, y: 387 * scaleY };
-
-        redCube.fillRect(redCubePosition.x, redCubePosition.y, 50, 50);
 
         this.input.on('pointerdown', function (pointer) {
             if (pointer.leftButtonDown()) {
@@ -107,7 +133,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                             });
                         } else {
                             console.log("Path crosses over the ocean");
-
+                            console.log(gameGrid)
                             let screenPath = findShorelinePath(
                                 Math.round(redCubePosition.x / scaleX),
                                 Math.round(redCubePosition.y / scaleY),
@@ -148,116 +174,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
                             } else {
                                 console.log("No valid path found");
                             }
-
-
-                            function findShorelinePath(startX, startY, endX, endY, originalWidth, originalHeight, width, height, textures) {
-                                // Step 1: Create a 2D array representing the grid
-                                let grid = createGrid(originalWidth, originalHeight, textures);
-
-                                // Step 2: Implement A* algorithm to find the shortest path avoiding the ocean
-                                let path = aStarAlgorithm(grid, { x: startX, y: startY }, { x: endX, y: endY });
-
-                                // Step 3: Convert the path to screen coordinates
-                                let screenPath = path.map(node => ({
-                                    x: (node.x * width) / originalWidth,
-                                    y: (node.y * height) / originalHeight
-                                }));
-
-                                return screenPath;
-                            }
-
-                            function createGrid(width, height, textures) {
-                                let grid = new Array(height).fill(null).map(() => new Array(width).fill(0));
-
-                                for (let y = 0; y < height; y++) {
-                                    for (let x = 0; x < width; x++) {
-                                        let color = textures.getPixel(x, y, 'land');
-                                        grid[y][x] = color.blue > 155 ? 1 : 0;  // 1 for ocean (not walkable), 0 for land (walkable)
-                                    }
-                                }
-
-                                return grid;
-                            }
-
-                            function aStarAlgorithm(grid, start, end) {
-                                let openSet = [start];
-                                let cameFrom = grid.map(row => row.map(() => null));
-
-                                let gScores = grid.map(row => row.map(() => Infinity));
-                                gScores[start.y][start.x] = 0;
-
-                                let fScores = grid.map(row => row.map(() => Infinity));
-                                fScores[start.y][start.x] = heuristic(start, end);
-
-                                while (openSet.length > 0) {
-                                    let current = lowestFScore(openSet, fScores);
-                                    if (current.x === end.x && current.y === end.y) {
-                                        return reconstructPath(cameFrom, current);
-                                    }
-
-                                    openSet = openSet.filter(node => node.x !== current.x || node.y !== current.y);
-
-                                    for (let neighbor of getNeighbors(current, grid)) {
-                                        let tentativeGScore = gScores[current.y][current.x] + 1; // Assuming each move has a cost of 1
-                                        if (tentativeGScore < gScores[neighbor.y][neighbor.x]) {
-                                            cameFrom[neighbor.y][neighbor.x] = current;
-                                            gScores[neighbor.y][neighbor.x] = tentativeGScore;
-                                            fScores[neighbor.y][neighbor.x] = tentativeGScore + heuristic(neighbor, end);
-                                            if (!openSet.some(node => node.x === neighbor.x && node.y === neighbor.y)) {
-                                                openSet.push(neighbor);
-                                            }
-                                        }
-                                    }
-                                }
-
-                                return []; // Return an empty array if no path was found
-                            }
-
-                            function heuristic(node, end) {
-                                return Math.abs(node.x - end.x) + Math.abs(node.y - end.y);
-                            }
-
-                            function getNeighbors(node, grid) {
-                                let neighbors = [];
-
-                                let directions = [
-                                    { dx: 1, dy: 0 },
-                                    { dx: -1, dy: 0 },
-                                    { dx: 0, dy: 1 },
-                                    { dx: 0, dy: -1 },
-                                ];
-
-                                for (let dir of directions) {
-                                    let x = node.x + dir.dx;
-                                    let y = node.y + dir.dy;
-
-                                    if (x >= 0 && y >= 0 && x < grid[0].length && y < grid.length && grid[y][x] === 0) {
-                                        neighbors.push({ x: x, y: y });
-                                    }
-                                }
-
-                                return neighbors;
-                            }
-
-                            function lowestFScore(openSet, fScores) {
-                                let lowest = openSet[0];
-                                for (let node of openSet) {
-                                    if (fScores[node.y][node.x] < fScores[lowest.y][lowest.x]) {
-                                        lowest = node;
-                                    }
-                                }
-
-                                return lowest;
-                            }
-
-                            function reconstructPath(cameFrom, current) {
-                                let path = [];
-                                while (current !== null) {
-                                    path.push(current);
-                                    current = cameFrom[current.y][current.x];
-                                }
-                                return path.reverse();
-                            }
                         }
                     }
                 } else {
@@ -292,15 +208,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
     function startGame() {
         const config = {
             type: Phaser.AUTO,
-            width: 1920,  // Replace with your desired width
-            height: 1080,  // Replace with your desired height
+            width: 1920,
+            height: 1080,
             parent: 'battle-scene',
             scene: {
                 preload: preload,
                 create: create,
             },
             render: {
-                pixelArt: true,  // Maintain this property
+                pixelArt: true,
             },
         };
         game = new Phaser.Game(config);
@@ -330,5 +246,122 @@ document.addEventListener('DOMContentLoaded', (event) => {
         game.loop.resume();
         resumeButton.style.display = 'none';
     });
+
+    function findShorelinePath(startX, startY, endX, endY, originalWidth, originalHeight, width, height, textures) {
+        // Step 1: Create a 2D array representing the grid
+        // let grid = createGrid(originalWidth, originalHeight, textures);
+        console.log("called," + gameGrid)
+        // Step 2: Implement A* algorithm to find the shortest path avoiding the ocean
+        let path = aStarAlgorithm(gameGrid, { x: startX, y: startY }, { x: endX, y: endY });
+        // Step 3: Convert the path to screen coordinates
+        let screenPath = path.map(node => ({
+            x: (node.x * width) / originalWidth,
+            y: (node.y * height) / originalHeight
+        }));
+
+        return screenPath;
+    }
+
+    function createGrid(width, height, textures) {
+        let grid = new Array(height).fill(null).map(() => new Array(width).fill(0));
+
+        let y = 0;
+
+        let chunkProcessing = () => {
+            for (let x = 0; x < width; x++) {
+                let color = textures.getPixel(x, y, 'land');
+                grid[y][x] = color.blue > 155 ? 1 : 0;
+            }
+
+            y++;
+
+            if (y < height) {
+                requestAnimationFrame(chunkProcessing);
+            }
+        };
+
+        requestAnimationFrame(chunkProcessing);
+        return grid;
+    }
+
+    function aStarAlgorithm(grid, start, end) {
+        let openSet = [start];
+        let cameFrom = grid.map(row => row.map(() => null));
+
+        let gScores = grid.map(row => row.map(() => Infinity));
+        gScores[start.y][start.x] = 0;
+
+        let fScores = grid.map(row => row.map(() => Infinity));
+        fScores[start.y][start.x] = heuristic(start, end);
+
+        while (openSet.length > 0) {
+            let current = lowestFScore(openSet, fScores);
+            if (current.x === end.x && current.y === end.y) {
+                return reconstructPath(cameFrom, current);
+            }
+
+            openSet = openSet.filter(node => node.x !== current.x || node.y !== current.y);
+
+            for (let neighbor of getNeighbors(current, grid)) {
+                let tentativeGScore = gScores[current.y][current.x] + 1; // Assuming each move has a cost of 1
+                if (tentativeGScore < gScores[neighbor.y][neighbor.x]) {
+                    cameFrom[neighbor.y][neighbor.x] = current;
+                    gScores[neighbor.y][neighbor.x] = tentativeGScore;
+                    fScores[neighbor.y][neighbor.x] = tentativeGScore + heuristic(neighbor, end);
+                    if (!openSet.some(node => node.x === neighbor.x && node.y === neighbor.y)) {
+                        openSet.push(neighbor);
+                    }
+                }
+            }
+        }
+
+        return []; // Return an empty array if no path was found
+    }
+
+    function heuristic(node, end) {
+        return Math.abs(node.x - end.x) + Math.abs(node.y - end.y);
+    }
+
+    function getNeighbors(node, grid) {
+        let neighbors = [];
+
+        let directions = [
+            { dx: 1, dy: 0 },
+            { dx: -1, dy: 0 },
+            { dx: 0, dy: 1 },
+            { dx: 0, dy: -1 },
+        ];
+
+        for (let dir of directions) {
+            let x = node.x + dir.dx;
+            let y = node.y + dir.dy;
+
+            if (x >= 0 && y >= 0 && x < grid[0].length && y < grid.length && grid[y][x] === 0) {
+                neighbors.push({ x: x, y: y });
+            }
+        }
+
+        return neighbors;
+    }
+
+    function lowestFScore(openSet, fScores) {
+        let lowest = openSet[0];
+        for (let node of openSet) {
+            if (fScores[node.y][node.x] < fScores[lowest.y][lowest.x]) {
+                lowest = node;
+            }
+        }
+
+        return lowest;
+    }
+
+    function reconstructPath(cameFrom, current) {
+        let path = [];
+        while (current !== null) {
+            path.push(current);
+            current = cameFrom[current.y][current.x];
+        }
+        return path.reverse();
+    }
 
 });
