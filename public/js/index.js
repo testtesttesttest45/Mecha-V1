@@ -4,6 +4,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const battleScene = document.getElementById('battle-scene');
     const playButton = document.querySelector('.play-button');
     const resumeButton = document.querySelector('.resume-button');
+    const overlay = document.getElementById('loading-overlay');
+
 
     let game;
     let redCube;
@@ -40,18 +42,18 @@ document.addEventListener('DOMContentLoaded', (event) => {
         setTimeout(() => {
             if (!gameGrid) {
                 gameGrid = createGrid(originalWidth, originalHeight, this.textures, (progress) => {
-                    this.loadingText.setText(`Loading... ${Math(progress)}%`);
-            
+                    this.loadingText.setText(`Loading... ${Math.round(progress)}%`);
+
                     if (progress >= 100) {
                         this.loadingText.setVisible(false);
                         land.setVisible(true);
+                        // initial red cube after the land is loaded
+                        redCube = this.add.graphics();
+                        redCube.fillStyle(0xff0000);
+                        redCube.fillRect(redCubePosition.x, redCubePosition.y, 50, 50);
                     }
                 });
             }
-            // initial red cube after the land is loaded
-            redCube = this.add.graphics();
-            redCube.fillStyle(0xff0000);
-            redCube.fillRect(redCubePosition.x, redCubePosition.y, 50, 50);
         }, 10);  // createGrid() function is computationally expensive and is "blocking" the rendering of the 'Loading...' text until it completes
 
         const scaleX = width / originalWidth;
@@ -263,36 +265,38 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     function createGrid(width, height, textures, onProgress) {
         isLoading = true;
+        overlay.style.display = 'block';
         let grid = new Array(height).fill(null).map(() => new Array(width).fill(0));
         const totalCells = width * height;
         let processedCells = 0;
         const rowsPerChunk = 10; // Adjust this number as necessary for performance
-    
+
         function processChunk(startY) {
             let endY = Math.min(startY + rowsPerChunk, height);
             for (let y = startY; y < endY; y++) {
                 for (let x = 0; x < width; x++) {
                     let color = textures.getPixel(x, y, 'land');
                     grid[y][x] = color.blue > 155 ? 1 : 0;
-    
+
                     processedCells++;
                 }
             }
-    
+
             const progress = (processedCells / totalCells) * 100;
             if (onProgress && typeof onProgress === 'function') {
                 onProgress(progress);
             }
-    
+
             if (endY < height) {
                 // Move on to the next chunk
                 setTimeout(() => processChunk(endY), 0);
             } else {
                 console.log('Grid created');
                 isLoading = false;
+                overlay.style.display = 'none';
             }
         }
-    
+
         processChunk(0);
         return grid;
     }
