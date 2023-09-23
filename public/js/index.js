@@ -11,21 +11,23 @@ document.addEventListener('DOMContentLoaded', (event) => {
     let gameGrid = null;  // Will hold the grid data once computed
     let isLoading = false;
 
+
     function preload() {
         this.load.image('land', 'assets/images/land.png');
     }
 
     function create() {
+
         const width = this.sys.game.config.width;
         const height = this.sys.game.config.height;
 
-        this.loadingText = this.add.text(width / 2, (height / 2) - 100, 'Loading... 0%', {
+        this.loadingText = this.add.text(width / 2, (height / 2) - 100, 'Loading...', {
             font: '74px Orbitron',
             fill: '#fff',
             align: 'center'
         });
         this.loadingText.setOrigin(0.5, 0.5);
-        this.loadingText.setVisible(true);
+        this.loadingText.setVisible(true);  // Show the loading text
 
         const land = this.add.image(width / 2, height / 2, 'land').setInteractive();
         land.setScale(2);
@@ -33,33 +35,28 @@ document.addEventListener('DOMContentLoaded', (event) => {
         const originalWidth = land.width;
         const originalHeight = land.height;
         land.setDisplaySize(width, height);
-        land.setVisible(false);
+        land.setVisible(false);  // Hide the land for now
 
-        const totalDuration = 100;
-        let currentProgress = 0;
-
-        let updateInterval = setInterval(() => {
-            console.log("called")
-            currentProgress += 10; // 2.5% per 100ms to get to 100% in 4s
-            this.loadingText.setText(`Loading... ${Math.round(currentProgress)}%`);
-            if (currentProgress >= 100) {
-                clearInterval(updateInterval);
-                this.loadingText.setVisible(false);
-                land.setVisible(true);
-
-                redCube = this.add.graphics();
-                redCube.fillStyle(0xff0000);
-                redCube.fillRect(redCubePosition.x, redCubePosition.y, 50, 50);
+        setTimeout(() => {
+            if (!gameGrid) {
+                gameGrid = createGrid(originalWidth, originalHeight, this.textures, (progress) => {
+                    this.loadingText.setText(`Loading... ${Math(progress)}%`);
+            
+                    if (progress >= 100) {
+                        this.loadingText.setVisible(false);
+                        land.setVisible(true);
+                    }
+                });
             }
-        }, 100);
+            // initial red cube after the land is loaded
+            redCube = this.add.graphics();
+            redCube.fillStyle(0xff0000);
+            redCube.fillRect(redCubePosition.x, redCubePosition.y, 50, 50);
+        }, 10);  // createGrid() function is computationally expensive and is "blocking" the rendering of the 'Loading...' text until it completes
 
         const scaleX = width / originalWidth;
         const scaleY = height / originalHeight;
         let redCubePosition = { x: 61 * scaleX, y: 387 * scaleY };
-
-        if (!gameGrid) {
-            gameGrid = createGrid(originalWidth, originalHeight, this.textures);
-        }
 
         this.messageText = this.add.text(width / 2, height / 2, '', {
             font: '24px Orbitron',
@@ -134,7 +131,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                             });
                         } else {
                             console.log("Path crosses over the ocean");
-                            console.log(gameGrid)
+
                             let screenPath = findShorelinePath(
                                 Math.round(redCubePosition.x / scaleX),
                                 Math.round(redCubePosition.y / scaleY),
@@ -200,8 +197,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     document.addEventListener('visibilitychange', () => {
-        if (resumeButtonPressed || document.hidden) {
-            gamePause(document.hidden, game, isLoading);
+        console.log(isLoading)
+        if (!isLoading && (resumeButtonPressed || document.hidden)) {
+            gamePause(document.hidden, game);
         }
         resumeButtonPressed = false;
     });
@@ -251,7 +249,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     function findShorelinePath(startX, startY, endX, endY, originalWidth, originalHeight, width, height, textures) {
         // Step 1: Create a 2D array representing the grid
         // let grid = createGrid(originalWidth, originalHeight, textures);
-        console.log("called," + gameGrid)
+
         // Step 2: Implement A* algorithm to find the shortest path avoiding the ocean
         let path = aStarAlgorithm(gameGrid, { x: startX, y: startY }, { x: endX, y: endY });
         // Step 3: Convert the path to screen coordinates
@@ -263,28 +261,39 @@ document.addEventListener('DOMContentLoaded', (event) => {
         return screenPath;
     }
 
-    function createGrid(width, height, textures) {
+    function createGrid(width, height, textures, onProgress) {
         isLoading = true;
         let grid = new Array(height).fill(null).map(() => new Array(width).fill(0));
-
-        let y = 0;
-
-        let chunkProcessing = () => {
-            for (let x = 0; x < width; x++) {
-                let color = textures.getPixel(x, y, 'land');
-                grid[y][x] = color.blue > 155 ? 1 : 0;
+        const totalCells = width * height;
+        let processedCells = 0;
+        const rowsPerChunk = 10; // Adjust this number as necessary for performance
+    
+        function processChunk(startY) {
+            let endY = Math.min(startY + rowsPerChunk, height);
+            for (let y = startY; y < endY; y++) {
+                for (let x = 0; x < width; x++) {
+                    let color = textures.getPixel(x, y, 'land');
+                    grid[y][x] = color.blue > 155 ? 1 : 0;
+    
+                    processedCells++;
+                }
             }
-
-            y++;
-
-            if (y < height) {
-                requestAnimationFrame(chunkProcessing);
+    
+            const progress = (processedCells / totalCells) * 100;
+            if (onProgress && typeof onProgress === 'function') {
+                onProgress(progress);
+            }
+    
+            if (endY < height) {
+                // Move on to the next chunk
+                setTimeout(() => processChunk(endY), 0);
             } else {
-                isLoading = false;  // Reset the flag when processing is completely done
+                console.log('Grid created');
+                isLoading = false;
             }
-        };
-
-        requestAnimationFrame(chunkProcessing);
+        }
+    
+        processChunk(0);
         return grid;
     }
 
