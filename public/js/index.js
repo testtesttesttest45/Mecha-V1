@@ -12,8 +12,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     function preload() {
         this.load.image('land', 'assets/images/land.png');
-        // 3000 x 5700
-        this.load.spritesheet('blackRobot', 'assets/sprites/idle_spritesheet.png', { frameWidth: 3000 / 5, frameHeight: 5700 / 12 });
+        this.load.spritesheet('blackRobotIdle', 'assets/sprites/idle_spritesheet.png', { frameWidth: 3000 / 5, frameHeight: 5700 / 12 });
+        this.load.spritesheet('blackRobotMoving', 'assets/sprites/moving_spritesheet.png', { frameWidth: 7200 / 12, frameHeight: 5470 / 10 });
     }
 
     function create() {

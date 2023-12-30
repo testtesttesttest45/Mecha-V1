@@ -3,13 +3,11 @@ class Player {
     constructor(scene, initialX, initialY) {
         this.scene = scene;
         this.robotSprite = null;
-        // this.position = { x: initialX, y: initialY };
-        // this.position will not be center of robot, but on bottom center, which is the feet
         this.position = { x: initialX, y: initialY };
         this.currentTween = null;
         this.idleAnimationIndex = 0;
-        this.lastAnimationChange = this.scene.time.now; // Add this line
-        this.lastActionTime = this.scene.time.now; // Add this line
+        this.lastAnimationChange = this.scene.time.now;
+        this.lastActionTime = this.scene.time.now;
 
     }
 
@@ -21,7 +19,7 @@ class Player {
         for (let i = 0; i < 4; i++) {
             this.scene.anims.create({
                 key: `idle${i + 1}`,
-                frames: this.scene.anims.generateFrameNumbers('blackRobot', { start: i * 15, end: (i + 1) * 15 - 1 }),
+                frames: this.scene.anims.generateFrameNumbers('blackRobotIdle', { start: i * 15, end: (i + 1) * 15 - 1 }),
                 frameRate: 10,
                 repeat: -1
             });
@@ -30,12 +28,22 @@ class Player {
         this.robotSprite.play('idle1');
         this.lastAnimationChange = this.scene.time.now;
         this.robotSprite.setScale(0.5);
+
+        const directions = ['southeast', 'southwest', 'south', 'east', 'west', 'northeast', 'northwest', 'north'];
+        directions.forEach((dir, index) => {
+            this.scene.anims.create({
+                key: `move${dir}`,
+                frames: this.scene.anims.generateFrameNumbers('blackRobotMoving', { start: index * 15, end: (index + 1) * 15 - 1 }),
+                frameRate: 10,
+                repeat: -1
+            });
+        });
     }
-    
+
 
     move(newX, newY, speed) {
         if (this.currentTween) {
-            this.currentTween.stop();  // Stop any existing tween animation
+            this.currentTween.stop();
         }
 
         // Calculate the distance for the tween
@@ -52,30 +60,46 @@ class Player {
             onUpdate: () => this.updatePosition()
         });
         this.lastActionTime = this.scene.time.now; // Reset last action time on movement
+        const direction = this.determineDirection(newX, newY);
+        this.robotSprite.play(`move${direction}`);
+    }
+
+    determineDirection(newX, newY) {
+        const dx = newX - this.position.x;
+        const dy = newY - this.position.y;
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    
+        if (angle >= -22.5 && angle < 22.5) return 'east';
+        if (angle >= 22.5 && angle < 67.5) return 'northeast';
+        if (angle >= 67.5 && angle < 112.5) return 'south';
+        if (angle >= 112.5 && angle < 157.5) return 'northwest';
+        if (angle >= 157.5 || angle < -157.5) return 'west';
+        if (angle >= -157.5 && angle < -112.5) return 'southwest';
+        if (angle >= -112.5 && angle < -67.5) return 'north';
+        if (angle >= -67.5 && angle < -22.5) return 'southeast';
     }
 
     updatePosition() {
-        // Update the internal position object to match the sprite's position
         this.position.x = this.robotSprite.x;
         this.position.y = this.robotSprite.y;
     }
 
     update(time, delta) {
-        // If there is an active tween, update the robot's position
         if (this.currentTween && this.currentTween.isPlaying()) {
             this.robotSprite.setPosition(this.position.x, this.position.y);
-        }
-    
-        // Check if the player has been idle for more than 5 seconds
-        if (time - this.lastActionTime > 5000) {
-            // Check if it's time to change the idle animation
-            if (time - this.lastAnimationChange > 5000) {
-                this.idleAnimationIndex = (this.idleAnimationIndex + 1) % 4;
+        } else {
+            if (time - this.lastActionTime > 5000) {
+                if (time - this.lastAnimationChange > 5000) {
+                    this.idleAnimationIndex = (this.idleAnimationIndex + 1) % 4;
+                    this.robotSprite.play(`idle${this.idleAnimationIndex + 1}`);
+                    this.lastAnimationChange = time;
+                }
+            } else if (!this.robotSprite.anims.isPlaying) {
                 this.robotSprite.play(`idle${this.idleAnimationIndex + 1}`);
-                this.lastAnimationChange = time;
             }
         }
     }
+    
 
     getPosition() {
         return this.robotSprite ? { x: this.robotSprite.x, y: this.robotSprite.y } : this.position;
