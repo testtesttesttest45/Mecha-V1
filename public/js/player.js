@@ -2,53 +2,83 @@ class Player {
 
     constructor(scene, initialX, initialY) {
         this.scene = scene;
-        this.redCube = null;
-        this.redCubePosition = { x: initialX, y: initialY };
+        this.robotSprite = null;
+        // this.position = { x: initialX, y: initialY };
+        // this.position will not be center of robot, but on bottom center, which is the feet
+        this.position = { x: initialX, y: initialY };
         this.currentTween = null;
+        this.idleAnimationIndex = 0;
+        this.lastAnimationChange = this.scene.time.now; // Add this line
+        this.lastActionTime = this.scene.time.now; // Add this line
+
     }
 
     create() {
-        this.redCube = this.scene.add.graphics();
-        this.redCube.fillStyle(0xff0000);
-        this.redCube.fillRect(
-            this.redCubePosition.x - 25, // Subtract half the width of the cube
-            this.redCubePosition.y - 25, // Subtract half the height of the cube
-            50, 50 // Width and height of the cube
-        );
+        this.robotSprite = this.scene.add.sprite(this.position.x, this.position.y, 'blackRobot');
+        this.robotSprite.setOrigin(0.5, 1); // Sets the anchor to the bottom middle of the sprite
+
+
+        for (let i = 0; i < 4; i++) {
+            this.scene.anims.create({
+                key: `idle${i + 1}`,
+                frames: this.scene.anims.generateFrameNumbers('blackRobot', { start: i * 15, end: (i + 1) * 15 - 1 }),
+                frameRate: 10,
+                repeat: -1
+            });
+        }
+
+        this.robotSprite.play('idle1');
+        this.lastAnimationChange = this.scene.time.now;
+        this.robotSprite.setScale(0.5);
     }
+    
 
     move(newX, newY, speed) {
         if (this.currentTween) {
-            this.currentTween.stop();
+            this.currentTween.stop();  // Stop any existing tween animation
         }
 
-        let distance = Phaser.Math.Distance.Between(this.redCubePosition.x, this.redCubePosition.y, newX, newY);
-        let duration = distance / speed * 1000;
+        // Calculate the distance for the tween
+        let distance = Phaser.Math.Distance.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
+        let duration = distance / speed * 1000;  // Duration based on speed
 
+        // Create a new tween for smooth movement
         this.currentTween = this.scene.tweens.add({
-            targets: this.redCubePosition,
+            targets: this.robotSprite,
             x: newX,
             y: newY,
             duration: duration,
             ease: 'Linear',
-            onUpdate: () => this.update()
+            onUpdate: () => this.updatePosition()
         });
+        this.lastActionTime = this.scene.time.now; // Reset last action time on movement
     }
 
-    update() {
-        this.redCube.clear();
-        this.redCube.fillStyle(0xff0000);
-        this.redCube.fillRect(
-            this.redCubePosition.x - 25, // Subtract half the width of the cube
-            this.redCubePosition.y - 25, // Subtract half the height of the cube
-            50, 50 // Width and height of the cube
-        );
-        this.redCube.fillStyle(0x00ff00); // Use a different color for visibility
-        this.redCube.fillCircle(this.redCubePosition.x, this.redCubePosition.y, 5);
+    updatePosition() {
+        // Update the internal position object to match the sprite's position
+        this.position.x = this.robotSprite.x;
+        this.position.y = this.robotSprite.y;
+    }
+
+    update(time, delta) {
+        // If there is an active tween, update the robot's position
+        if (this.currentTween && this.currentTween.isPlaying()) {
+            this.robotSprite.setPosition(this.position.x, this.position.y);
+        }
+    
+        // Check if the player has been idle for more than 5 seconds
+        if (time - this.lastActionTime > 5000) {
+            // Check if it's time to change the idle animation
+            if (time - this.lastAnimationChange > 5000) {
+                this.idleAnimationIndex = (this.idleAnimationIndex + 1) % 4;
+                this.robotSprite.play(`idle${this.idleAnimationIndex + 1}`);
+                this.lastAnimationChange = time;
+            }
+        }
     }
 
     getPosition() {
-        return this.redCubePosition;
+        return this.robotSprite ? { x: this.robotSprite.x, y: this.robotSprite.y } : this.position;
     }
 
     canMoveTo(startX, startY, endX, endY, originalWidth, originalHeight, width, height, textures) {

@@ -12,6 +12,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     function preload() {
         this.load.image('land', 'assets/images/land.png');
+        // 3000 x 5700
+        this.load.spritesheet('blackRobot', 'assets/sprites/idle_spritesheet.png', { frameWidth: 3000 / 5, frameHeight: 5700 / 12 });
     }
 
     function create() {
@@ -44,8 +46,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
             if (!gameGrid) {
                 gameGrid = createGrid(originalWidth, originalHeight, this.textures, (progress) => { // texture might have a problem. on coordiantes (23, 121), it is a yellow color, but when creating grid, it shows the coordiantes as blue
 
-                    console.log(`Original Dimensions2: ${originalWidth} x ${originalHeight}`);
-
                     this.loadingText.setText(`Loading... ${Math.round(progress)}%`);
 
                     if (progress >= 100) {
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                         // use gold color
 
                         player = new Player(this, 45 * scaleX, 113 * scaleY);
-                        player.create();
+                        player.create(); 
                         // const color = this.textures.getPixel(player.getPosition().x, player.getPosition().y, 'land');
                         let textureX = player.getPosition().x * (originalWidth / width);
                         let textureY = player.getPosition().y * (originalHeight / height);
@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                         const cubeY = (y * height) / originalHeight;
 
                         if (player.canMoveTo(player.getPosition().x, player.getPosition().y, cubeX, cubeY, originalWidth, originalHeight, width, height, this.textures)) {
-                            const newTargetPosition = { x: (x * width) / originalWidth , y: (y * height) / originalHeight  };
+                            const newTargetPosition = { x: (x * width) / originalWidth, y: (y * height) / originalHeight };
                             const speed = 150;
                             player.move(newTargetPosition.x, newTargetPosition.y, speed);
 
@@ -139,16 +139,16 @@ document.addEventListener('DOMContentLoaded', (event) => {
                             if (path.length > 0) {
                                 let moveAlongPath = (path, index) => {
                                     if (index >= path.length) return; // End of path
-                                
+
                                     let nextPoint = path[index];
                                     let screenX = (nextPoint.x * width) / originalWidth;
                                     let screenY = (nextPoint.y * height) / originalHeight;
-                                
+
                                     const speed = 500;
-                                
+
                                     player.move(screenX, screenY, speed);
                                     // it doesnt move. if i change the speed to 100, it moves but super slow. if i use higher, 
-                                
+
                                     player.currentTween.on('complete', () => {
                                         moveAlongPath(path, index + 1);
                                     });
@@ -165,13 +165,20 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 } else {
                     console.log('No color data available');
                 }
+                player.lastActionTime = this.time.now;
             }
         }, this);
 
-        this.input.enabled = true; // Ensure the input is enabled at the beginning
+        this.input.enabled = true;
 
-        this.sceneName = "battle-scene"; // Add a custom property to identify the scene
+        this.sceneName = "battle-scene";
 
+    }
+
+    function update(time) {
+        if (player) {
+            player.update(time);
+        }
     }
 
     function startGame() {
@@ -183,6 +190,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             scene: {
                 preload: preload,
                 create: create,
+                update: update
             },
             render: {
                 pixelArt: true,
