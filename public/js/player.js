@@ -8,7 +8,9 @@ class Player {
         this.idleAnimationIndex = 0;
         this.lastAnimationChange = this.scene.time.now;
         this.lastActionTime = this.scene.time.now;
-
+        this.lastDirection = null;
+        this.directions = [];
+        this.directionAveragingSteps = 10;
     }
 
     create() {
@@ -41,7 +43,45 @@ class Player {
     }
 
 
-    move(newX, newY, speed) {
+    moveAlongPath(newX, newY, speed) {
+        if (this.currentTween) {
+            this.currentTween.stop();
+        }
+
+        // Calculate the distance for the tween
+        let distance = Phaser.Math.Distance.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
+        let duration = distance / speed * 1000; // Duration based on speed
+
+        // Determine the direction for the new segment
+        const newDirection = this.determineDirection(newX, newY);
+
+        // Update direction with averaging/smoothing
+        this.directions.push(newDirection);
+        if (this.directions.length > this.directionAveragingSteps) {
+            this.directions.shift(); // Remove the oldest direction
+        }
+        const averageDirection = this.calculateAverageDirection(this.directions);
+
+        // Update the sprite's animation based on the averaged direction
+        if (this.lastDirection !== averageDirection) {
+            this.robotSprite.play(`move${averageDirection}`);
+            this.lastDirection = averageDirection;
+        }
+
+        // Create a new tween for smooth movement
+        this.currentTween = this.scene.tweens.add({
+            targets: this.robotSprite,
+            x: newX,
+            y: newY,
+            duration: duration,
+            ease: 'Linear',
+            onUpdate: () => this.updatePosition()
+        });
+
+        this.lastActionTime = this.scene.time.now; // Reset last action time on movement
+    }
+
+    moveStraight(newX, newY, speed) {
         if (this.currentTween) {
             this.currentTween.stop();
         }
@@ -64,11 +104,29 @@ class Player {
         this.robotSprite.play(`move${direction}`);
     }
 
+    calculateAverageDirection(directions) {
+        // Calculate the most frequent direction in the array
+        const directionCounts = directions.reduce((acc, dir) => {
+            acc[dir] = (acc[dir] || 0) + 1;
+            return acc;
+        }, {});
+
+        let mostFrequentDirection = null;
+        let maxCount = 0;
+        for (let dir in directionCounts) {
+            if (directionCounts[dir] > maxCount) {
+                mostFrequentDirection = dir;
+                maxCount = directionCounts[dir];
+            }
+        }
+        return mostFrequentDirection;
+    }
+
     determineDirection(newX, newY) {
         const dx = newX - this.position.x;
         const dy = newY - this.position.y;
         const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-    
+
         if (angle >= -22.5 && angle < 22.5) return 'east';
         if (angle >= 22.5 && angle < 67.5) return 'northeast';
         if (angle >= 67.5 && angle < 112.5) return 'south';
@@ -99,7 +157,7 @@ class Player {
             }
         }
     }
-    
+
 
     getPosition() {
         return this.robotSprite ? { x: this.robotSprite.x, y: this.robotSprite.y } : this.position;
@@ -223,6 +281,30 @@ class Player {
 
     findPath(grid, start, end) {
         return this.aStarAlgorithm(grid, start, end);
+    }
+
+    drawPath(path, originalWidth, originalHeight, width, height) {
+        if (!this.pathGraphics) {
+            this.pathGraphics = this.scene.add.graphics({ lineStyle: { width: 6, color: 0xff0000 } });
+        }
+
+        this.pathGraphics.clear(); // Clear previous path
+        if (path.length < 2) return;
+
+        this.pathGraphics.beginPath();
+        let firstPoint = path[0];
+        let firstScreenX = (firstPoint.x * width) / originalWidth;
+        let firstScreenY = (firstPoint.y * height) / originalHeight;
+        this.pathGraphics.moveTo(firstScreenX, firstScreenY);
+
+        for (let i = 1; i < path.length; i++) {
+            let point = path[i];
+            let screenX = (point.x * width) / originalWidth;
+            let screenY = (point.y * height) / originalHeight;
+            this.pathGraphics.lineTo(screenX, screenY);
+        }
+
+        this.pathGraphics.strokePath();
     }
 
 
