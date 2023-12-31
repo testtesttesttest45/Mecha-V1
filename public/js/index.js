@@ -12,8 +12,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
     function preload() {
         this.load.image('land', 'assets/images/land.png');
-        this.load.spritesheet('blackRobotIdle', 'assets/sprites/idle_spritesheet.png', { frameWidth: 3000 / 5, frameHeight: 5700 / 12 });
-        this.load.spritesheet('blackRobotMoving', 'assets/sprites/moving_spritesheet.png', { frameWidth: 7200 / 12, frameHeight: 5470 / 10 });
+        loadDynamicSpriteSheet.call(this, 'blackRobotIdle', 'assets/sprites/1_idle_spritesheet.png', 5, 12);
+        loadDynamicSpriteSheet.call(this, 'blackRobotMoving', 'assets/sprites/1_moving_spritesheet.png', 12, 10);
+        loadDynamicSpriteSheet.call(this, 'goldenWarriorIdle', 'assets/sprites/2_idle_spritesheet.png', 5, 12);
+        loadDynamicSpriteSheet.call(this, 'goldenWarriorMoving', 'assets/sprites/2_moving_spritesheet.png', 12, 10);
     }
 
     function create() {
@@ -53,7 +55,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                         this.loadingText.setVisible(false);
                         land.setVisible(true);
 
-                        player = new Player(this, 45 * scaleX, 113 * scaleY);
+                        player = new Player(this, 45 * scaleX, 113 * scaleY, 2);
                         player.create();
                         // const color = this.textures.getPixel(player.getPosition().x, player.getPosition().y, 'land');
                         let textureX = player.getPosition().x * (originalWidth / width);
@@ -133,7 +135,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                             let gridEndX = Math.floor((cubeX) * (originalWidth / width));
                             let gridEndY = Math.floor((cubeY) * (originalHeight / height));
                             let path = player.findPath(gameGrid, { x: gridStartX, y: gridStartY }, { x: gridEndX, y: gridEndY });
-                            
+
                             if (path.length > 0) {
                                 // player.drawPath(path, originalWidth, originalHeight, width, height);
 
@@ -157,7 +159,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                                 };
 
                                 moveAlongPathRecursive();
-                          
+
 
                             } else {
                                 console.log("No valid path to the destination");
@@ -213,6 +215,18 @@ document.addEventListener('DOMContentLoaded', (event) => {
         battleScene.style.display = 'flex';
         startGame();
     });
+
+    function loadDynamicSpriteSheet(key, path, horizontalFrames, verticalFrames) {
+        this.load.image(key + 'Image', path);
+
+        this.load.on('filecomplete-image-' + key + 'Image', function () {
+            let image = this.textures.get(key + 'Image').getSourceImage();
+            let frameWidth = image.width / horizontalFrames;
+            let frameHeight = image.height / verticalFrames;
+
+            this.load.spritesheet(key, path, { frameWidth, frameHeight });
+        }, this);
+    }
 
 
 });

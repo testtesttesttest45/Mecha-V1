@@ -1,6 +1,6 @@
 class Player {
 
-    constructor(scene, initialX, initialY) {
+    constructor(scene, initialX, initialY, characterCode = 1) {
         this.scene = scene;
         this.robotSprite = null;
         this.position = { x: initialX, y: initialY };
@@ -11,17 +11,20 @@ class Player {
         this.lastDirection = null;
         this.directions = [];
         this.directionAveragingSteps = 10;
+        this.characterCode = characterCode;
     }
 
     create() {
-        this.robotSprite = this.scene.add.sprite(this.position.x, this.position.y, 'blackRobot');
-        this.robotSprite.setOrigin(0.5, 1); // Sets the anchor to the bottom middle of the sprite
+        const character = characterMap[this.characterCode];
+
+        this.robotSprite = this.scene.add.sprite(this.position.x, this.position.y, character.idle);
+        this.robotSprite.setOrigin(0.5, 1); // Set origin to bottom center
 
 
         for (let i = 0; i < 4; i++) {
             this.scene.anims.create({
                 key: `idle${i + 1}`,
-                frames: this.scene.anims.generateFrameNumbers('blackRobotIdle', { start: i * 15, end: (i + 1) * 15 - 1 }),
+                frames: this.scene.anims.generateFrameNumbers(character.idle, { start: i * 15, end: (i + 1) * 15 - 1 }),
                 frameRate: 10,
                 repeat: -1
             });
@@ -35,7 +38,7 @@ class Player {
         directions.forEach((dir, index) => {
             this.scene.anims.create({
                 key: `move${dir}`,
-                frames: this.scene.anims.generateFrameNumbers('blackRobotMoving', { start: index * 15, end: (index + 1) * 15 - 1 }),
+                frames: this.scene.anims.generateFrameNumbers(character.moving, { start: index * 15, end: (index + 1) * 15 - 1 }),
                 frameRate: 10,
                 repeat: -1
             });
@@ -309,5 +312,17 @@ class Player {
 
 
 }
+
+const characterMap = {
+    1: {
+        idle: 'blackRobotIdle',
+        moving: 'blackRobotMoving'
+    },
+    2: {
+        idle: 'goldenWarriorIdle',
+        moving: 'goldenWarriorMoving'
+    }
+    // Add more characters here as needed
+};
 
 export default Player;
