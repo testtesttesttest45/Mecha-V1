@@ -67,3 +67,15 @@ export function resize(game) {
     game.canvas.style.marginTop = '0px';
     game.canvas.style.marginLeft = '0px';
 }
+
+export function loadDynamicSpriteSheet(key, path, horizontalFrames, verticalFrames) {
+    this.load.image(key + 'Image', path);
+
+    this.load.on('filecomplete-image-' + key + 'Image', function () {
+        let image = this.textures.get(key + 'Image').getSourceImage();
+        let frameWidth = image.width / horizontalFrames;
+        let frameHeight = image.height / verticalFrames;
+
+        this.load.spritesheet(key, path, { frameWidth, frameHeight });
+    }, this);
+}

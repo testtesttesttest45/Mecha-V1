@@ -1,74 +1,50 @@
 import Player from './player.js';
-import { rgbToHex, resize, createGrid } from './utilities.js';
+import Enemy from './enemy.js';
+import { rgbToHex, resize, createGrid, loadDynamicSpriteSheet } from './utilities.js';
 
-document.addEventListener('DOMContentLoaded', (event) => {
-    const gameScreen = document.getElementById('game-screen');
-    const battleScene = document.getElementById('battle-scene');
-    const playButton = document.querySelector('.play-button');
-
-    let game;
-    let gameGrid = null;
-    let player;
-
-    function preload() {
-        this.load.image('land', 'assets/images/land.png');
-        loadDynamicSpriteSheet.call(this, 'blackRobotIdle', 'assets/sprites/1_idle_spritesheet.png', 5, 12);
-        loadDynamicSpriteSheet.call(this, 'blackRobotMoving', 'assets/sprites/1_moving_spritesheet.png', 12, 10);
-        loadDynamicSpriteSheet.call(this, 'goldenWarriorIdle', 'assets/sprites/2_idle_spritesheet.png', 5, 12);
-        loadDynamicSpriteSheet.call(this, 'goldenWarriorMoving', 'assets/sprites/2_moving_spritesheet.png', 12, 10);
+class GameScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'GameScene' });
+        this.gameGrid = null;
+        this.player = null;
+        this.enemy = null;
     }
 
-    function create() {
-        const landTexture = this.textures.get('land');
-        console.log(`Texture Dimensions: ${landTexture.getSourceImage().width} x ${landTexture.getSourceImage().height}`);
+    preload() {
+
+    }
+
+    init(data) {
+        this.gameGrid = data.gameGrid; // Receive the grid from LoadingScene
+    }
+    create() {
         const width = this.sys.game.config.width;
         const height = this.sys.game.config.height;
-        console.log(`Canvas dimensions: ${width} x ${height}`);
-        this.loadingText = this.add.text(width / 2, (height / 2) - 100, 'Loading...', {
-            font: '74px Orbitron',
-            fill: '#fff',
-            align: 'center'
-        });
-        this.loadingText.setOrigin(0.5, 0.5);
-        this.loadingText.setVisible(true);  // Show the loading text
 
-
-        const land = this.add.image(width / 2, height / 2, 'land').setInteractive();
-        land.setScale(2);
-        land.setOrigin(0.5, 0.5);
-        const originalWidth = land.width;
-        const originalHeight = land.height;
-        console.log(`Original Dimensions: ${originalWidth} x ${originalHeight}`);
-
+        const land = this.add.image(width / 2, height / 2, 'land').setOrigin(0.5, 0.5);
         land.setDisplaySize(width, height);
-        land.setVisible(false);  // Hide the land for now
-        const scaleX = width / originalWidth;
-        const scaleY = height / originalHeight;
+        land.setVisible(true);
 
-        setTimeout(() => {
-            if (!gameGrid) {
-                gameGrid = createGrid(originalWidth, originalHeight, this.textures, (progress) => { // texture might have a problem. on coordiantes (23, 121), it is a yellow color, but when creating grid, it shows the coordiantes as blue
+        // Scale factors
+        const scaleX = width / land.width;
+        const scaleY = height / land.height;
 
-                    this.loadingText.setText(`Loading... ${Math.round(progress)}%`);
+        // Create and setup player, enemy, etc. using this.gameGrid
+        // Player creation example (adjust as needed):
+        this.player = new Player(this, 45 * scaleX, 113 * scaleY, 1);
+        this.player.create();
+        const originalWidth = land.texture.source[0].width;
+        const originalHeight = land.texture.source[0].height;
 
-                    if (progress >= 100) {
-                        this.loadingText.setVisible(false);
-                        land.setVisible(true);
+        this.enemy = new Enemy(this, 1000, 500, 3);
+        this.enemy.create();
 
-                        player = new Player(this, 45 * scaleX, 113 * scaleY, 2);
-                        player.create();
-                        // const color = this.textures.getPixel(player.getPosition().x, player.getPosition().y, 'land');
-                        let textureX = player.getPosition().x * (originalWidth / width);
-                        let textureY = player.getPosition().y * (originalHeight / height);
-                        const color = this.textures.getPixel(Math.floor(textureX), Math.floor(textureY), 'land');
-                        const hexColor = rgbToHex(color.red, color.green, color.blue);
-                        console.log('Hex color red cube is standing on:', hexColor);
-                    }
-                });
-            }
-        }, 10);  // createGrid() function is computationally expensive and is "blocking" the rendering of the 'Loading...' text until it completes
-
-
+        // const color = this.textures.getPixel(player.getPosition().x, player.getPosition().y, 'land');
+        let textureX = this.player.getPosition().x * (originalWidth / width);
+        let textureY = this.player.getPosition().y * (originalHeight / height);
+        const color = this.textures.getPixel(Math.floor(textureX), Math.floor(textureY), 'land');
+        const hexColor = rgbToHex(color.red, color.green, color.blue);
+        // console.log('Hex color red cube is standing on:', hexColor);
 
         this.messageText = this.add.text(width / 2, height / 2, '', {
             font: '24px Orbitron',
@@ -82,8 +58,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
             if (pointer.leftButtonDown()) {
                 const x = Math.floor((pointer.x - land.x + width / 2) * (originalWidth / width));
                 const y = Math.floor((pointer.y - land.y + height / 2) * (originalHeight / height));
-                console.log(`Pointer screen coordinates: (${pointer.x}, ${pointer.y})`);
-                console.log(`Transformed grid coordinates: (${x}, ${y})`);
+                // console.log(`Pointer screen coordinates: (${pointer.x}, ${pointer.y})`);
+                // console.log(`Transformed grid coordinates: (${x}, ${y})`);
                 // Constrain x and y to the dimensions of the texture
                 const constrainedX = Math.max(0, Math.min(x, originalWidth - 1));
                 const constrainedY = Math.max(0, Math.min(y, originalHeight - 1));
@@ -122,19 +98,20 @@ document.addEventListener('DOMContentLoaded', (event) => {
                         const cubeX = (x * width) / originalWidth;
                         const cubeY = (y * height) / originalHeight;
 
-                        if (player.canMoveTo(player.getPosition().x, player.getPosition().y, cubeX, cubeY, originalWidth, originalHeight, width, height, this.textures)) {
+                        if (this.player.canMoveTo(this.player.getPosition().x, this.player.getPosition().y, cubeX, cubeY, originalWidth, originalHeight, width, height, this.textures)) {
                             console.log("Land to land with no ocean in between");
                             const newTargetPosition = { x: (x * width) / originalWidth, y: (y * height) / originalHeight };
                             const speed = 150;
-                            player.moveStraight(newTargetPosition.x, newTargetPosition.y, speed);
+                            this.player.moveStraight(newTargetPosition.x, newTargetPosition.y, speed);
+                            console.log("Player position:", this.player.getPosition());
                         } else {
                             console.log("Path has ocean in between, using A* algorithm");
 
-                            let gridStartX = Math.floor(player.getPosition().x * (originalWidth / width));
-                            let gridStartY = Math.floor(player.getPosition().y * (originalHeight / height));
+                            let gridStartX = Math.floor(this.player.getPosition().x * (originalWidth / width));
+                            let gridStartY = Math.floor(this.player.getPosition().y * (originalHeight / height));
                             let gridEndX = Math.floor((cubeX) * (originalWidth / width));
                             let gridEndY = Math.floor((cubeY) * (originalHeight / height));
-                            let path = player.findPath(gameGrid, { x: gridStartX, y: gridStartY }, { x: gridEndX, y: gridEndY });
+                            let path = this.player.findPath(this.gameGrid, { x: gridStartX, y: gridStartY }, { x: gridEndX, y: gridEndY });
 
                             if (path.length > 0) {
                                 // player.drawPath(path, originalWidth, originalHeight, width, height);
@@ -150,9 +127,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
                                     let screenY = (point.y * height) / originalHeight;
                                     let speed = 450;
 
-                                    player.moveAlongPath(screenX, screenY, speed);
+                                    this.player.moveAlongPath(screenX, screenY, speed);
 
-                                    player.currentTween.on('complete', () => {
+                                    this.player.currentTween.on('complete', () => {
                                         moveIndex++;
                                         moveAlongPathRecursive();
                                     });
@@ -169,21 +146,97 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 } else {
                     console.log('No color data available');
                 }
-                player.lastActionTime = this.time.now;
+                this.player.lastActionTime = this.time.now;
             }
         }, this);
 
         this.input.enabled = true;
 
         this.sceneName = "battle-scene";
-
     }
 
-    function update(time) {
-        if (player) {
-            player.update(time);
+    update(time) {
+        if (this.player) {
+            this.player.update(time);
         }
     }
+}
+
+class LoadingScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'LoadingScene' });
+        this.grid = null;
+        this.loadingStartTime = 0;
+        this.assetsLoaded = false;
+        this.gridCreated = false;
+        this.assetProgress = 0; // Progress of asset loading
+        this.gridProgress = 0;
+    }
+
+    preload() {
+        this.loadingStartTime = Date.now();
+        this.createLoadingText();
+        this.loadAssets();
+        
+    }
+
+    create() {
+        const landTexture = this.textures.get('land');
+        const originalWidth = landTexture.getSourceImage().width;
+        const originalHeight = landTexture.getSourceImage().height;
+
+        this.createGrid(originalWidth, originalHeight);
+    }
+
+    createGrid(originalWidth, originalHeight) {
+        this.grid = createGrid(originalWidth, originalHeight, this.textures, (progress) => {
+            this.gridProgress = progress;
+            this.updateTotalProgress();
+        });
+    }
+
+    updateTotalProgress() {
+        let totalProgress = (this.assetProgress + this.gridProgress) / 2;
+        this.loadingText.setText(`Loading... ${Math.round(totalProgress)}%`);
+
+        if (totalProgress >= 100) {
+            let loadingEndTime = Date.now();
+            let loadingDuration = (loadingEndTime - this.loadingStartTime) / 1000;
+            console.log(`Loading completed in ${loadingDuration.toFixed(2)} seconds`);
+            this.loadingText.setVisible(false);
+            this.scene.start('GameScene', { gameGrid: this.grid });
+        }
+    }
+
+    createLoadingText() {
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+        this.loadingText = this.add.text(width / 2, height / 2, 'Loading...', {
+            font: '74px Orbitron',
+            fill: '#fff',
+            align: 'center'
+        }).setOrigin(0.5, 0.5);
+    }
+    loadAssets() {
+        this.load.image('land', 'assets/images/land.png');
+        loadDynamicSpriteSheet.call(this, 'blackRobotIdle', 'assets/sprites/1_idle_spritesheet.png', 5, 12);
+        loadDynamicSpriteSheet.call(this, 'blackRobotMoving', 'assets/sprites/1_moving_spritesheet.png', 12, 10);
+        loadDynamicSpriteSheet.call(this, 'goldenWarriorIdle', 'assets/sprites/2_idle_spritesheet.png', 5, 12);
+        loadDynamicSpriteSheet.call(this, 'goldenWarriorMoving', 'assets/sprites/2_moving_spritesheet.png', 12, 10);
+        loadDynamicSpriteSheet.call(this, 'enemyIdle', 'assets/sprites/3_idle_spritesheet.png', 5, 12);
+        this.load.on('progress', (value) => {
+            this.assetProgress = value * 100; // Convert to percentage
+            this.updateTotalProgress();
+        });
+    }
+
+    
+}
+
+document.addEventListener('DOMContentLoaded', (event) => {
+    const gameScreen = document.getElementById('game-screen');
+    const battleScene = document.getElementById('battle-scene');
+    const playButton = document.querySelector('.play-button');
 
     function startGame() {
         const config = {
@@ -191,17 +244,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
             width: 1920,
             height: 1080,
             parent: 'battle-scene',
-            scene: {
-                preload: preload,
-                create: create,
-                update: update
-            },
+            scene: [LoadingScene, GameScene],
             render: {
                 pixelArt: true,
             },
         };
-        game = new Phaser.Game(config);
 
+        const game = new Phaser.Game(config);
         game.canvas.id = 'battle-canvas';
         resize(game);
 
@@ -215,18 +264,4 @@ document.addEventListener('DOMContentLoaded', (event) => {
         battleScene.style.display = 'flex';
         startGame();
     });
-
-    function loadDynamicSpriteSheet(key, path, horizontalFrames, verticalFrames) {
-        this.load.image(key + 'Image', path);
-
-        this.load.on('filecomplete-image-' + key + 'Image', function () {
-            let image = this.textures.get(key + 'Image').getSourceImage();
-            let frameWidth = image.width / horizontalFrames;
-            let frameHeight = image.height / verticalFrames;
-
-            this.load.spritesheet(key, path, { frameWidth, frameHeight });
-        }, this);
-    }
-
-
 });

@@ -1,3 +1,4 @@
+import characterMap from './characters.js';
 class Player {
 
     constructor(scene, initialX, initialY, characterCode = 1) {
@@ -131,13 +132,13 @@ class Player {
         const angle = Math.atan2(dy, dx) * 180 / Math.PI;
 
         if (angle >= -22.5 && angle < 22.5) return 'east';
-        if (angle >= 22.5 && angle < 67.5) return 'northeast';
+        if (angle >= 22.5 && angle < 67.5) return 'southeast';
         if (angle >= 67.5 && angle < 112.5) return 'south';
-        if (angle >= 112.5 && angle < 157.5) return 'northwest';
+        if (angle >= 112.5 && angle < 157.5) return 'southwest';
         if (angle >= 157.5 || angle < -157.5) return 'west';
-        if (angle >= -157.5 && angle < -112.5) return 'southwest';
+        if (angle >= -157.5 && angle < -112.5) return 'northwest';
         if (angle >= -112.5 && angle < -67.5) return 'north';
-        if (angle >= -67.5 && angle < -22.5) return 'southeast';
+        if (angle >= -67.5 && angle < -22.5) return 'northeast';
     }
 
     updatePosition() {
@@ -171,7 +172,7 @@ class Player {
         let y1 = Math.floor(startY * (originalHeight / height));
         let x2 = Math.floor(endX * (originalWidth / width));
         let y2 = Math.floor(endY * (originalHeight / height));
-        console.log(`Checking path from grid (${x1}, ${y1}) to (${x2}, ${y2})`);
+        // console.log(`Checking path from grid (${x1}, ${y1}) to (${x2}, ${y2})`);
 
         let dx = Math.abs(x2 - x1);
         let dy = Math.abs(y2 - y1);
@@ -310,19 +311,6 @@ class Player {
         this.pathGraphics.strokePath();
     }
 
-
 }
-
-const characterMap = {
-    1: {
-        idle: 'blackRobotIdle',
-        moving: 'blackRobotMoving'
-    },
-    2: {
-        idle: 'goldenWarriorIdle',
-        moving: 'goldenWarriorMoving'
-    }
-    // Add more characters here as needed
-};
 
 export default Player;
