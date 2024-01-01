@@ -8,89 +8,84 @@ class GameScene extends Phaser.Scene {
         this.gameGrid = null;
         this.player = null;
         this.enemy = null;
-    }
-
-    preload() {
-
+        this.land = null; // Add land as a property
+        this.width = 0;   // Add width as a property
+        this.height = 0;
     }
 
     init(data) {
         this.gameGrid = data.gameGrid; // Receive the grid from LoadingScene
     }
+
     create() {
-        const width = this.sys.game.config.width;
-        const height = this.sys.game.config.height;
+        this.width = this.sys.game.config.width;
+        this.height = this.sys.game.config.height;
 
-        const land = this.add.image(width / 2, height / 2, 'land').setOrigin(0.5, 0.5);
-        land.setDisplaySize(width, height);
-        land.setVisible(true);
+        this.createLand();
+        this.createPlayer();
+        this.createEnemy();
+        this.setupInputHandlers();
+    }
 
-        // Scale factors
-        const scaleX = width / land.width;
-        const scaleY = height / land.height;
-        // this.input.setDefaultCursor(`url('assets/images/mouse_cursor.png'), pointer`);
-        // offset by (5,10) for the cursor
-        this.input.setDefaultCursor(`url('assets/images/mouse_cursor.png') 15 10, pointer`);
+    createLand() {
+        this.land = this.add.image(this.width / 2, this.height / 2, 'land').setOrigin(0.5, 0.5);
+        this.land.setDisplaySize(this.width, this.height);
+        this.land.setVisible(true);
+    }
 
-        // Create and setup player, enemy, etc. using this.gameGrid
-        // Player creation example (adjust as needed):
+    createPlayer() {
+        const scaleX = this.width / this.land.width;
+        const scaleY = this.height / this.land.height;
+
         this.player = new Player(this, 45 * scaleX, 113 * scaleY, 1);
         this.player.create();
-        const originalWidth = land.texture.source[0].width;
-        const originalHeight = land.texture.source[0].height;
+    }
+
+    createEnemy() {
+        const originalWidth = this.land.texture.source[0].width;
+        const originalHeight = this.land.texture.source[0].height;
 
         this.enemy = new Enemy(this, 1000, 500, 3);
         this.enemy.create();
-        
-        // Change cursor when hovering over the enemy
+
         this.enemy.sprite.on('pointerover', () => {
             this.input.setDefaultCursor(`url('assets/images/mouse_cursor_attack.png') 15 10, pointer`);
         });
         this.enemy.sprite.on('pointerout', () => {
             this.input.setDefaultCursor(`url('assets/images/mouse_cursor.png') 15 10, pointer`);
         });
+    }
 
-        // const color = this.textures.getPixel(player.getPosition().x, player.getPosition().y, 'land');
-        let textureX = this.player.getPosition().x * (originalWidth / width);
-        let textureY = this.player.getPosition().y * (originalHeight / height);
-        const color = this.textures.getPixel(Math.floor(textureX), Math.floor(textureY), 'land');
-        const hexColor = rgbToHex(color.red, color.green, color.blue);
-        // console.log('Hex color red cube is standing on:', hexColor);
-
-        this.messageText = this.add.text(width / 2, height / 2, '', {
-            font: '24px Orbitron',
-            fill: '#ff0000',
-            align: 'center'
-        });
-        this.messageText.setOrigin(0.5, 0.5);
-        this.messageText.setVisible(false);
+    setupInputHandlers() {
+        const originalWidth = this.land.texture.source[0].width;
+        const originalHeight = this.land.texture.source[0].height;
 
         this.input.on('pointerdown', function (pointer) {
             if (pointer.leftButtonDown()) {
-                const x = Math.floor((pointer.x - land.x + width / 2) * (originalWidth / width));
-                const y = Math.floor((pointer.y - land.y + height / 2) * (originalHeight / height));
+                const x = Math.floor((pointer.x - this.land.x + this.width / 2) * (originalWidth / this.width));
+                const y = Math.floor((pointer.y - this.land.y + this.height / 2) * (originalHeight / this.height));
                 // console.log(`Pointer screen coordinates: (${pointer.x}, ${pointer.y})`);
                 // console.log(`Transformed grid coordinates: (${x}, ${y})`);
                 // Constrain x and y to the dimensions of the texture
                 const constrainedX = Math.max(0, Math.min(x, originalWidth - 1));
                 const constrainedY = Math.max(0, Math.min(y, originalHeight - 1));
-
+    
                 const color = this.textures.getPixel(constrainedX, constrainedY, 'land');
-
+    
                 if (color.alpha !== 0) {
                     const hexColor = rgbToHex(color.red, color.green, color.blue);
                     // console.log('Hex color:', hexColor);
-
+    
                     if (color.blue > 200) {
                         console.log("This area is ocean");
-
+    
                         let x = Phaser.Math.Clamp(pointer.x, this.messageText.width / 2, this.sys.game.config.width - this.messageText.width / 2); // ensure the text is within the canvas
                         let y = Phaser.Math.Clamp(pointer.y, this.messageText.height / 2, this.sys.game.config.height - this.messageText.height / 2);
                         // The minimum x and y are set to half of the text's width and height, respectively, to prevent the text from going off the left and top edges of the screen.
                         this.messageText.setPosition(x, y);
                         this.messageText.setText("Can't go there!");
                         this.messageText.setVisible(true);
-
+    
                         this.tweens.add({
                             targets: this.messageText,
                             alpha: { start: 0, to: 1 },
@@ -104,51 +99,51 @@ class GameScene extends Phaser.Scene {
                             }
                         });
                     } else {
-
+    
                         console.log("This area is land");
-                        const cubeX = (x * width) / originalWidth;
-                        const cubeY = (y * height) / originalHeight;
-
-                        if (this.player.canMoveTo(this.player.getPosition().x, this.player.getPosition().y, cubeX, cubeY, originalWidth, originalHeight, width, height, this.textures)) {
+                        const cubeX = (x * this.width) / originalWidth;
+                        const cubeY = (y * this.height) / originalHeight;
+    
+                        if (this.player.canMoveTo(this.player.getPosition().x, this.player.getPosition().y, cubeX, cubeY, originalWidth, originalHeight, this.width, this.height, this.textures)) {
                             console.log("Land to land with no ocean in between");
-                            const newTargetPosition = { x: (x * width) / originalWidth, y: (y * height) / originalHeight };
+                            const newTargetPosition = { x: (x * this.width) / originalWidth, y: (y * this.height) / originalHeight };
                             const speed = 150;
                             this.player.moveStraight(newTargetPosition.x, newTargetPosition.y, speed);
-                            console.log("Player position:", this.player.getPosition());
+                            // console.log("Player position:", this.player.getPosition());
                         } else {
                             console.log("Path has ocean in between, using A* algorithm");
-
-                            let gridStartX = Math.floor(this.player.getPosition().x * (originalWidth / width));
-                            let gridStartY = Math.floor(this.player.getPosition().y * (originalHeight / height));
-                            let gridEndX = Math.floor((cubeX) * (originalWidth / width));
-                            let gridEndY = Math.floor((cubeY) * (originalHeight / height));
+    
+                            let gridStartX = Math.floor(this.player.getPosition().x * (originalWidth / this.width));
+                            let gridStartY = Math.floor(this.player.getPosition().y * (originalHeight / this.height));
+                            let gridEndX = Math.floor((cubeX) * (originalWidth / this.width));
+                            let gridEndY = Math.floor((cubeY) * (originalHeight / this.height));
                             let path = this.player.findPath(this.gameGrid, { x: gridStartX, y: gridStartY }, { x: gridEndX, y: gridEndY });
-
+    
                             if (path.length > 0) {
                                 // player.drawPath(path, originalWidth, originalHeight, width, height);
-
+    
                                 let moveIndex = 0;
                                 const moveAlongPathRecursive = () => {
                                     if (moveIndex >= path.length) {
                                         return; // End of path
                                     }
-
+    
                                     let point = path[moveIndex];
-                                    let screenX = (point.x * width) / originalWidth;
-                                    let screenY = (point.y * height) / originalHeight;
+                                    let screenX = (point.x * this.width) / originalWidth;
+                                    let screenY = (point.y * this.height) / originalHeight;
                                     let speed = 450;
-
+    
                                     this.player.moveAlongPath(screenX, screenY, speed);
-
+    
                                     this.player.currentTween.on('complete', () => {
                                         moveIndex++;
                                         moveAlongPathRecursive();
                                     });
                                 };
-
+    
                                 moveAlongPathRecursive();
-
-
+    
+    
                             } else {
                                 console.log("No valid path to the destination");
                             }
@@ -160,9 +155,9 @@ class GameScene extends Phaser.Scene {
                 this.player.lastActionTime = this.time.now;
             }
         }, this);
-
+    
         this.input.enabled = true;
-
+    
         this.sceneName = "battle-scene";
     }
 

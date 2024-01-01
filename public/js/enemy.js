@@ -31,8 +31,8 @@ class Enemy {
         this.sprite.setScale(0.5);
         this.scene.physics.world.enable(this.sprite);
 
-        const bodyWidth = 200;
-        const bodyHeight = 230;
+        const bodyWidth = 180;
+        const bodyHeight = 220;
         const offsetX = (this.sprite.width - bodyWidth) / 2;
         const offsetY = this.sprite.height - 320;
 
