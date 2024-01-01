@@ -7,6 +7,7 @@ class Enemy {
         this.y = y;
         this.characterCode = characterCode;
         this.sprite = null;
+        this.currentAnimationIndex = 0;
     }
 
     create() {
@@ -26,10 +27,38 @@ class Enemy {
         }
 
         this.sprite.play('enemyIdle1');
+        this.scheduleNextAnimation();
         this.sprite.setScale(0.5);
+        this.scene.physics.world.enable(this.sprite);
+
+        const bodyWidth = 200;
+        const bodyHeight = 230;
+        const offsetX = (this.sprite.width - bodyWidth) / 2;
+        const offsetY = this.sprite.height - 320;
+
+        this.sprite.body.setSize(bodyWidth, bodyHeight);
+        this.sprite.body.setOffset(offsetX, offsetY);
+
+        // Define a custom hit area that matches the body size and position
+        const hitArea = new Phaser.Geom.Rectangle(offsetX, offsetY, bodyWidth, bodyHeight);
+
+        // Set the sprite to be interactive with the custom hit area
+        this.sprite.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
     }
 
-    // Additional methods for enemy behavior
+    scheduleNextAnimation() {
+        this.scene.time.addEvent({
+            delay: 4000,
+            callback: () => {
+                this.currentAnimationIndex = (this.currentAnimationIndex + 1) % 4;
+
+                this.sprite.play(`enemyIdle${this.currentAnimationIndex + 1}`);
+
+                this.scheduleNextAnimation();
+            }
+        });
+    }
+
 }
 
 export default Enemy;

@@ -28,6 +28,9 @@ class GameScene extends Phaser.Scene {
         // Scale factors
         const scaleX = width / land.width;
         const scaleY = height / land.height;
+        // this.input.setDefaultCursor(`url('assets/images/mouse_cursor.png'), pointer`);
+        // offset by (5,10) for the cursor
+        this.input.setDefaultCursor(`url('assets/images/mouse_cursor.png') 15 10, pointer`);
 
         // Create and setup player, enemy, etc. using this.gameGrid
         // Player creation example (adjust as needed):
@@ -38,6 +41,14 @@ class GameScene extends Phaser.Scene {
 
         this.enemy = new Enemy(this, 1000, 500, 3);
         this.enemy.create();
+        
+        // Change cursor when hovering over the enemy
+        this.enemy.sprite.on('pointerover', () => {
+            this.input.setDefaultCursor(`url('assets/images/mouse_cursor_attack.png') 15 10, pointer`);
+        });
+        this.enemy.sprite.on('pointerout', () => {
+            this.input.setDefaultCursor(`url('assets/images/mouse_cursor.png') 15 10, pointer`);
+        });
 
         // const color = this.textures.getPixel(player.getPosition().x, player.getPosition().y, 'land');
         let textureX = this.player.getPosition().x * (originalWidth / width);
@@ -177,7 +188,7 @@ class LoadingScene extends Phaser.Scene {
         this.loadingStartTime = Date.now();
         this.createLoadingText();
         this.loadAssets();
-        
+
     }
 
     create() {
@@ -219,10 +230,12 @@ class LoadingScene extends Phaser.Scene {
     }
     loadAssets() {
         this.load.image('land', 'assets/images/land.png');
+        this.load.image('mouse_cursor', 'assets/images/mouse_cursor.png');
+        this.load.image('mouse_cursor_attack', 'assets/images/mouse_cursor_attack.png');
         loadDynamicSpriteSheet.call(this, 'blackRobotIdle', 'assets/sprites/1_idle_spritesheet.png', 5, 12);
         loadDynamicSpriteSheet.call(this, 'blackRobotMoving', 'assets/sprites/1_moving_spritesheet.png', 12, 10);
-        loadDynamicSpriteSheet.call(this, 'goldenWarriorIdle', 'assets/sprites/2_idle_spritesheet.png', 5, 12);
-        loadDynamicSpriteSheet.call(this, 'goldenWarriorMoving', 'assets/sprites/2_moving_spritesheet.png', 12, 10);
+        // loadDynamicSpriteSheet.call(this, 'goldenWarriorIdle', 'assets/sprites/2_idle_spritesheet.png', 5, 12);
+        // loadDynamicSpriteSheet.call(this, 'goldenWarriorMoving', 'assets/sprites/2_moving_spritesheet.png', 12, 10);
         loadDynamicSpriteSheet.call(this, 'enemyIdle', 'assets/sprites/3_idle_spritesheet.png', 5, 12);
         this.load.on('progress', (value) => {
             this.assetProgress = value * 100; // Convert to percentage
@@ -230,7 +243,6 @@ class LoadingScene extends Phaser.Scene {
         });
     }
 
-    
 }
 
 document.addEventListener('DOMContentLoaded', (event) => {
@@ -247,6 +259,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
             scene: [LoadingScene, GameScene],
             render: {
                 pixelArt: true,
+            },
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    debug: false // true to see physics bodies for debugging
+                }
             },
         };
 

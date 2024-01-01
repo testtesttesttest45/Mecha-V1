@@ -18,11 +18,6 @@ html {
     width: 80vw;
     height: calc(45vw - 4vw);
     /* Adjusted to maintain a 16:9 aspect ratio */
-    cursor: url('../assets/images/mouse_cursor.png') 15 10, auto !important;
-}
-
-button {
-    cursor: url('../assets/images/mouse_cursor.png') 15 5, auto !important;
 }
 
 .game-screen,
