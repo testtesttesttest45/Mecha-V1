@@ -13,19 +13,25 @@ class Player {
         this.directions = [];
         this.directionAveragingSteps = 10;
         this.characterCode = characterCode;
+        const character = characterMap[this.characterCode];
+        this.range = character.range;
+        this.idleAnimationKey = character.idle;
+        this.movingAnimationKey = character.moving;
+        this.attackingAnimationKey = character.attacking;
+        this.isAttacking = false;
+
     }
 
     create() {
-        const character = characterMap[this.characterCode];
 
-        this.robotSprite = this.scene.add.sprite(this.position.x, this.position.y, character.idle);
+        this.robotSprite = this.scene.add.sprite(this.position.x, this.position.y, this.idleAnimationKey);
         this.robotSprite.setOrigin(0.5, 1); // Set origin to bottom center
 
 
         for (let i = 0; i < 4; i++) {
             this.scene.anims.create({
                 key: `idle${i + 1}`,
-                frames: this.scene.anims.generateFrameNumbers(character.idle, { start: i * 15, end: (i + 1) * 15 - 1 }),
+                frames: this.scene.anims.generateFrameNumbers(this.idleAnimationKey, { start: i * 15, end: (i + 1) * 15 - 1 }),
                 frameRate: 10,
                 repeat: -1
             });
@@ -39,7 +45,15 @@ class Player {
         directions.forEach((dir, index) => {
             this.scene.anims.create({
                 key: `move${dir}`,
-                frames: this.scene.anims.generateFrameNumbers(character.moving, { start: index * 15, end: (index + 1) * 15 - 1 }),
+                frames: this.scene.anims.generateFrameNumbers(this.movingAnimationKey, { start: index * 15, end: (index + 1) * 15 - 1 }),
+                frameRate: 10,
+                repeat: -1
+            });
+        });
+        directions.forEach((dir, index) => {
+            this.scene.anims.create({
+                key: `attack${dir}`,
+                frames: this.scene.anims.generateFrameNumbers(this.attackingAnimationKey, { start: index * 8, end: (index + 1) * 8 - 1 }),
                 frameRate: 10,
                 repeat: -1
             });
@@ -85,7 +99,7 @@ class Player {
         this.lastActionTime = this.scene.time.now; // Reset last action time on movement
     }
 
-    moveStraight(newX, newY, speed) {
+    moveStraight(newX, newY, speed, onCompleteCallback = null) {
         if (this.currentTween) {
             this.currentTween.stop();
         }
@@ -101,11 +115,42 @@ class Player {
             y: newY,
             duration: duration,
             ease: 'Linear',
-            onUpdate: () => this.updatePosition()
+            onUpdate: () => {
+                this.updatePosition();
+                console.log(`Moving to (${newX}, ${newY})`);
+            },
+            onComplete: () => {
+                console.log(`Reached (${newX}, ${newY})`);
+                if (onCompleteCallback) {
+                    onCompleteCallback();
+                }
+            }
         });
         this.lastActionTime = this.scene.time.now; // Reset last action time on movement
         const direction = this.determineDirection(newX, newY);
         this.robotSprite.play(`move${direction}`);
+        this.lastDirection = this.determineDirection(newX, newY);
+        console.log(`Moving ${direction}`);
+    }
+
+    playAttackAnimation() {
+        const currentAnim = this.robotSprite.anims.currentAnim;
+        if (currentAnim && currentAnim.key.startsWith('attack')) {
+            // If already playing an attack animation, do nothing
+            return;
+        }
+
+        this.isAttacking = true; // Set the flag to true when attack starts
+        const direction = this.lastDirection;
+        this.robotSprite.play(`attack${direction}`);
+    }
+
+    isInRangeOf(target) {
+        const distance = Phaser.Math.Distance.Between(
+            this.robotSprite.x, this.robotSprite.y,
+            target.sprite.x, target.sprite.y
+        );
+        return distance <= this.range; // Use this.range
     }
 
     calculateAverageDirection(directions) {
@@ -147,24 +192,40 @@ class Player {
     }
 
     update(time, delta) {
-        if (this.currentTween && this.currentTween.isPlaying()) {
-            this.robotSprite.setPosition(this.position.x, this.position.y);
-        } else {
-            if (time - this.lastActionTime > 5000) {
+        // Check if the player is currently moving or attacking
+        const isMoving = this.currentTween && this.currentTween.isPlaying();
+        const isAttacking = this.robotSprite.anims.isPlaying && this.robotSprite.anims.currentAnim.key.startsWith('attack');
+
+        // If the player is neither moving nor attacking
+        if (!isMoving && !isAttacking) {
+            if (time - this.lastActionTime > 5000) { // 5 seconds of inactivity
                 if (time - this.lastAnimationChange > 5000) {
                     this.idleAnimationIndex = (this.idleAnimationIndex + 1) % 4;
                     this.robotSprite.play(`idle${this.idleAnimationIndex + 1}`);
                     this.lastAnimationChange = time;
                 }
-            } else if (!this.robotSprite.anims.isPlaying) {
-                this.robotSprite.play(`idle${this.idleAnimationIndex + 1}`);
             }
+        } else {
+            this.lastActionTime = time; // Reset the last action time if the player is moving or attacking
+        }
+
+        if (this.currentTween && this.currentTween.isPlaying()) {
+            this.robotSprite.setPosition(this.position.x, this.position.y);
+        }
+
+        const currentAnim = this.robotSprite.anims.currentAnim;
+        if (!currentAnim || !currentAnim.key.startsWith('attack')) {
+            this.isAttacking = false;
         }
     }
 
-
     getPosition() {
         return this.robotSprite ? { x: this.robotSprite.x, y: this.robotSprite.y } : this.position;
+    }
+
+    moveToLocation(location) {
+        const speed = 150; // Define your movement speed
+        this.moveStraight(location.x, location.y, speed);
     }
 
     canMoveTo(startX, startY, endX, endY, originalWidth, originalHeight, width, height, textures) {

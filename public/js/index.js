@@ -25,6 +25,8 @@ class GameScene extends Phaser.Scene {
         this.createPlayer();
         this.createEnemy();
         this.setupInputHandlers();
+        this.messageText = this.add.text(0, 0, '', { font: '24px Orbitron', fill: '#ff0000', align: 'center' });
+        this.messageText.setVisible(false);
     }
 
     createLand() {
@@ -47,13 +49,34 @@ class GameScene extends Phaser.Scene {
 
         this.enemy = new Enemy(this, 1000, 500, 3);
         this.enemy.create();
-
         this.enemy.sprite.on('pointerover', () => {
             this.input.setDefaultCursor(`url('assets/images/mouse_cursor_attack.png') 15 10, pointer`);
         });
+
         this.enemy.sprite.on('pointerout', () => {
             this.input.setDefaultCursor(`url('assets/images/mouse_cursor.png') 15 10, pointer`);
         });
+
+        this.enemyClicked = false; // Add a flag to track enemy clicks
+
+        this.enemy.sprite.on('pointerdown', () => {
+            this.enemyClicked = true; // Set the flag when the enemy sprite is clicked
+            console.log(this.player.isAttacking)
+            if (!this.player.isAttacking) {
+                const enemyX = this.enemy.sprite.x;
+                const enemyY = this.enemy.sprite.y;
+                const speed = 150;
+
+                // Move to enemy and then play attack animation
+                this.player.moveStraight(enemyX, enemyY, speed, () => {
+                    console.log('Player reached enemy');
+                    if (this.player.isInRangeOf(this.enemy)) {
+                        this.player.playAttackAnimation(); // Trigger attack animation
+                    }
+                });
+            }
+        });
+
     }
 
     setupInputHandlers() {
@@ -62,6 +85,10 @@ class GameScene extends Phaser.Scene {
 
         this.input.on('pointerdown', function (pointer) {
             if (pointer.leftButtonDown()) {
+                if (this.enemyClicked) {
+                    this.enemyClicked = false; // Reset the flag
+                    return; // Click was on the enemy, so skip the general click logic/no callback
+                }
                 const x = Math.floor((pointer.x - this.land.x + this.width / 2) * (originalWidth / this.width));
                 const y = Math.floor((pointer.y - this.land.y + this.height / 2) * (originalHeight / this.height));
                 // console.log(`Pointer screen coordinates: (${pointer.x}, ${pointer.y})`);
@@ -69,23 +96,23 @@ class GameScene extends Phaser.Scene {
                 // Constrain x and y to the dimensions of the texture
                 const constrainedX = Math.max(0, Math.min(x, originalWidth - 1));
                 const constrainedY = Math.max(0, Math.min(y, originalHeight - 1));
-    
+
                 const color = this.textures.getPixel(constrainedX, constrainedY, 'land');
-    
+
                 if (color.alpha !== 0) {
                     const hexColor = rgbToHex(color.red, color.green, color.blue);
                     // console.log('Hex color:', hexColor);
-    
+
                     if (color.blue > 200) {
                         console.log("This area is ocean");
-    
+
                         let x = Phaser.Math.Clamp(pointer.x, this.messageText.width / 2, this.sys.game.config.width - this.messageText.width / 2); // ensure the text is within the canvas
                         let y = Phaser.Math.Clamp(pointer.y, this.messageText.height / 2, this.sys.game.config.height - this.messageText.height / 2);
                         // The minimum x and y are set to half of the text's width and height, respectively, to prevent the text from going off the left and top edges of the screen.
                         this.messageText.setPosition(x, y);
                         this.messageText.setText("Can't go there!");
                         this.messageText.setVisible(true);
-    
+
                         this.tweens.add({
                             targets: this.messageText,
                             alpha: { start: 0, to: 1 },
@@ -99,51 +126,58 @@ class GameScene extends Phaser.Scene {
                             }
                         });
                     } else {
-    
                         console.log("This area is land");
                         const cubeX = (x * this.width) / originalWidth;
                         const cubeY = (y * this.height) / originalHeight;
-    
+
                         if (this.player.canMoveTo(this.player.getPosition().x, this.player.getPosition().y, cubeX, cubeY, originalWidth, originalHeight, this.width, this.height, this.textures)) {
                             console.log("Land to land with no ocean in between");
-                            const newTargetPosition = { x: (x * this.width) / originalWidth, y: (y * this.height) / originalHeight };
                             const speed = 150;
-                            this.player.moveStraight(newTargetPosition.x, newTargetPosition.y, speed);
+
+                            // Normal movement
+                            const x = Math.floor((pointer.x - this.land.x + this.width / 2) * (originalWidth / this.width));
+                            const y = Math.floor((pointer.y - this.land.y + this.height / 2) * (originalHeight / this.height));
+                            const constrainedX = Math.max(0, Math.min(x, originalWidth - 1));
+                            const constrainedY = Math.max(0, Math.min(y, originalHeight - 1));
+                            const newTargetPosition = { x: (x * this.width) / originalWidth, y: (y * this.height) / originalHeight };
+
+                            this.player.moveStraight(newTargetPosition.x, newTargetPosition.y, 150);
+
                             // console.log("Player position:", this.player.getPosition());
                         } else {
                             console.log("Path has ocean in between, using A* algorithm");
-    
+
                             let gridStartX = Math.floor(this.player.getPosition().x * (originalWidth / this.width));
                             let gridStartY = Math.floor(this.player.getPosition().y * (originalHeight / this.height));
                             let gridEndX = Math.floor((cubeX) * (originalWidth / this.width));
                             let gridEndY = Math.floor((cubeY) * (originalHeight / this.height));
                             let path = this.player.findPath(this.gameGrid, { x: gridStartX, y: gridStartY }, { x: gridEndX, y: gridEndY });
-    
+
                             if (path.length > 0) {
                                 // player.drawPath(path, originalWidth, originalHeight, width, height);
-    
+
                                 let moveIndex = 0;
                                 const moveAlongPathRecursive = () => {
                                     if (moveIndex >= path.length) {
                                         return; // End of path
                                     }
-    
+
                                     let point = path[moveIndex];
                                     let screenX = (point.x * this.width) / originalWidth;
                                     let screenY = (point.y * this.height) / originalHeight;
                                     let speed = 450;
-    
+
                                     this.player.moveAlongPath(screenX, screenY, speed);
-    
+
                                     this.player.currentTween.on('complete', () => {
                                         moveIndex++;
                                         moveAlongPathRecursive();
                                     });
                                 };
-    
+
                                 moveAlongPathRecursive();
-    
-    
+
+
                             } else {
                                 console.log("No valid path to the destination");
                             }
@@ -152,14 +186,16 @@ class GameScene extends Phaser.Scene {
                 } else {
                     console.log('No color data available');
                 }
-                this.player.lastActionTime = this.time.now;
             }
         }, this);
-    
+
         this.input.enabled = true;
-    
+
         this.sceneName = "battle-scene";
+
+
     }
+
 
     update(time) {
         if (this.player) {
@@ -227,8 +263,9 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('land', 'assets/images/land.png');
         this.load.image('mouse_cursor', 'assets/images/mouse_cursor.png');
         this.load.image('mouse_cursor_attack', 'assets/images/mouse_cursor_attack.png');
-        loadDynamicSpriteSheet.call(this, 'blackRobotIdle', 'assets/sprites/1_idle_spritesheet.png', 5, 12);
+        loadDynamicSpriteSheet.call(this, 'blackRobotIdle', 'assets/sprites/1_idle_spritesheet.png', 5, 12); // no. of col, no. of row
         loadDynamicSpriteSheet.call(this, 'blackRobotMoving', 'assets/sprites/1_moving_spritesheet.png', 12, 10);
+        loadDynamicSpriteSheet.call(this, 'blackRobotAttacking', 'assets/sprites/1_attacking_spritesheet.png', 8, 8);
         // loadDynamicSpriteSheet.call(this, 'goldenWarriorIdle', 'assets/sprites/2_idle_spritesheet.png', 5, 12);
         // loadDynamicSpriteSheet.call(this, 'goldenWarriorMoving', 'assets/sprites/2_moving_spritesheet.png', 12, 10);
         loadDynamicSpriteSheet.call(this, 'enemyIdle', 'assets/sprites/3_idle_spritesheet.png', 5, 12);

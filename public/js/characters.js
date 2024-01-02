@@ -1,7 +1,9 @@
 const characterMap = {
     1: {
         idle: 'blackRobotIdle',
-        moving: 'blackRobotMoving'
+        moving: 'blackRobotMoving',
+        attacking: 'blackRobotAttacking',
+        range: 50
     },
     2: {
         idle: 'goldenWarriorIdle',
