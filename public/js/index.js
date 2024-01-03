@@ -47,7 +47,7 @@ class GameScene extends Phaser.Scene {
         const originalWidth = this.land.texture.source[0].width;
         const originalHeight = this.land.texture.source[0].height;
 
-        this.enemy = new Enemy(this, 1000, 500, 3);
+        this.enemy = new Enemy(this, 186, 827, 3);
         this.enemy.create();
         this.enemy.sprite.on('pointerover', () => {
             this.input.setDefaultCursor(`url('assets/images/mouse_cursor_attack.png') 15 10, pointer`);
@@ -60,19 +60,55 @@ class GameScene extends Phaser.Scene {
         this.enemyClicked = false; // Add a flag to track enemy clicks
 
         this.enemy.sprite.on('pointerdown', () => {
-            this.enemyClicked = true; // Set the flag when the enemy sprite is clicked
+            this.enemyClicked = true; 
             console.log(this.player.isAttacking)
             if (!this.player.isAttacking) {
                 const enemyX = this.enemy.sprite.x;
                 const enemyY = this.enemy.sprite.y;
                 const speed = 150;
-
-                this.player.moveStraight(enemyX, enemyY, speed, () => {
-                    this.player.playAttackAnimation();
-                });
+        
+                // Calculate the grid coordinates for the player and enemy
+                const playerPosition = this.player.getPosition();
+                const gridStartX = Math.floor(playerPosition.x * (originalWidth / this.width));
+                const gridStartY = Math.floor(playerPosition.y * (originalHeight / this.height));
+                const gridEndX = Math.floor(enemyX * (originalWidth / this.width));
+                const gridEndY = Math.floor(enemyY * (originalHeight / this.height));
+        
+                // Determine if moveStraight or moveAlongPath should be used
+                if (this.player.canMoveTo(playerPosition.x, playerPosition.y, enemyX, enemyY, originalWidth, originalHeight, this.width, this.height, this.textures)) {
+                    // Use moveStraight
+                    this.player.moveStraight(enemyX, enemyY, speed, () => {
+                        this.player.playAttackAnimation();
+                    });
+                } else {
+                    // Use moveAlongPath with pathfinding
+                    let path = this.player.findPath(this.gameGrid, { x: gridStartX, y: gridStartY }, { x: gridEndX, y: gridEndY });
+                    if (path.length > 0) {
+                        // Move along the path and then play attack animation
+                        let moveIndex = 0;
+                        const moveAlongPathRecursive = () => {
+                            if (moveIndex >= path.length) {
+                                this.player.playAttackAnimation(); // Play attack animation after reaching the enemy
+                                return;
+                            }
+        
+                            let point = path[moveIndex];
+                            let screenX = (point.x * this.width) / originalWidth;
+                            let screenY = (point.y * this.height) / originalHeight;
+                            this.player.moveAlongPath(screenX, screenY, speed, () => {
+                                moveIndex++;
+                                moveAlongPathRecursive();
+                            });
+                        };
+        
+                        moveAlongPathRecursive();
+                    } else {
+                        console.log("No valid path to the enemy");
+                    }
+                }
             }
         });
-
+        
     }
 
     setupInputHandlers() {
@@ -267,6 +303,7 @@ class LoadingScene extends Phaser.Scene {
         // loadDynamicSpriteSheet.call(this, 'goldenWarriorIdle', 'assets/sprites/2_idle_spritesheet.png', 5, 12);
         // loadDynamicSpriteSheet.call(this, 'goldenWarriorMoving', 'assets/sprites/2_moving_spritesheet.png', 12, 10);
         loadDynamicSpriteSheet.call(this, 'enemyIdle', 'assets/sprites/3_idle_spritesheet.png', 5, 12);
+        // loadDynamicSpriteSheet.call(this, 'enemy2Idle', 'assets/sprites/4_idle_spritesheet.png', 14, 8);
         this.load.on('progress', (value) => {
             this.assetProgress = value * 100; // Convert to percentage
             this.updateTotalProgress();

@@ -61,7 +61,7 @@ class Player {
     }
 
 
-    moveAlongPath(newX, newY, speed) {
+    moveAlongPath(newX, newY, speed, onCompleteCallback = null) {
         if (this.currentTween) {
             this.currentTween.stop();
         }
@@ -93,7 +93,12 @@ class Player {
             y: newY,
             duration: duration,
             ease: 'Linear',
-            onUpdate: () => this.updatePosition()
+            onUpdate: () => this.updatePosition(),
+            onComplete: () => {
+                if (onCompleteCallback) {
+                    onCompleteCallback();
+                }
+            }
         });
 
         this.lastActionTime = this.scene.time.now; // Reset last action time on movement
@@ -145,11 +150,6 @@ class Player {
 
         this.lastActionTime = this.scene.time.now; // Reset last action time on movement
     }
-
-
-
-
-
 
     playAttackAnimation() {
         const direction = this.determineDirectionToEnemy();
