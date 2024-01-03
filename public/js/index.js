@@ -67,12 +67,8 @@ class GameScene extends Phaser.Scene {
                 const enemyY = this.enemy.sprite.y;
                 const speed = 150;
 
-                // Move to enemy and then play attack animation
                 this.player.moveStraight(enemyX, enemyY, speed, () => {
-                    console.log('Player reached enemy');
-                    if (this.player.isInRangeOf(this.enemy)) {
-                        this.player.playAttackAnimation(); // Trigger attack animation
-                    }
+                    this.player.playAttackAnimation();
                 });
             }
         });
@@ -228,6 +224,8 @@ class LoadingScene extends Phaser.Scene {
         const originalHeight = landTexture.getSourceImage().height;
 
         this.createGrid(originalWidth, originalHeight);
+        // set default cursor
+        this.input.setDefaultCursor(`url('assets/images/mouse_cursor.png') 15 10, pointer`);
     }
 
     createGrid(originalWidth, originalHeight) {
@@ -295,7 +293,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             physics: {
                 default: 'arcade',
                 arcade: {
-                    debug: false // true to see physics bodies for debugging
+                    debug: true // true to see physics bodies for debugging
                 }
             },
         };

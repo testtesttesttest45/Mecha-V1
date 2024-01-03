@@ -19,7 +19,6 @@ class Player {
         this.movingAnimationKey = character.moving;
         this.attackingAnimationKey = character.attacking;
         this.isAttacking = false;
-
     }
 
     create() {
@@ -58,6 +57,7 @@ class Player {
                 repeat: -1
             });
         });
+
     }
 
 
@@ -104,53 +104,74 @@ class Player {
             this.currentTween.stop();
         }
 
-        // Calculate the distance for the tween
+        let targetDistance = Phaser.Math.Distance.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
+
+        // Check if the target is an enemy and within the attack range
+        if (this.scene.enemyClicked && targetDistance > this.range) {
+            // Adjust the target position to stop at the attack range
+            let angleToTarget = Phaser.Math.Angle.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
+            newX = this.robotSprite.x + Math.cos(angleToTarget) * (targetDistance - this.range);
+            newY = this.robotSprite.y + Math.sin(angleToTarget) * (targetDistance - this.range);
+        } else if (this.scene.enemyClicked && targetDistance <= this.range) {
+            newX = this.robotSprite.x;
+            newY = this.robotSprite.y;
+        }
+
+        const direction = this.determineDirection(newX, newY);
+        this.robotSprite.play(`move${direction}`);
+        this.lastDirection = direction;
+        console.log('lastDirection: ' + this.lastDirection);
+
         let distance = Phaser.Math.Distance.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
         let duration = distance / speed * 1000;  // Duration based on speed
 
-        // Create a new tween for smooth movement
         this.currentTween = this.scene.tweens.add({
             targets: this.robotSprite,
             x: newX,
             y: newY,
             duration: duration,
             ease: 'Linear',
-            onUpdate: () => {
-                this.updatePosition();
-                console.log(`Moving to (${newX}, ${newY})`);
-            },
+            onUpdate: () => this.updatePosition(),
             onComplete: () => {
-                console.log(`Reached (${newX}, ${newY})`);
+                if (this.scene.enemyClicked) {
+                    this.playAttackAnimation();
+                    this.scene.enemyClicked = false; // Reset the flag after attacking
+                }
                 if (onCompleteCallback) {
                     onCompleteCallback();
                 }
             }
         });
+
         this.lastActionTime = this.scene.time.now; // Reset last action time on movement
-        const direction = this.determineDirection(newX, newY);
-        this.robotSprite.play(`move${direction}`);
-        this.lastDirection = this.determineDirection(newX, newY);
-        console.log(`Moving ${direction}`);
     }
 
+
+
+
+
+
     playAttackAnimation() {
+        const direction = this.determineDirectionToEnemy();
         const currentAnim = this.robotSprite.anims.currentAnim;
         if (currentAnim && currentAnim.key.startsWith('attack')) {
-            // If already playing an attack animation, do nothing
-            return;
+            return; // If already playing an attack animation, do nothing
         }
-
+    
         this.isAttacking = true; // Set the flag to true when attack starts
-        const direction = this.lastDirection;
         this.robotSprite.play(`attack${direction}`);
     }
 
     isInRangeOf(target) {
+        // Calculate the distance between the player and the target
         const distance = Phaser.Math.Distance.Between(
             this.robotSprite.x, this.robotSprite.y,
             target.sprite.x, target.sprite.y
         );
-        return distance <= this.range; // Use this.range
+        console.log(`Distance to enemy: ${distance}`);
+        console.log(`Player range: ${this.range}`);
+        // Compare the distance to the player's attack range
+        return distance <= this.range;
     }
 
     calculateAverageDirection(directions) {
@@ -174,6 +195,23 @@ class Player {
     determineDirection(newX, newY) {
         const dx = newX - this.position.x;
         const dy = newY - this.position.y;
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+        if (angle >= -22.5 && angle < 22.5) return 'east';
+        if (angle >= 22.5 && angle < 67.5) return 'southeast';
+        if (angle >= 67.5 && angle < 112.5) return 'south';
+        if (angle >= 112.5 && angle < 157.5) return 'southwest';
+        if (angle >= 157.5 || angle < -157.5) return 'west';
+        if (angle >= -157.5 && angle < -112.5) return 'northwest';
+        if (angle >= -112.5 && angle < -67.5) return 'north';
+        if (angle >= -67.5 && angle < -22.5) return 'northeast';
+    }
+
+    determineDirectionToEnemy() {
+        const enemyX = this.scene.enemy.sprite.x;
+        const enemyY = this.scene.enemy.sprite.y;
+        const dx = enemyX - this.robotSprite.x;
+        const dy = enemyY - this.robotSprite.y;
         const angle = Math.atan2(dy, dx) * 180 / Math.PI;
 
         if (angle >= -22.5 && angle < 22.5) return 'east';
