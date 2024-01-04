@@ -1,6 +1,6 @@
 import Player from './player.js';
 import Enemy from './enemy.js';
-import { rgbToHex, resize, createGrid, loadDynamicSpriteSheet } from './utilities.js';
+import { rgbToHex, resize, createGrid, loadDynamicSpriteSheet, setAttackCursor, setDefaultCursor } from './utilities.js';
 
 class GameScene extends Phaser.Scene {
     constructor() {
@@ -8,8 +8,8 @@ class GameScene extends Phaser.Scene {
         this.gameGrid = null;
         this.player = null;
         this.enemy = null;
-        this.land = null; // Add land as a property
-        this.width = 0;   // Add width as a property
+        this.land = null;
+        this.width = 0;
         this.height = 0;
     }
 
@@ -47,19 +47,23 @@ class GameScene extends Phaser.Scene {
         const originalWidth = this.land.texture.source[0].width;
         const originalHeight = this.land.texture.source[0].height;
 
-        this.enemy = new Enemy(this, 186, 827, 3);
+        this.enemy = new Enemy(this, 1000, 500, 3);
         this.enemy.create();
+        
         this.enemy.sprite.on('pointerover', () => {
-            this.input.setDefaultCursor(`url('assets/images/mouse_cursor_attack.png') 15 10, pointer`);
+            if (!this.enemy.isDead) {
+                setAttackCursor(this);
+            }
         });
 
         this.enemy.sprite.on('pointerout', () => {
-            this.input.setDefaultCursor(`url('assets/images/mouse_cursor.png') 15 10, pointer`);
+            setDefaultCursor(this);
         });
 
         this.enemyClicked = false; // Add a flag to track enemy clicks
 
         this.enemy.sprite.on('pointerdown', () => {
+            console.log("Enemy clicked");
             this.enemyClicked = true; 
             if (!this.player.isAttacking) {
                 const enemyX = this.enemy.sprite.x;
@@ -76,7 +80,7 @@ class GameScene extends Phaser.Scene {
                 if (this.player.canMoveTo(playerPosition.x, playerPosition.y, enemyX, enemyY, originalWidth, originalHeight, this.width, this.height, this.textures)) {
                     // Use moveStraight
                     this.player.moveStraight(enemyX, enemyY, () => {
-                        this.player.playAttackAnimation();
+                        this.player.playAttackAnimation(this.enemy);
                     });
                 } else {
                     // Use moveAlongPath with pathfinding
@@ -299,6 +303,7 @@ class LoadingScene extends Phaser.Scene {
         // loadDynamicSpriteSheet.call(this, 'goldenWarriorIdle', 'assets/sprites/2_idle_spritesheet.png', 5, 12);
         // loadDynamicSpriteSheet.call(this, 'goldenWarriorMoving', 'assets/sprites/2_moving_spritesheet.png', 12, 10);
         loadDynamicSpriteSheet.call(this, 'enemyIdle', 'assets/sprites/3_idle_spritesheet.png', 5, 12);
+        loadDynamicSpriteSheet.call(this, 'enemyDeath', 'assets/sprites/3_death_spritesheet.png', 5, 10);
         // loadDynamicSpriteSheet.call(this, 'enemy2Idle', 'assets/sprites/4_idle_spritesheet.png', 14, 8);
         this.load.on('progress', (value) => {
             this.assetProgress = value * 100; // Convert to percentage

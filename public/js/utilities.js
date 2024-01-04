@@ -14,7 +14,7 @@ export function createGrid(width, height, textures, onProgress) {
                 let color = textures.getPixel(x, y, 'land');
                 grid[y][x] = color.blue > 150 ? 1 : 0;
                 if ((x === 32 && y === 113)) {
-                    console.log(`Grid[${x},${y}]: ${grid[y][x]} (Color: ${color.blue}), Hex: ${rgbToHex(color.red, color.green, color.blue)}`);
+                    // console.log(`Grid[${x},${y}]: ${grid[y][x]} (Color: ${color.blue}), Hex: ${rgbToHex(color.red, color.green, color.blue)}`);
                 }
                 processedCells++;
             }
@@ -78,4 +78,12 @@ export function loadDynamicSpriteSheet(key, path, horizontalFrames, verticalFram
 
         this.load.spritesheet(key, path, { frameWidth, frameHeight });
     }, this);
+}
+
+export function setAttackCursor(game) {
+    game.input.setDefaultCursor(`url('assets/images/mouse_cursor_attack.png') 15 10, pointer`);
+}
+
+export function setDefaultCursor(game) {
+    game.input.setDefaultCursor(`url('assets/images/mouse_cursor.png') 15 10, pointer`);
 }

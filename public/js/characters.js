@@ -3,8 +3,9 @@ const characterMap = {
         idle: 'blackRobotIdle',
         moving: 'blackRobotMoving',
         attacking: 'blackRobotAttacking',
-        range: 100,
-        speed: 150
+        range: 80,
+        speed: 150,
+        attack: 50
     },
     2: {
         idle: 'goldenWarriorIdle',
@@ -12,7 +13,8 @@ const characterMap = {
     },
     3: {
         idle: 'enemyIdle',
-        moving: 'redRobotMoving'
+        death: 'enemyDeath',
+        health: 220
     }
 };
 

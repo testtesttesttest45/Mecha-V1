@@ -1,4 +1,5 @@
 import characterMap from './characters.js';
+import { setDefaultCursor } from './utilities.js';
 
 class Enemy {
     constructor(scene, x, y, characterCode = 3) {
@@ -8,6 +9,9 @@ class Enemy {
         this.characterCode = characterCode;
         this.sprite = null;
         this.currentAnimationIndex = 0;
+        const character = characterMap[this.characterCode];
+        this.health = character.health;
+        this.isDead = false;
     }
 
     create() {
@@ -25,6 +29,14 @@ class Enemy {
                 repeat: -1
             });
         }
+
+        // create for death animation
+        this.scene.anims.create({
+            key: 'enemyDeath',
+            frames: this.scene.anims.generateFrameNumbers(character.death, { start: 0, end: 49 }),
+            frameRate: 10,
+            repeat: 0
+        });
 
         this.sprite.play('enemyIdle1');
         this.scheduleNextAnimation();
@@ -46,10 +58,43 @@ class Enemy {
         this.sprite.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
     }
 
+    takeDamage(damage, player) {
+        if (this.isDead) return;
+
+        this.attackingPlayer = player; // Store reference to the attacking player
+
+        this.health -= damage;
+        this.health = Math.max(this.health, 0);
+        console.log(`Enemy took ${damage} damage. ${this.health} health remaining`);
+        if (this.health <= 0 && !this.isDead) {
+            this.die();
+        }
+    }
+
+    die() {
+        if (this.isDead) return;
+
+        this.isDead = true;
+        console.log('Enemy died');
+        this.sprite.setInteractive(false);  // Make the sprite uninteractable
+        this.sprite.stop();  // Stop any current animation
+        this.sprite.play('enemyDeath');
+        this.sprite.removeInteractive();
+        setDefaultCursor(this.scene); // Reset cursor if needed
+
+        if (this.attackingPlayer) {
+            console.log('Enemy stopped attacking');
+            this.attackingPlayer.stopAttacking(); // Stop the player from attacking
+        }
+    }
+
+
     scheduleNextAnimation() {
+        if (this.isDead) return;
         this.scene.time.addEvent({
             delay: 4000,
             callback: () => {
+                if (this.isDead) return;
                 this.currentAnimationIndex = (this.currentAnimationIndex + 1) % 4;
 
                 this.sprite.play(`enemyIdle${this.currentAnimationIndex + 1}`);

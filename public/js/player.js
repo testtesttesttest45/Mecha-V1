@@ -16,10 +16,12 @@ class Player {
         const character = characterMap[this.characterCode];
         this.range = character.range;
         this.speed = character.speed;
+        this.attack = character.attack;
         this.idleAnimationKey = character.idle;
         this.movingAnimationKey = character.moving;
         this.attackingAnimationKey = character.attacking;
         this.isAttacking = false;
+        this.attackEvent = null;
     }
 
     create() {
@@ -35,7 +37,7 @@ class Player {
                 frameRate: 10,
                 repeat: -1
             });
-        }
+        }// the above code looops through the idle animation and creates a new animation for each of the 4 directions
 
         this.robotSprite.play('idle1');
         this.lastAnimationChange = this.scene.time.now;
@@ -59,6 +61,7 @@ class Player {
             });
         });
 
+
     }
 
 
@@ -69,7 +72,7 @@ class Player {
 
         // Calculate the distance for the tween
         let distance = Phaser.Math.Distance.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
-        let duration = distance / ( this.speed + 100) * 1000; // Duration based on speed
+        let duration = distance / (this.speed + 100) * 1000; // Duration based on speed
 
         // Determine the direction for the new segment
         const newDirection = this.determineDirection(newX, newY);
@@ -106,6 +109,7 @@ class Player {
     }
 
     moveStraight(newX, newY, onCompleteCallback = null) {
+        this.stopAttacking();
         if (this.currentTween) {
             this.currentTween.stop();
         }
@@ -140,7 +144,6 @@ class Player {
             onUpdate: () => this.updatePosition(),
             onComplete: () => {
                 if (this.scene.enemyClicked) {
-                    this.playAttackAnimation();
                     this.scene.enemyClicked = false; // Reset the flag after attacking
                 }
                 if (onCompleteCallback) {
@@ -152,29 +155,46 @@ class Player {
         this.lastActionTime = this.scene.time.now; // Reset last action time on movement
     }
 
-    playAttackAnimation() {
+    playAttackAnimation(enemy) {
+        console.log("CALLING")
         const direction = this.determineDirectionToEnemy();
         const currentAnim = this.robotSprite.anims.currentAnim;
         if (currentAnim && currentAnim.key.startsWith('attack')) {
             return; // If already playing an attack animation, do nothing
         }
-    
+
         this.isAttacking = true; // Set the flag to true when attack starts
         this.robotSprite.play(`attack${direction}`);
+
+        this.currentEnemy = enemy; // Store a reference to the current enemy being attacked
+        if (this.attackEvent) {
+            this.attackEvent.remove(false);
+        }
+        this.attackEvent = this.scene.time.addEvent({
+            delay: 500,
+            callback: () => {
+                if (this.currentEnemy) {
+                    this.currentEnemy.takeDamage(this.attack, this); // Pass 'this' as the player reference
+                }
+            },
+            callbackScope: this,
+            loop: true
+        });
     }
 
-    isInRangeOf(target) {
-        // Calculate the distance between the player and the target
-        const distance = Phaser.Math.Distance.Between(
-            this.robotSprite.x, this.robotSprite.y,
-            target.sprite.x, target.sprite.y
-        );
-        console.log(`Distance to enemy: ${distance}`);
-        console.log(`Player range: ${this.range}`);
-        // Compare the distance to the player's attack range
-        return distance <= this.range;
+    stopAttacking() {
+        if (this.attackEvent) {
+            this.attackEvent.remove(false);
+            this.attackEvent = null;
+        }
+        this.isAttacking = false;
+        this.currentEnemy = null;
+        
+        // Transition back to idle animation
+        if (!this.currentTween || !this.currentTween.isPlaying()) {
+            this.robotSprite.play(`idle1`); // Play the default idle animation
+        }
     }
-
     calculateAverageDirection(directions) {
         // Calculate the most frequent direction in the array
         const directionCounts = directions.reduce((acc, dir) => {
