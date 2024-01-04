@@ -139,14 +139,15 @@ class GameScene extends Phaser.Scene {
 
                     if (color.blue > 200) {
                         console.log("This area is ocean");
+                        this.messageText.setText("Can't go there!");
+                        this.messageText.setOrigin(0.5, 0.5);
+                        this.messageText.setVisible(true);
 
                         let x = Phaser.Math.Clamp(pointer.x, this.messageText.width / 2, this.sys.game.config.width - this.messageText.width / 2); // ensure the text is within the canvas
                         let y = Phaser.Math.Clamp(pointer.y, this.messageText.height / 2, this.sys.game.config.height - this.messageText.height / 2);
                         // The minimum x and y are set to half of the text's width and height, respectively, to prevent the text from going off the left and top edges of the screen.
                         this.messageText.setPosition(x, y);
-                        this.messageText.setText("Can't go there!");
-                        this.messageText.setVisible(true);
-
+                        
                         this.tweens.add({
                             targets: this.messageText,
                             alpha: { start: 0, to: 1 },
