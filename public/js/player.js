@@ -15,6 +15,7 @@ class Player {
         this.characterCode = characterCode;
         const character = characterMap[this.characterCode];
         this.range = character.range;
+        this.speed = character.speed;
         this.idleAnimationKey = character.idle;
         this.movingAnimationKey = character.moving;
         this.attackingAnimationKey = character.attacking;
@@ -61,14 +62,14 @@ class Player {
     }
 
 
-    moveAlongPath(newX, newY, speed, onCompleteCallback = null) {
+    moveAlongPath(newX, newY, onCompleteCallback = null) {
         if (this.currentTween) {
             this.currentTween.stop();
         }
 
         // Calculate the distance for the tween
         let distance = Phaser.Math.Distance.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
-        let duration = distance / speed * 1000; // Duration based on speed
+        let duration = distance / ( this.speed + 100) * 1000; // Duration based on speed
 
         // Determine the direction for the new segment
         const newDirection = this.determineDirection(newX, newY);
@@ -104,7 +105,7 @@ class Player {
         this.lastActionTime = this.scene.time.now; // Reset last action time on movement
     }
 
-    moveStraight(newX, newY, speed, onCompleteCallback = null) {
+    moveStraight(newX, newY, onCompleteCallback = null) {
         if (this.currentTween) {
             this.currentTween.stop();
         }
@@ -128,7 +129,7 @@ class Player {
         console.log('lastDirection: ' + this.lastDirection);
 
         let distance = Phaser.Math.Distance.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
-        let duration = distance / speed * 1000;  // Duration based on speed
+        let duration = distance / this.speed * 1000;  // Duration based on speed
 
         this.currentTween = this.scene.tweens.add({
             targets: this.robotSprite,
@@ -262,8 +263,7 @@ class Player {
     }
 
     moveToLocation(location) {
-        const speed = 150; // Define your movement speed
-        this.moveStraight(location.x, location.y, speed);
+        this.moveStraight(location.x, location.y);
     }
 
     canMoveTo(startX, startY, endX, endY, originalWidth, originalHeight, width, height, textures) {

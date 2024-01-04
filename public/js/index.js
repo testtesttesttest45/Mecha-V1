@@ -61,11 +61,9 @@ class GameScene extends Phaser.Scene {
 
         this.enemy.sprite.on('pointerdown', () => {
             this.enemyClicked = true; 
-            console.log(this.player.isAttacking)
             if (!this.player.isAttacking) {
                 const enemyX = this.enemy.sprite.x;
                 const enemyY = this.enemy.sprite.y;
-                const speed = 150;
         
                 // Calculate the grid coordinates for the player and enemy
                 const playerPosition = this.player.getPosition();
@@ -77,7 +75,7 @@ class GameScene extends Phaser.Scene {
                 // Determine if moveStraight or moveAlongPath should be used
                 if (this.player.canMoveTo(playerPosition.x, playerPosition.y, enemyX, enemyY, originalWidth, originalHeight, this.width, this.height, this.textures)) {
                     // Use moveStraight
-                    this.player.moveStraight(enemyX, enemyY, speed, () => {
+                    this.player.moveStraight(enemyX, enemyY, () => {
                         this.player.playAttackAnimation();
                     });
                 } else {
@@ -95,7 +93,7 @@ class GameScene extends Phaser.Scene {
                             let point = path[moveIndex];
                             let screenX = (point.x * this.width) / originalWidth;
                             let screenY = (point.y * this.height) / originalHeight;
-                            this.player.moveAlongPath(screenX, screenY, speed, () => {
+                            this.player.moveAlongPath(screenX, screenY, () => {
                                 moveIndex++;
                                 moveAlongPathRecursive();
                             });
@@ -164,7 +162,6 @@ class GameScene extends Phaser.Scene {
 
                         if (this.player.canMoveTo(this.player.getPosition().x, this.player.getPosition().y, cubeX, cubeY, originalWidth, originalHeight, this.width, this.height, this.textures)) {
                             console.log("Land to land with no ocean in between");
-                            const speed = 150;
 
                             // Normal movement
                             const x = Math.floor((pointer.x - this.land.x + this.width / 2) * (originalWidth / this.width));
@@ -173,7 +170,7 @@ class GameScene extends Phaser.Scene {
                             const constrainedY = Math.max(0, Math.min(y, originalHeight - 1));
                             const newTargetPosition = { x: (x * this.width) / originalWidth, y: (y * this.height) / originalHeight };
 
-                            this.player.moveStraight(newTargetPosition.x, newTargetPosition.y, 150);
+                            this.player.moveStraight(newTargetPosition.x, newTargetPosition.y);
 
                             // console.log("Player position:", this.player.getPosition());
                         } else {
@@ -197,9 +194,8 @@ class GameScene extends Phaser.Scene {
                                     let point = path[moveIndex];
                                     let screenX = (point.x * this.width) / originalWidth;
                                     let screenY = (point.y * this.height) / originalHeight;
-                                    let speed = 450;
 
-                                    this.player.moveAlongPath(screenX, screenY, speed);
+                                    this.player.moveAlongPath(screenX, screenY);
 
                                     this.player.currentTween.on('complete', () => {
                                         moveIndex++;
