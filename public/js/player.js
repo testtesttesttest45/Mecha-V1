@@ -159,32 +159,40 @@ class Player {
     }
 
     playAttackAnimation(enemy) {
-        console.log("CALLING")
         const direction = this.determineDirectionToEnemy();
         const currentAnim = this.robotSprite.anims.currentAnim;
         if (currentAnim && currentAnim.key.startsWith('attack')) {
             return; // If already playing an attack animation, do nothing
         }
-
+    
         this.isAttacking = true; // Set the flag to true when attack starts
-        this.robotSprite.play(`attack${direction}`);
-
+        const attackAnimationKey = `attack${direction}`;
+        this.robotSprite.play(attackAnimationKey);
         this.currentEnemy = enemy; // Store a reference to the current enemy being attacked
+    
         if (this.attackEvent) {
             this.attackEvent.remove(false);
         }
-        this.attackEvent = this.scene.time.addEvent({
-            delay: 800,
-            callback: () => {
+    
+        // Remove any existing listeners to avoid duplicates
+        this.robotSprite.off('animationupdate');
+    
+        // Add a listener for the animation frame event
+        this.robotSprite.on('animationupdate', (anim, frame) => {
+            // Check if the current frame is the specific frame where damage should be applied
+            if (anim.key === attackAnimationKey && frame.index === 6) {
                 if (this.currentEnemy) {
-                    this.currentEnemy.takeDamage(this.attack, this); // Pass 'this' as the player reference
+                    this.currentEnemy.takeDamage(this.attack, this); // now then apply the damage
                 }
-            },
-            callbackScope: this,
-            loop: true
-        });
+            }
+        }, this);
+    
+        // Ensure that the listener is removed after the attack animation completes
+        this.robotSprite.once('animationcomplete', () => {
+            this.robotSprite.off('animationupdate');
+        }, this);
     }
-
+    
     stopAttacking() {
         if (this.attackEvent) {
             this.attackEvent.remove(false);
