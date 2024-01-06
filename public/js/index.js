@@ -301,10 +301,12 @@ class LoadingScene extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'blackRobotIdle', 'assets/sprites/1_idle_spritesheet.png', 5, 12); // no. of col, no. of row
         loadDynamicSpriteSheet.call(this, 'blackRobotMoving', 'assets/sprites/1_moving_spritesheet.png', 12, 10);
         loadDynamicSpriteSheet.call(this, 'blackRobotAttacking', 'assets/sprites/1_attacking_spritesheet.png', 8, 8);
+        loadDynamicSpriteSheet.call(this, 'blackRobotDeath', 'assets/sprites/1_death_spritesheet.png', 5, 10);
         // loadDynamicSpriteSheet.call(this, 'goldenWarriorIdle', 'assets/sprites/2_idle_spritesheet.png', 5, 12);
         // loadDynamicSpriteSheet.call(this, 'goldenWarriorMoving', 'assets/sprites/2_moving_spritesheet.png', 12, 10);
         loadDynamicSpriteSheet.call(this, 'enemyIdle', 'assets/sprites/3_idle_spritesheet.png', 5, 12);
         loadDynamicSpriteSheet.call(this, 'enemyDeath', 'assets/sprites/3_death_spritesheet.png', 5, 10);
+        loadDynamicSpriteSheet.call(this, 'enemyAttacking', 'assets/sprites/3_attacking_spritesheet.png', 8, 8);
         // loadDynamicSpriteSheet.call(this, 'enemy2Idle', 'assets/sprites/4_idle_spritesheet.png', 14, 8);
         this.load.on('progress', (value) => {
             this.assetProgress = value * 100; // Convert to percentage
