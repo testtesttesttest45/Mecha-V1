@@ -5,7 +5,8 @@ const characterMap = {
         attacking: 'blackRobotAttacking',
         range: 80,
         speed: 150,
-        attack: 50
+        attack: 50,
+        health: 250
     },
     2: {
         idle: 'goldenWarriorIdle',

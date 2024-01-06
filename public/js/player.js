@@ -22,6 +22,9 @@ class Player {
         this.attackingAnimationKey = character.attacking;
         this.isAttacking = false;
         this.attackEvent = null;
+        this.health = character.health;
+        this.totalHealth = character.health; // Store the total health
+        this.healthBar = null;
     }
 
     create() {
@@ -61,9 +64,9 @@ class Player {
             });
         });
 
+        this.createHealthBar();
 
     }
-
 
     moveAlongPath(newX, newY, onCompleteCallback = null) {
         if (this.currentTween) {
@@ -171,7 +174,7 @@ class Player {
             this.attackEvent.remove(false);
         }
         this.attackEvent = this.scene.time.addEvent({
-            delay: 500,
+            delay: 800,
             callback: () => {
                 if (this.currentEnemy) {
                     this.currentEnemy.takeDamage(this.attack, this); // Pass 'this' as the player reference
@@ -195,6 +198,7 @@ class Player {
             this.robotSprite.play(`idle1`); // Play the default idle animation
         }
     }
+
     calculateAverageDirection(directions) {
         // Calculate the most frequent direction in the array
         const directionCounts = directions.reduce((acc, dir) => {
@@ -276,6 +280,8 @@ class Player {
         if (!currentAnim || !currentAnim.key.startsWith('attack')) {
             this.isAttacking = false;
         }
+
+        this.updateHealthBar();
     }
 
     getPosition() {
@@ -316,6 +322,53 @@ class Player {
 
         return true; // Path is valid
     }
+
+    createHealthBar() {
+        this.healthBar = this.scene.add.graphics();
+    
+        // Draw the initial health bar
+        this.updateHealthBar();
+    }
+
+    updateHealthBar() {
+        // Calculate the position of the health bar above the player
+        const barX = this.robotSprite.x - 70;
+        const barY = this.robotSprite.y - this.robotSprite.displayHeight;
+    
+        this.healthBar.clear();
+        this.healthBar.setPosition(barX, barY);
+    
+        // Background of health bar (transparent part)
+        this.healthBar.fillStyle(0x000000, 0.5);
+        this.healthBar.fillRect(0, 0, 150, 10);
+    
+        // Health portion
+        const healthPercentage = this.health / this.totalHealth;
+        const healthBarWidth = healthPercentage * 150;
+        // fill style dark green
+        this.healthBar.fillStyle(0x00ff00, 1);
+        this.healthBar.fillRect(0, 0, healthBarWidth, 10);
+    }
+
+    takeDamage(damage, enemy) {
+        if (this.isDead) return;
+    
+        this.attackingPlayer = player; // Store reference to the attacking player
+    
+        this.health -= damage;
+        this.health = Math.max(this.health, 0);
+        console.log(`Enemy took ${damage} damage. ${this.health} health remaining`);
+    
+        // Create and display damage text
+        this.createDamageText(damage);
+    
+        if (this.health <= 0 && !this.isDead) {
+            this.die();
+        }
+    
+        this.updateHealthBar();
+    }
+    
 
     aStarAlgorithm(grid, start, end) {
         let openSet = [start];

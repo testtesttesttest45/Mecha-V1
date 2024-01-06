@@ -39,7 +39,7 @@ class GameScene extends Phaser.Scene {
         const scaleX = this.width / this.land.width;
         const scaleY = this.height / this.land.height;
 
-        this.player = new Player(this, 45 * scaleX, 113 * scaleY, 1);
+        this.player = new Player(this, 245 * scaleX, 200 * scaleY, 1);
         this.player.create();
     }
 
@@ -332,7 +332,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             physics: {
                 default: 'arcade',
                 arcade: {
-                    debug: true // true to see physics bodies for debugging
+                    debug: false // true to see physics bodies for debugging
                 }
             },
         };

@@ -12,6 +12,8 @@ class Enemy {
         const character = characterMap[this.characterCode];
         this.health = character.health;
         this.isDead = false;
+        this.totalHealth = character.health; // Store the total health
+        this.healthBar = null;
     }
 
     create() {
@@ -56,19 +58,44 @@ class Enemy {
 
         // Set the sprite to be interactive with the custom hit area
         this.sprite.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
+
+        this.createHealthBar();
     }
 
     takeDamage(damage, player) {
         if (this.isDead) return;
-
+    
         this.attackingPlayer = player; // Store reference to the attacking player
-
+    
         this.health -= damage;
         this.health = Math.max(this.health, 0);
         console.log(`Enemy took ${damage} damage. ${this.health} health remaining`);
+    
+        // Create and display damage text
+        this.createDamageText(damage);
+    
         if (this.health <= 0 && !this.isDead) {
             this.die();
         }
+    
+        this.updateHealthBar();
+    }
+
+    createDamageText(damage) {
+        const damageText = this.scene.add.text(this.sprite.x, this.sprite.y - 100, `-${damage}`, { font: '36px Orbitron', fill: '#ff0000' });
+        damageText.setOrigin(0.5, 0.5);
+    
+        // Animation for damage text (move up and fade out)
+        this.scene.tweens.add({
+            targets: damageText,
+            y: damageText.y - 30, // Move up
+            alpha: 0, // Fade out
+            duration: 800,
+            ease: 'Power2',
+            onComplete: () => {
+                damageText.destroy(); // Remove the text object
+            }
+        });
     }
 
     die() {
@@ -86,6 +113,29 @@ class Enemy {
             console.log('Enemy stopped attacking');
             this.attackingPlayer.stopAttacking(); // Stop the player from attacking
         }
+
+        this.healthBar.destroy(); // Destroy the health bar
+    }
+
+    createHealthBar() {
+        this.healthBar = this.scene.add.graphics({ x: this.sprite.x - 25, y: this.sprite.y - this.sprite.displayHeight + 60 });
+    
+        // Draw the initial health bar
+        this.updateHealthBar();
+    }
+    
+    updateHealthBar() {
+        this.healthBar.clear();
+        
+        // Background of health bar (transparent part)
+        this.healthBar.fillStyle(0x000000, 0.5);
+        this.healthBar.fillRect(0, 0, 60, 10);
+        
+        // Health portion (dynamic width based on current health)
+        const healthPercentage = this.health / this.totalHealth;
+        const healthBarWidth = healthPercentage * 60; // Calculate the width based on health percentage
+        this.healthBar.fillStyle(0xff0000, 1);
+        this.healthBar.fillRect(0, 0, healthBarWidth, 10);
     }
 
 
