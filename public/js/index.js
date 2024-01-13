@@ -234,6 +234,15 @@ class GameScene extends Phaser.Scene {
         if (this.player) {
             this.player.update(time);
         }
+
+        if (this.enemy) {
+            let x = this.player.getPosition().x;
+            // console.log("Player position:", this.player.getPosition().x, this.player.getPosition().y);
+            let y = this.player.getPosition().y;
+            // console.log("Enemy position:", this.enemy.sprite.x, this.enemy.sprite.y);
+            this.enemy.updateEnemy(x, y);
+            this.enemy.update(time);
+        }
     }
 }
 
@@ -305,6 +314,7 @@ class LoadingScene extends Phaser.Scene {
         // loadDynamicSpriteSheet.call(this, 'goldenWarriorIdle', 'assets/sprites/2_idle_spritesheet.png', 5, 12);
         // loadDynamicSpriteSheet.call(this, 'goldenWarriorMoving', 'assets/sprites/2_moving_spritesheet.png', 12, 10);
         loadDynamicSpriteSheet.call(this, 'enemyIdle', 'assets/sprites/3_idle_spritesheet.png', 5, 12);
+        loadDynamicSpriteSheet.call(this, 'enemyMoving', 'assets/sprites/3_moving_spritesheet.png', 10, 12);
         loadDynamicSpriteSheet.call(this, 'enemyDeath', 'assets/sprites/3_death_spritesheet.png', 5, 10);
         loadDynamicSpriteSheet.call(this, 'enemyAttacking', 'assets/sprites/3_attacking_spritesheet.png', 8, 8);
         // loadDynamicSpriteSheet.call(this, 'enemy2Idle', 'assets/sprites/4_idle_spritesheet.png', 14, 8);
@@ -334,7 +344,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             physics: {
                 default: 'arcade',
                 arcade: {
-                    debug: false // true to see physics bodies for debugging
+                    debug: true // true to see physics bodies for debugging
                 }
             },
         };

@@ -133,11 +133,11 @@ class Player {
         const direction = this.determineDirection(newX, newY);
         this.robotSprite.play(`move${direction}`);
         this.lastDirection = direction;
-        console.log('lastDirection: ' + this.lastDirection);
+        // console.log('lastDirection: ' + this.lastDirection);
 
         let distance = Phaser.Math.Distance.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
         let duration = distance / this.speed * 1000;  // Duration based on speed
-
+        console.log('duration: ' + duration);
         this.currentTween = this.scene.tweens.add({
             targets: this.robotSprite,
             x: newX,
