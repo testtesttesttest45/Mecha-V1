@@ -69,15 +69,16 @@ export function resize(game) {
 }
 
 export function loadDynamicSpriteSheet(key, path, horizontalFrames, verticalFrames) {
-    this.load.image(key + 'Image', path);
 
-    this.load.on('filecomplete-image-' + key + 'Image', function () {
-        let image = this.textures.get(key + 'Image').getSourceImage();
+    const image = new Image();
+    image.src = path;
+    image.onload = () => {
         let frameWidth = image.width / horizontalFrames;
         let frameHeight = image.height / verticalFrames;
 
-        this.load.spritesheet(key, path, { frameWidth, frameHeight });
-    }, this);
+        // Now load the spritesheet with the calculated frame dimensions
+        this.load.spritesheet(key, path, { frameWidth: frameWidth, frameHeight: frameHeight });
+    };
 }
 
 export function setAttackCursor(game) {

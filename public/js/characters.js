@@ -1,7 +1,7 @@
 const characterMap = {
     1: {
         idle: 'blackRobotIdle',
-        moving: 'enemyMoving',
+        moving: 'blackRobotMoving',
         attacking: 'blackRobotAttacking',
         death: 'blackRobotDeath',
         range: 80,

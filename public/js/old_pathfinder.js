@@ -1,151 +1,45 @@
 import Player from './player.js';
 import Enemy from './enemy.js';
-import { rgbToHex, resize, loadDynamicSpriteSheet, setAttackCursor, setDefaultCursor } from './utilities.js';
+import { rgbToHex, resize, createGrid, loadDynamicSpriteSheet, setAttackCursor, setDefaultCursor } from './utilities.js';
 
 class GameScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene' });
+        this.gameGrid = null;
         this.player = null;
         this.enemy = null;
         this.land = null;
-        this.ocean = null;
-        this.initialZoom = 1;
-        this.isDragging = false;
-        this.dragStartPoint = null;
+        this.width = 0;
+        this.height = 0;
+    }
+
+    init(data) {
+        this.gameGrid = data.gameGrid; // Receive the grid from LoadingScene
     }
 
     create() {
-        this.gameScreenWidth = this.sys.game.config.width;
-        this.gameScreenHeight = this.sys.game.config.height;
-        console.log("Game screen width:", this.gameScreenWidth);
-        this.createStaticBackground();
+        this.width = this.sys.game.config.width;
+        this.height = this.sys.game.config.height;
+
         this.createLand();
-
-        this.createEnemy();
         this.createPlayer();
-        // this.setupInputHandlers();
-        this.setupCamera();
-
+        this.createEnemy();
+        this.setupInputHandlers();
         this.messageText = this.add.text(0, 0, '', { font: '24px Orbitron', fill: '#ff0000', align: 'center' });
         this.messageText.setVisible(false);
     }
 
-    createStaticBackground() {
-        // Ocean setup
-        this.ocean = this.add.image(0, 0, 'ocean').setOrigin(0, 0);
-        this.ocean.setDisplaySize(4000, 2000);
-        this.ocean.setDepth(-1);
-    }
-
     createLand() {
-        // Place land image in the center of the ocean
-        this.land = this.add.image(
-            2000, 1000, 'land').setOrigin(0.5, 0.5);
+        this.land = this.add.image(this.width / 2, this.height / 2, 'land').setOrigin(0.5, 0.5);
+        this.land.setDisplaySize(this.width, this.height);
+        this.land.setVisible(true);
     }
-
-    setupCamera() {
-        // Set the bounds and initial zoom of the camera
-        this.cameras.main.setBounds(0, 0, 4000, 2000);
-        this.cameras.main.setZoom(this.initialZoom);
-
-        // Center the camera on the land initially
-        this.cameras.main.scrollX = this.land.x - this.gameScreenWidth / 2;
-        this.cameras.main.scrollY = this.land.y - this.gameScreenHeight / 2;
-
-        // Enhanced Zoom controls
-        this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
-            const newZoom = deltaY > 0 ? Math.max(this.cameras.main.zoom - 0.4, 0.7) : Math.min(this.cameras.main.zoom + 0.4, 1.5);
-            this.cameras.main.zoomTo(newZoom, 300);
-        });
-
-        // Implementing Camera Dragging
-        this.input.on('pointerdown', pointer => {
-            this.dragStartPoint = new Phaser.Math.Vector2(pointer.x, pointer.y);
-            this.isDragging = false;
-        });
-
-        this.input.on('pointermove', pointer => {
-            if (!pointer.isDown) return;
-            if (!this.dragStartPoint) return;
-
-            const distanceMoved = Phaser.Math.Distance.Between(this.dragStartPoint.x, this.dragStartPoint.y, pointer.x, pointer.y);
-            if (distanceMoved > 5) {
-                this.isDragging = true;
-
-                const dragX = this.cameras.main.scrollX + (this.dragStartPoint.x - pointer.x);
-                const dragY = this.cameras.main.scrollY + (this.dragStartPoint.y - pointer.y);
-
-                this.cameras.main.scrollX = dragX;
-                this.cameras.main.scrollY = dragY;
-
-                this.dragStartPoint.x = pointer.x;
-                this.dragStartPoint.y = pointer.y;
-            }
-        });
-
-        this.input.on('pointerup', pointer => {
-            if (!this.isDragging && this.dragStartPoint) {
-                this.handlePlayerClick(pointer);
-            }
-            this.dragStartPoint = null;
-        });
-    }
-
-    handlePlayerClick(pointer) {
-        if (this.enemyClicked) {
-            this.enemyClicked = false; // Reset the flag
-            return; // Click was on the enemy, skip the general click logic
-        }
-    
-        // Convert screen coordinates to world coordinates
-        const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-        const originalWidth = this.land.texture.source[0].width;
-        const originalHeight = this.land.texture.source[0].height;
-    
-        // Check if the clicked point is within the bounds of the land
-        if (worldPoint.x >= this.land.x - originalWidth / 2 && 
-            worldPoint.x <= this.land.x + originalWidth / 2 && 
-            worldPoint.y >= this.land.y - originalHeight / 2 && 
-            worldPoint.y <= this.land.y + originalHeight / 2) {
-            // If within bounds, move the player
-            this.player.moveStraight(worldPoint.x, worldPoint.y);
-        } else {
-            this.showOutOfBoundsMessage(worldPoint);
-        }
-    }
-    
-    showOutOfBoundsMessage(worldPoint) {
-        this.messageText.setText("Can't go there!");
-        this.messageText.setOrigin(0.5, 0.5);
-        this.messageText.setVisible(true);
-    
-        // Adjust position of the message text
-        if (worldPoint.x < this.sys.game.config.width / 2) {
-            this.messageText.setPosition(worldPoint.x + 100, worldPoint.y);
-        } else {
-            this.messageText.setPosition(worldPoint.x - 50, worldPoint.y);
-        }
-    
-        this.tweens.add({
-            targets: this.messageText,
-            alpha: { start: 0, to: 1 },
-            duration: 1000,
-            ease: 'Linear',
-            yoyo: true,
-            repeat: 0,
-            onComplete: () => {
-                this.messageText.setVisible(false);
-                this.messageText.setAlpha(1); // Reset alpha value for the next use
-            }
-        });
-    }
-    
 
     createPlayer() {
         const scaleX = this.width / this.land.width;
         const scaleY = this.height / this.land.height;
 
-        this.player = new Player(this, 1500 , 800 , 1);
+        this.player = new Player(this, 245 * scaleX, 200 * scaleY, 1);
         this.player.create();
     }
 
@@ -153,9 +47,9 @@ class GameScene extends Phaser.Scene {
         const originalWidth = this.land.texture.source[0].width;
         const originalHeight = this.land.texture.source[0].height;
 
-        this.enemy = new Enemy(this, 1500, 900, 3);
+        this.enemy = new Enemy(this, 1000, 500, 3);
         this.enemy.create();
-
+        
         this.enemy.sprite.on('pointerover', () => {
             if (!this.enemy.isDead) {
                 setAttackCursor(this);
@@ -170,18 +64,18 @@ class GameScene extends Phaser.Scene {
 
         this.enemy.sprite.on('pointerdown', () => {
             console.log("Enemy clicked");
-            this.enemyClicked = true;
+            this.enemyClicked = true; 
             if (!this.player.isAttacking) {
                 const enemyX = this.enemy.sprite.x;
                 const enemyY = this.enemy.sprite.y;
-
+        
                 // Calculate the grid coordinates for the player and enemy
                 const playerPosition = this.player.getPosition();
                 const gridStartX = Math.floor(playerPosition.x * (originalWidth / this.width));
                 const gridStartY = Math.floor(playerPosition.y * (originalHeight / this.height));
                 const gridEndX = Math.floor(enemyX * (originalWidth / this.width));
                 const gridEndY = Math.floor(enemyY * (originalHeight / this.height));
-
+        
                 // Determine if moveStraight or moveAlongPath should be used
                 if (this.player.canMoveTo(playerPosition.x, playerPosition.y, enemyX, enemyY, originalWidth, originalHeight, this.width, this.height, this.textures)) {
                     // Use moveStraight
@@ -199,7 +93,7 @@ class GameScene extends Phaser.Scene {
                                 this.player.playAttackAnimation(); // Play attack animation after reaching the enemy
                                 return;
                             }
-
+        
                             let point = path[moveIndex];
                             let screenX = (point.x * this.width) / originalWidth;
                             let screenY = (point.y * this.height) / originalHeight;
@@ -208,7 +102,7 @@ class GameScene extends Phaser.Scene {
                                 moveAlongPathRecursive();
                             });
                         };
-
+        
                         moveAlongPathRecursive();
                     } else {
                         console.log("No valid path to the enemy");
@@ -216,61 +110,123 @@ class GameScene extends Phaser.Scene {
                 }
             }
         });
-
+        
     }
 
     setupInputHandlers() {
         const originalWidth = this.land.texture.source[0].width;
         const originalHeight = this.land.texture.source[0].height;
-    
+
         this.input.on('pointerdown', function (pointer) {
             if (pointer.leftButtonDown()) {
                 if (this.enemyClicked) {
                     this.enemyClicked = false; // Reset the flag
                     return; // Click was on the enemy, so skip the general click logic/no callback
                 }
-    
-                // Convert screen coordinates to world coordinates
-                const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-    
-                // Check if the clicked point is within the bounds of the island
-                if (worldPoint.x >= this.land.x - originalWidth / 2 && 
-                    worldPoint.x <= this.land.x + originalWidth / 2 && 
-                    worldPoint.y >= this.land.y - originalHeight / 2 && 
-                    worldPoint.y <= this.land.y + originalHeight / 2) {
-                    // If within bounds, move the player
-                    this.player.moveStraight(worldPoint.x, worldPoint.y);
-                } else {
-                    this.messageText.setText("Can't go there!");
-                    this.messageText.setOrigin(0.5, 0.5);
-                    this.messageText.setVisible(true);
-                    
-                    // this.messageText.setPosition(worldPoint.x, worldPoint.y);
-                    // ensure the text is seen fully within this.sys.game.config.width
-                    if (worldPoint.x < this.sys.game.config.width / 2) {
-                        this.messageText.setPosition(worldPoint.x + 100, worldPoint.y);
+                const x = Math.floor((pointer.x - this.land.x + this.width / 2) * (originalWidth / this.width));
+                const y = Math.floor((pointer.y - this.land.y + this.height / 2) * (originalHeight / this.height));
+                // console.log(`Pointer screen coordinates: (${pointer.x}, ${pointer.y})`);
+                // console.log(`Transformed grid coordinates: (${x}, ${y})`);
+                // Constrain x and y to the dimensions of the texture
+                const constrainedX = Math.max(0, Math.min(x, originalWidth - 1));
+                const constrainedY = Math.max(0, Math.min(y, originalHeight - 1));
+
+                const color = this.textures.getPixel(constrainedX, constrainedY, 'land');
+
+                if (color.alpha !== 0) {
+                    const hexColor = rgbToHex(color.red, color.green, color.blue);
+                    // console.log('Hex color:', hexColor);
+
+                    if (color.blue > 200) {
+                        console.log("This area is ocean");
+                        this.messageText.setText("Can't go there!");
+                        this.messageText.setOrigin(0.5, 0.5);
+                        this.messageText.setVisible(true);
+
+                        let x = Phaser.Math.Clamp(pointer.x, this.messageText.width / 2, this.sys.game.config.width - this.messageText.width / 2); // ensure the text is within the canvas
+                        let y = Phaser.Math.Clamp(pointer.y, this.messageText.height / 2, this.sys.game.config.height - this.messageText.height / 2);
+                        // The minimum x and y are set to half of the text's width and height, respectively, to prevent the text from going off the left and top edges of the screen.
+                        this.messageText.setPosition(x, y);
+                        
+                        this.tweens.add({
+                            targets: this.messageText,
+                            alpha: { start: 0, to: 1 },
+                            duration: 500,
+                            ease: 'Linear',
+                            yoyo: true,
+                            repeat: 0,
+                            onComplete: () => {
+                                this.messageText.setVisible(false);
+                                this.messageText.setAlpha(1); // Reset alpha value for the next use
+                            }
+                        });
                     } else {
-                        this.messageText.setPosition(worldPoint.x - 50, worldPoint.y);
-                    }
-                    this.tweens.add({
-                        targets: this.messageText,
-                        alpha: { start: 0, to: 1 },
-                        duration: 1000,
-                        ease: 'Linear',
-                        yoyo: true,
-                        repeat: 0,
-                        onComplete: () => {
-                            this.messageText.setVisible(false);
-                            this.messageText.setAlpha(1); // Reset alpha value for the next use
+                        console.log("This area is land");
+                        const cubeX = (x * this.width) / originalWidth;
+                        const cubeY = (y * this.height) / originalHeight;
+
+                        if (this.player.canMoveTo(this.player.getPosition().x, this.player.getPosition().y, cubeX, cubeY, originalWidth, originalHeight, this.width, this.height, this.textures)) {
+                            console.log("Land to land with no ocean in between");
+
+                            // Normal movement
+                            const x = Math.floor((pointer.x - this.land.x + this.width / 2) * (originalWidth / this.width));
+                            const y = Math.floor((pointer.y - this.land.y + this.height / 2) * (originalHeight / this.height));
+                            const constrainedX = Math.max(0, Math.min(x, originalWidth - 1));
+                            const constrainedY = Math.max(0, Math.min(y, originalHeight - 1));
+                            const newTargetPosition = { x: (x * this.width) / originalWidth, y: (y * this.height) / originalHeight };
+
+                            this.player.moveStraight(newTargetPosition.x, newTargetPosition.y);
+
+                            // console.log("Player position:", this.player.getPosition());
+                        } else {
+                            console.log("Path has ocean in between, using A* algorithm");
+
+                            let gridStartX = Math.floor(this.player.getPosition().x * (originalWidth / this.width));
+                            let gridStartY = Math.floor(this.player.getPosition().y * (originalHeight / this.height));
+                            let gridEndX = Math.floor((cubeX) * (originalWidth / this.width));
+                            let gridEndY = Math.floor((cubeY) * (originalHeight / this.height));
+                            let path = this.player.findPath(this.gameGrid, { x: gridStartX, y: gridStartY }, { x: gridEndX, y: gridEndY });
+
+                            if (path.length > 0) {
+                                // player.drawPath(path, originalWidth, originalHeight, width, height);
+
+                                let moveIndex = 0;
+                                const moveAlongPathRecursive = () => {
+                                    if (moveIndex >= path.length) {
+                                        return; // End of path
+                                    }
+
+                                    let point = path[moveIndex];
+                                    let screenX = (point.x * this.width) / originalWidth;
+                                    let screenY = (point.y * this.height) / originalHeight;
+
+                                    this.player.moveAlongPath(screenX, screenY);
+
+                                    this.player.currentTween.on('complete', () => {
+                                        moveIndex++;
+                                        moveAlongPathRecursive();
+                                    });
+                                };
+
+                                moveAlongPathRecursive();
+
+
+                            } else {
+                                console.log("No valid path to the destination");
+                            }
                         }
-                    });
+                    }
+                } else {
+                    console.log('No color data available');
                 }
             }
         }, this);
-    
+
         this.input.enabled = true;
-    
+
         this.sceneName = "battle-scene";
+
+
     }
 
 
@@ -297,7 +253,7 @@ class LoadingScene extends Phaser.Scene {
         this.loadingStartTime = 0;
         this.assetsLoaded = false;
         this.gridCreated = false;
-        this.assetProgress = 0;
+        this.assetProgress = 0; // Progress of asset loading
         this.gridProgress = 0;
     }
 
@@ -306,25 +262,36 @@ class LoadingScene extends Phaser.Scene {
         this.createLoadingText();
         this.loadAssets();
 
-        this.load.on('progress', (value) => {
-            this.assetProgress = value * 100; // Convert to percentage
-            this.loadingText.setText(`Loading... ${Math.round(this.assetProgress)}%`);
-        });
+    }
 
-        this.load.on('complete', () => {
-            // All assets are loaded
-            console.log('All assets loaded, switching to GameScene');
+    create() {
+        const landTexture = this.textures.get('land');
+        const originalWidth = landTexture.getSourceImage().width;
+        const originalHeight = landTexture.getSourceImage().height;
+
+        this.createGrid(originalWidth, originalHeight);
+        // set default cursor
+        this.input.setDefaultCursor(`url('assets/images/mouse_cursor.png') 15 10, pointer`);
+    }
+
+    createGrid(originalWidth, originalHeight) {
+        this.grid = createGrid(originalWidth, originalHeight, this.textures, (progress) => {
+            this.gridProgress = progress;
+            this.updateTotalProgress();
+        });
+    }
+
+    updateTotalProgress() {
+        let totalProgress = (this.assetProgress + this.gridProgress) / 2;
+        this.loadingText.setText(`Loading... ${Math.round(totalProgress)}%`);
+
+        if (totalProgress >= 100) {
             let loadingEndTime = Date.now();
             let loadingDuration = (loadingEndTime - this.loadingStartTime) / 1000;
             console.log(`Loading completed in ${loadingDuration.toFixed(2)} seconds`);
             this.loadingText.setVisible(false);
-            this.scene.start('GameScene');
-        });
-    }
-
-    create() {
-        // set default cursor
-        this.input.setDefaultCursor(`url('assets/images/mouse_cursor.png') 15 10, pointer`);
+            this.scene.start('GameScene', { gameGrid: this.grid });
+        }
     }
 
     createLoadingText() {
@@ -336,14 +303,11 @@ class LoadingScene extends Phaser.Scene {
             align: 'center'
         }).setOrigin(0.5, 0.5);
     }
-
     loadAssets() {
-        this.load.image('ocean', 'assets/images/ocean.png');
-        this.load.image('land', 'assets/images/land2.png');
-
+        this.load.image('land', 'assets/images/land.png');
         this.load.image('mouse_cursor', 'assets/images/mouse_cursor.png');
         this.load.image('mouse_cursor_attack', 'assets/images/mouse_cursor_attack.png');
-        loadDynamicSpriteSheet.call(this, 'blackRobotIdle', 'assets/sprites/1_idle_spritesheet.png', 5, 12);
+        loadDynamicSpriteSheet.call(this, 'blackRobotIdle', 'assets/sprites/1_idle_spritesheet.png', 5, 12); // no. of col, no. of row
         loadDynamicSpriteSheet.call(this, 'blackRobotMoving', 'assets/sprites/1_moving_spritesheet.png', 12, 10);
         loadDynamicSpriteSheet.call(this, 'blackRobotAttacking', 'assets/sprites/1_attacking_spritesheet.png', 8, 8);
         loadDynamicSpriteSheet.call(this, 'blackRobotDeath', 'assets/sprites/1_death_spritesheet.png', 5, 10);
@@ -354,10 +318,14 @@ class LoadingScene extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'enemyDeath', 'assets/sprites/3_death_spritesheet.png', 5, 10);
         loadDynamicSpriteSheet.call(this, 'enemyAttacking', 'assets/sprites/3_attacking_spritesheet.png', 8, 8);
         // loadDynamicSpriteSheet.call(this, 'enemy2Idle', 'assets/sprites/4_idle_spritesheet.png', 14, 8);
-
+        this.load.on('progress', (value) => {
+            this.assetProgress = value * 100; // Convert to percentage
+            this.updateTotalProgress();
+        });
     }
 
 }
+
 document.addEventListener('DOMContentLoaded', (event) => {
     const gameScreen = document.getElementById('game-screen');
     const battleScene = document.getElementById('battle-scene');

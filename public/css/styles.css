@@ -15,9 +15,8 @@ html {
 
 .container {
     position: relative;
-    width: 80vw;
-    height: calc(45vw - 4vw);
-    /* Adjusted to maintain a 16:9 aspect ratio */
+    width: 100%;
+    height: 56.25vw;
 }
 
 .game-screen,
