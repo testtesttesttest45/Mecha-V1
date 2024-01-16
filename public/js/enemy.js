@@ -2,7 +2,7 @@ import characterMap from './characters.js';
 import { setDefaultCursor } from './utilities.js';
 
 class Enemy {
-    constructor(scene, x, y, characterCode = 3) {
+    constructor(scene, x, y, characterCode = 2) {
         this.scene = scene;
         this.x = x;
         this.y = y;
@@ -15,11 +15,10 @@ class Enemy {
         this.totalHealth = character.health; // Store the total health
         this.healthBar = null;
         this.detectionRadius = 100;
-        this.movingAnimationKey = character.moving;
-        this.attackingAnimationKey = character.attacking;
         this.speed = character.speed;
         this.isMoving = false;
         this.moveTween = null;
+        this.spritesheetKey = character.spritesheetKey;
     }
 
     create() {
@@ -28,45 +27,42 @@ class Enemy {
         this.sprite = this.scene.add.sprite(this.x, this.y, character.idle);
         this.sprite.setOrigin(0.5, 1); // Set origin to bottom center
 
-        // Create animations for idle and possibly other states
         for (let i = 0; i < 4; i++) {
             this.scene.anims.create({
-                key: `enemyIdle${i + 1}`,
-                frames: this.scene.anims.generateFrameNumbers(character.idle, { start: i * 15, end: (i + 1) * 15 - 1 }),
-                frameRate: 10,
-                repeat: -1
+                key: `character${this.characterCode}Idle${i + 1}`, // character2Idle1
+                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: i * 5, end: i * 5 + 4 }), // after the whole loop ends, the final frame will be 19
+                frameRate: 6,
+                repeat: -1,
             });
         }
 
-        // create for death animation
         this.scene.anims.create({
-            key: 'enemyDeath',
-            frames: this.scene.anims.generateFrameNumbers(character.death, { start: 0, end: 49 }),
-            frameRate: 20,
+            key: `character${this.characterCode}Death`, // character2Idle1
+            frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 99, end: 103 }), // frame starts at 99, and when loop ends, the final frame will be 103
+            frameRate: 6,
             repeat: 0
         });
 
         const directions = ['southeast', 'southwest', 'south', 'east', 'west', 'northeast', 'northwest', 'north'];
         directions.forEach((dir, index) => {
             this.scene.anims.create({
-                key: `enemyMoving${dir}`,
-                frames: this.scene.anims.generateFrameNumbers(this.movingAnimationKey, { start: index * 15, end: (index + 1) * 15 - 1 }),
-                frameRate: 10,
+                key: `character${this.characterCode}Moving${dir}`,
+                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 20 + index * 5, end: 24 + index * 5 }), // frame starts at 20, and when loop ends, the final frame will be 59
+                frameRate: 6,
                 repeat: -1
             });
         });
 
         directions.forEach((dir, index) => {
             this.scene.anims.create({
-                key: `enemyAttack${dir}`,
-                frames: this.scene.anims.generateFrameNumbers(this.attackingAnimationKey, { start: index * 8, end: (index + 1) * 8 - 1 }),
-                frameRate: 10,
+                key: `character${this.characterCode}Attack${dir}`,
+                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 60 + index * 5, end: 64 + index * 5 }), // frame starts at 60, and when loop ends, the final frame will be 99
+                frameRate: 6,
                 repeat: -1
             });
         });
 
-        this.sprite.play('enemyIdle1');
-        console.log('wtf');
+        this.sprite.play(`character${this.characterCode}Idle1`);
         this.scheduleNextAnimation();
         this.sprite.setScale(0.5);
         this.scene.physics.world.enable(this.sprite);
@@ -92,6 +88,7 @@ class Enemy {
     }
 
     takeDamage(damage, player) {
+        console.log('Enemy taking damage');
         if (this.isDead) return;
 
         this.attackingPlayer = player; // Store reference to the attacking player
@@ -112,14 +109,9 @@ class Enemy {
 
     moveToPlayer(playerX, playerY) {
         if (this.isDead) return;
-        // if there is already a tween, override it
-        if (this.moveTween) {
-            console.log('Overriding tween');
-            this.moveTween.stop();
-        }
         const updateDirection = () => {
             const direction = this.determineDirectionToPlayer(playerX, playerY);
-            this.sprite.play(`enemyMoving${direction}`);
+            this.sprite.play(`character${this.characterCode}Moving${direction}`);
         };
     
         updateDirection(); // Update direction initially
@@ -153,7 +145,7 @@ class Enemy {
         const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, playerX, playerY);
         
         if (distance < this.detectionRadius && !this.isMoving) {
-            this.moveToPlayer(playerX, playerY);
+           // this.moveToPlayer(playerX, playerY);
         } else if (distance >= this.detectionRadius && this.isMoving) {
             this.isMoving = false;
             if (this.moveTween) {
@@ -200,29 +192,29 @@ class Enemy {
         this.isDead = true;
         console.log('Enemy died');
         this.sprite.setInteractive(false);  // Make the sprite uninteractable
-        this.sprite.stop();  // Stop any current animation
-        this.sprite.play('enemyDeath');
+        this.sprite.stop();
+        this.sprite.play(`character${this.characterCode}Death`);
         this.sprite.removeInteractive();
-        setDefaultCursor(this.scene); // Reset cursor if needed
+        setDefaultCursor(this.scene);
 
         if (this.attackingPlayer) {
             console.log('Enemy stopped attacking');
-            this.attackingPlayer.stopAttacking(); // Stop the player from attacking
+            this.attackingPlayer.stopAttacking();
         }
 
-        this.healthBar.destroy(); // Destroy the health bar
+        this.healthBar.destroy();
     }
 
     createHealthBar() {
-        this.healthBar = this.scene.add.graphics({ x: this.sprite.x - 25, y: this.sprite.y - this.sprite.displayHeight + 60 });
+        this.healthBar = this.scene.add.graphics({ x: this.sprite.x, y: this.sprite.y });
 
         // Draw the initial health bar
         this.updateHealthBar();
     }
 
     updateHealthBar() {
-        const barX = this.sprite.x - 70;
-        const barY = this.sprite.y - this.sprite.displayHeight -50;
+        const barX = this.sprite.x - 30;
+        const barY = this.sprite.y - this.sprite.displayHeight + 50;
         
         this.healthBar.clear();
         this.healthBar.setPosition(barX, barY);
@@ -250,8 +242,7 @@ class Enemy {
             callback: () => {
                 if (this.isDead || this.isMoving) return;
                 this.currentAnimationIndex = (this.currentAnimationIndex + 1) % 4;
-                console.log(`wtf2`);
-                this.sprite.play(`enemyIdle${this.currentAnimationIndex + 1}`);
+                this.sprite.play(`character${this.characterCode}Idle${this.currentAnimationIndex + 1}`);
 
                 this.scheduleNextAnimation();
             }

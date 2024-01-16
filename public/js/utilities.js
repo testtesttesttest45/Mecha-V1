@@ -68,19 +68,12 @@ export function resize(game) {
     game.canvas.style.marginLeft = '0px';
 }
 
-export function loadDynamicSpriteSheet(key, path, horizontalFrames, verticalFrames) {
+export function loadDynamicSpriteSheet(key, path, width, height) {
+    const frameWidth = width / 10;
+    const frameHeight = height / 11;
 
-    const image = new Image();
-    image.src = path;
-    image.onload = () => {
-        let frameWidth = image.width / horizontalFrames;
-        let frameHeight = image.height / verticalFrames;
-
-        // Now load the spritesheet with the calculated frame dimensions
-        this.load.spritesheet(key, path, { frameWidth: frameWidth, frameHeight: frameHeight });
-    };
+    this.load.spritesheet(key, path, { frameWidth: frameWidth, frameHeight: frameHeight });
 }
-
 export function setAttackCursor(game) {
     game.input.setDefaultCursor(`url('assets/images/mouse_cursor_attack.png') 15 10, pointer`);
 }

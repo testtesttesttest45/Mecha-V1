@@ -17,7 +17,6 @@ class GameScene extends Phaser.Scene {
     create() {
         this.gameScreenWidth = this.sys.game.config.width;
         this.gameScreenHeight = this.sys.game.config.height;
-        console.log("Game screen width:", this.gameScreenWidth);
         this.createStaticBackground();
         this.createLand();
 
@@ -44,32 +43,36 @@ class GameScene extends Phaser.Scene {
     }
 
     setupCamera() {
+        let pointerDownTime = 0;
+        const dragThreshold = 20;
         // Set the bounds and initial zoom of the camera
         this.cameras.main.setBounds(0, 0, 4000, 2000);
         this.cameras.main.setZoom(this.initialZoom);
-
+        
         // Center the camera on the land initially
         this.cameras.main.scrollX = this.land.x - this.gameScreenWidth / 2;
         this.cameras.main.scrollY = this.land.y - this.gameScreenHeight / 2;
 
         // Enhanced Zoom controls
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
-            const newZoom = deltaY > 0 ? Math.max(this.cameras.main.zoom - 0.4, 0.7) : Math.min(this.cameras.main.zoom + 0.4, 1.5);
+            const newZoom = deltaY > 0 ? Math.max(this.cameras.main.zoom - 0.4, 0.7) : Math.min(this.cameras.main.zoom + 0.4, 2.5);
             this.cameras.main.zoomTo(newZoom, 300);
         });
 
         // Implementing Camera Dragging
         this.input.on('pointerdown', pointer => {
+            console.log("Pointer down");
+            pointerDownTime = Date.now();
+            
             this.dragStartPoint = new Phaser.Math.Vector2(pointer.x, pointer.y);
             this.isDragging = false;
         });
-
+    
         this.input.on('pointermove', pointer => {
-            if (!pointer.isDown) return;
-            if (!this.dragStartPoint) return;
-
+            if (!pointer.isDown || !this.dragStartPoint) return;
+    
             const distanceMoved = Phaser.Math.Distance.Between(this.dragStartPoint.x, this.dragStartPoint.y, pointer.x, pointer.y);
-            if (distanceMoved > 5) {
+            if (distanceMoved > dragThreshold) {
                 this.isDragging = true;
 
                 const dragX = this.cameras.main.scrollX + (this.dragStartPoint.x - pointer.x);
@@ -84,28 +87,38 @@ class GameScene extends Phaser.Scene {
         });
 
         this.input.on('pointerup', pointer => {
-            if (!this.isDragging && this.dragStartPoint) {
+            console.log("Pointer up");
+            const pointerUpTime = Date.now();
+            const heldTime = pointerUpTime - pointerDownTime;
+            console.log(`Pointer was held down for ${heldTime} milliseconds`);
+    
+            if (!this.isDragging) {
+                console.log("Is not dragging, handling click");
                 this.handlePlayerClick(pointer);
+            } else {
+                console.log("Is dragging, so don't handle click");
             }
             this.dragStartPoint = null;
+            this.isDragging = false;  // Reset the dragging flag
         });
     }
 
     handlePlayerClick(pointer) {
         if (this.enemyClicked) {
-            this.enemyClicked = false; // Reset the flag
+            console.log("Enemy clicked");
+            this.enemyClicked = false;
             return; // Click was on the enemy, skip the general click logic
         }
-    
+
         // Convert screen coordinates to world coordinates
         const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
         const originalWidth = this.land.texture.source[0].width;
         const originalHeight = this.land.texture.source[0].height;
-    
+
         // Check if the clicked point is within the bounds of the land
-        if (worldPoint.x >= this.land.x - originalWidth / 2 && 
-            worldPoint.x <= this.land.x + originalWidth / 2 && 
-            worldPoint.y >= this.land.y - originalHeight / 2 && 
+        if (worldPoint.x >= this.land.x - originalWidth / 2 &&
+            worldPoint.x <= this.land.x + originalWidth / 2 &&
+            worldPoint.y >= this.land.y - originalHeight / 2 &&
             worldPoint.y <= this.land.y + originalHeight / 2) {
             // If within bounds, move the player
             this.player.moveStraight(worldPoint.x, worldPoint.y);
@@ -113,19 +126,19 @@ class GameScene extends Phaser.Scene {
             this.showOutOfBoundsMessage(worldPoint);
         }
     }
-    
+
     showOutOfBoundsMessage(worldPoint) {
         this.messageText.setText("Can't go there!");
         this.messageText.setOrigin(0.5, 0.5);
         this.messageText.setVisible(true);
-    
+
         // Adjust position of the message text
         if (worldPoint.x < this.sys.game.config.width / 2) {
             this.messageText.setPosition(worldPoint.x + 100, worldPoint.y);
         } else {
             this.messageText.setPosition(worldPoint.x - 50, worldPoint.y);
         }
-    
+
         this.tweens.add({
             targets: this.messageText,
             alpha: { start: 0, to: 1 },
@@ -139,21 +152,19 @@ class GameScene extends Phaser.Scene {
             }
         });
     }
-    
+
 
     createPlayer() {
         const scaleX = this.width / this.land.width;
         const scaleY = this.height / this.land.height;
 
-        this.player = new Player(this, 1500 , 800 , 1);
+        this.player = new Player(this, 1500, 800, 1);
         this.player.create();
     }
 
     createEnemy() {
-        const originalWidth = this.land.texture.source[0].width;
-        const originalHeight = this.land.texture.source[0].height;
 
-        this.enemy = new Enemy(this, 1500, 900, 3);
+        this.enemy = new Enemy(this, 1500, 900, 2);
         this.enemy.create();
 
         this.enemy.sprite.on('pointerover', () => {
@@ -175,45 +186,10 @@ class GameScene extends Phaser.Scene {
                 const enemyX = this.enemy.sprite.x;
                 const enemyY = this.enemy.sprite.y;
 
-                // Calculate the grid coordinates for the player and enemy
-                const playerPosition = this.player.getPosition();
-                const gridStartX = Math.floor(playerPosition.x * (originalWidth / this.width));
-                const gridStartY = Math.floor(playerPosition.y * (originalHeight / this.height));
-                const gridEndX = Math.floor(enemyX * (originalWidth / this.width));
-                const gridEndY = Math.floor(enemyY * (originalHeight / this.height));
+                this.player.moveStraight(enemyX, enemyY, () => {
+                    this.player.playAttackAnimation(this.enemy);
+                });
 
-                // Determine if moveStraight or moveAlongPath should be used
-                if (this.player.canMoveTo(playerPosition.x, playerPosition.y, enemyX, enemyY, originalWidth, originalHeight, this.width, this.height, this.textures)) {
-                    // Use moveStraight
-                    this.player.moveStraight(enemyX, enemyY, () => {
-                        this.player.playAttackAnimation(this.enemy);
-                    });
-                } else {
-                    // Use moveAlongPath with pathfinding
-                    let path = this.player.findPath(this.gameGrid, { x: gridStartX, y: gridStartY }, { x: gridEndX, y: gridEndY });
-                    if (path.length > 0) {
-                        // Move along the path and then play attack animation
-                        let moveIndex = 0;
-                        const moveAlongPathRecursive = () => {
-                            if (moveIndex >= path.length) {
-                                this.player.playAttackAnimation(); // Play attack animation after reaching the enemy
-                                return;
-                            }
-
-                            let point = path[moveIndex];
-                            let screenX = (point.x * this.width) / originalWidth;
-                            let screenY = (point.y * this.height) / originalHeight;
-                            this.player.moveAlongPath(screenX, screenY, () => {
-                                moveIndex++;
-                                moveAlongPathRecursive();
-                            });
-                        };
-
-                        moveAlongPathRecursive();
-                    } else {
-                        console.log("No valid path to the enemy");
-                    }
-                }
             }
         });
 
@@ -222,21 +198,21 @@ class GameScene extends Phaser.Scene {
     setupInputHandlers() {
         const originalWidth = this.land.texture.source[0].width;
         const originalHeight = this.land.texture.source[0].height;
-    
+
         this.input.on('pointerdown', function (pointer) {
             if (pointer.leftButtonDown()) {
                 if (this.enemyClicked) {
                     this.enemyClicked = false; // Reset the flag
                     return; // Click was on the enemy, so skip the general click logic/no callback
                 }
-    
+
                 // Convert screen coordinates to world coordinates
                 const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-    
+
                 // Check if the clicked point is within the bounds of the island
-                if (worldPoint.x >= this.land.x - originalWidth / 2 && 
-                    worldPoint.x <= this.land.x + originalWidth / 2 && 
-                    worldPoint.y >= this.land.y - originalHeight / 2 && 
+                if (worldPoint.x >= this.land.x - originalWidth / 2 &&
+                    worldPoint.x <= this.land.x + originalWidth / 2 &&
+                    worldPoint.y >= this.land.y - originalHeight / 2 &&
                     worldPoint.y <= this.land.y + originalHeight / 2) {
                     // If within bounds, move the player
                     this.player.moveStraight(worldPoint.x, worldPoint.y);
@@ -244,7 +220,7 @@ class GameScene extends Phaser.Scene {
                     this.messageText.setText("Can't go there!");
                     this.messageText.setOrigin(0.5, 0.5);
                     this.messageText.setVisible(true);
-                    
+
                     // this.messageText.setPosition(worldPoint.x, worldPoint.y);
                     // ensure the text is seen fully within this.sys.game.config.width
                     if (worldPoint.x < this.sys.game.config.width / 2) {
@@ -267,9 +243,9 @@ class GameScene extends Phaser.Scene {
                 }
             }
         }, this);
-    
+
         this.input.enabled = true;
-    
+
         this.sceneName = "battle-scene";
     }
 
@@ -343,21 +319,14 @@ class LoadingScene extends Phaser.Scene {
 
         this.load.image('mouse_cursor', 'assets/images/mouse_cursor.png');
         this.load.image('mouse_cursor_attack', 'assets/images/mouse_cursor_attack.png');
-        loadDynamicSpriteSheet.call(this, 'blackRobotIdle', 'assets/sprites/1_idle_spritesheet.png', 5, 12);
-        loadDynamicSpriteSheet.call(this, 'blackRobotMoving', 'assets/sprites/1_moving_spritesheet.png', 12, 10);
-        loadDynamicSpriteSheet.call(this, 'blackRobotAttacking', 'assets/sprites/1_attacking_spritesheet.png', 8, 8);
-        loadDynamicSpriteSheet.call(this, 'blackRobotDeath', 'assets/sprites/1_death_spritesheet.png', 5, 10);
-        // loadDynamicSpriteSheet.call(this, 'goldenWarriorIdle', 'assets/sprites/2_idle_spritesheet.png', 5, 12);
-        // loadDynamicSpriteSheet.call(this, 'goldenWarriorMoving', 'assets/sprites/2_moving_spritesheet.png', 12, 10);
-        loadDynamicSpriteSheet.call(this, 'enemyIdle', 'assets/sprites/3_idle_spritesheet.png', 5, 12);
-        loadDynamicSpriteSheet.call(this, 'enemyMoving', 'assets/sprites/3_moving_spritesheet.png', 10, 12);
-        loadDynamicSpriteSheet.call(this, 'enemyDeath', 'assets/sprites/3_death_spritesheet.png', 5, 10);
-        loadDynamicSpriteSheet.call(this, 'enemyAttacking', 'assets/sprites/3_attacking_spritesheet.png', 8, 8);
-        // loadDynamicSpriteSheet.call(this, 'enemy2Idle', 'assets/sprites/4_idle_spritesheet.png', 14, 8);
 
+        loadDynamicSpriteSheet.call(this, 'character1', 'assets/sprites/character_1.png', 6000, 6600);
+        loadDynamicSpriteSheet.call(this, 'character2', 'assets/sprites/character_2.png', 4000, 4400);
     }
 
+    
 }
+
 document.addEventListener('DOMContentLoaded', (event) => {
     const gameScreen = document.getElementById('game-screen');
     const battleScene = document.getElementById('battle-scene');
