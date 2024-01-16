@@ -38,7 +38,8 @@ class Enemy {
 
         this.scene.anims.create({
             key: `character${this.characterCode}Death`, // character2Idle1
-            frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 100, end: 105 }),
+            frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 100, end: 104 }),
+            frameRate: 6,
             repeat: 0
         });
 
@@ -205,7 +206,7 @@ class Enemy {
     }
 
     createHealthBar() {
-        this.healthBar = this.scene.add.graphics({ x: this.sprite.x, y: this.sprite.y });
+        this.healthBar = this.scene.add.graphics();
 
         // Draw the initial health bar
         this.updateHealthBar();
@@ -213,7 +214,7 @@ class Enemy {
 
     updateHealthBar() {
         const barX = this.sprite.x - 30;
-        const barY = this.sprite.y - this.sprite.displayHeight + 50;
+        const barY = this.sprite.y - this.sprite.displayHeight + 90;
         
         this.healthBar.clear();
         this.healthBar.setPosition(barX, barY);

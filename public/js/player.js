@@ -269,7 +269,7 @@ class Player {
     }
 
     createHealthBar() {
-        this.healthBar = this.scene.add.graphics();
+        this.healthBar = this.scene.add.graphics();  // Create the graphics object, but don't draw anything yet
 
         // Draw the initial health bar
         this.updateHealthBar();
@@ -278,7 +278,7 @@ class Player {
     updateHealthBar() {
         // Calculate the position of the health bar above the player
         const barX = this.robotSprite.x - 70;
-        const barY = this.robotSprite.y - this.robotSprite.displayHeight;
+        const barY = this.robotSprite.y - this.robotSprite.displayHeight + 120;
 
         this.healthBar.clear();
         this.healthBar.setPosition(barX, barY);

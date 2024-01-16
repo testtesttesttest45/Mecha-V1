@@ -1,5 +1,6 @@
 import Player from './player.js';
 import Enemy from './enemy.js';
+import BattleUI from './battle_ui.js';
 import { rgbToHex, resize, loadDynamicSpriteSheet, setAttackCursor, setDefaultCursor } from './utilities.js';
 
 class GameScene extends Phaser.Scene {
@@ -9,7 +10,7 @@ class GameScene extends Phaser.Scene {
         this.enemy = null;
         this.land = null;
         this.ocean = null;
-        this.initialZoom = 1;
+        this.initialZoom = 0.7;
         this.isDragging = false;
         this.dragStartPoint = null;
     }
@@ -32,7 +33,7 @@ class GameScene extends Phaser.Scene {
     createStaticBackground() {
         // Ocean setup
         this.ocean = this.add.image(0, 0, 'ocean').setOrigin(0, 0);
-        this.ocean.setDisplaySize(4000, 2000);
+        this.ocean.setDisplaySize(8000, 4000);
         this.ocean.setDepth(-1);
     }
 
@@ -45,32 +46,43 @@ class GameScene extends Phaser.Scene {
     setupCamera() {
         let pointerDownTime = 0;
         const dragThreshold = 20;
+
+        this.isCameraLocked = false;
+        this.isCameraFollowingPlayer = false;
+
         // Set the bounds and initial zoom of the camera
         this.cameras.main.setBounds(0, 0, 4000, 2000);
         this.cameras.main.setZoom(this.initialZoom);
-        
+
         // Center the camera on the land initially
         this.cameras.main.scrollX = this.land.x - this.gameScreenWidth / 2;
         this.cameras.main.scrollY = this.land.y - this.gameScreenHeight / 2;
 
         // Enhanced Zoom controls
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
-            const newZoom = deltaY > 0 ? Math.max(this.cameras.main.zoom - 0.4, 0.7) : Math.min(this.cameras.main.zoom + 0.4, 2.5);
-            this.cameras.main.zoomTo(newZoom, 300);
+            if (this.isZoomEnabled) {
+                const newZoom = deltaY > 0 ? Math.max(this.cameras.main.zoom - 0.4, 0.4) : Math.min(this.cameras.main.zoom + 0.4, 2.5);
+                this.cameras.main.zoomTo(newZoom, 300);
+            }
         });
 
         // Implementing Camera Dragging
         this.input.on('pointerdown', pointer => {
             console.log("Pointer down");
             pointerDownTime = Date.now();
-            
+            if (!this.isCameraDraggable) {
+                return;
+            }
             this.dragStartPoint = new Phaser.Math.Vector2(pointer.x, pointer.y);
             this.isDragging = false;
         });
-    
+
         this.input.on('pointermove', pointer => {
+            if (!this.isCameraDraggable) {
+                return;
+            }
             if (!pointer.isDown || !this.dragStartPoint) return;
-    
+
             const distanceMoved = Phaser.Math.Distance.Between(this.dragStartPoint.x, this.dragStartPoint.y, pointer.x, pointer.y);
             if (distanceMoved > dragThreshold) {
                 this.isDragging = true;
@@ -91,7 +103,7 @@ class GameScene extends Phaser.Scene {
             const pointerUpTime = Date.now();
             const heldTime = pointerUpTime - pointerDownTime;
             console.log(`Pointer was held down for ${heldTime} milliseconds`);
-    
+
             if (!this.isDragging) {
                 console.log("Is not dragging, handling click");
                 this.handlePlayerClick(pointer);
@@ -101,6 +113,39 @@ class GameScene extends Phaser.Scene {
             this.dragStartPoint = null;
             this.isDragging = false;  // Reset the dragging flag
         });
+
+        this.input.keyboard.on('keydown-SPACE', () => {
+        this.isCameraFollowingPlayer = !this.isCameraFollowingPlayer;
+        if (this.isCameraFollowingPlayer) {
+            // Start following the player
+            this.cameras.main.startFollow(this.player.getPosition(), true, 0.01, 0.01);
+        } else {
+            // Stop following the player
+            this.cameras.main.stopFollow();
+        }
+    });
+
+    this.isCameraDraggable = true;
+    this.isZoomEnabled = true; // Ensure zoom is enabled by default
+
+    this.input.keyboard.on('keydown-L', () => {
+        if (this.isCameraLocked) {
+            // Unlock the camera
+            this.isCameraLocked = false;
+            this.isCameraDraggable = true;
+            this.isZoomEnabled = true;
+        } else {
+            // Lock the camera
+            this.isCameraLocked = true;
+            this.isCameraDraggable = false;
+            this.isZoomEnabled = false;
+            this.cameras.main.setZoom(this.initialZoom);
+            this.cameras.main.scrollX = this.land.x - this.gameScreenWidth / 2;
+            this.cameras.main.scrollY = this.land.y - this.gameScreenHeight / 2;
+            this.cameras.main.stopFollow();
+        }
+    });
+
     }
 
     handlePlayerClick(pointer) {
@@ -263,6 +308,11 @@ class GameScene extends Phaser.Scene {
             this.enemy.updateEnemy(x, y);
             this.enemy.update(time);
         }
+
+        if (this.isCameraFollowingPlayer) {
+            // Update the camera to follow the player's current position
+            this.cameras.main.startFollow(this.player.getPosition(), true, 0.01, 0.01);
+        }
     }
 }
 
@@ -324,7 +374,7 @@ class LoadingScene extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'character2', 'assets/sprites/character_2.png', 4000, 4400);
     }
 
-    
+
 }
 
 document.addEventListener('DOMContentLoaded', (event) => {
