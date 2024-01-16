@@ -105,7 +105,7 @@ class GameScene extends Phaser.Scene {
 
     handlePlayerClick(pointer) {
         if (this.enemyClicked) {
-            console.log("Enemy clicked");
+            console.log("Enemy clicked, dont come here");
             this.enemyClicked = false;
             return; // Click was on the enemy, skip the general click logic
         }

@@ -1,7 +1,7 @@
 const characterMap = {
     1: {
         spritesheetKey: 'character1',
-        range: 80,
+        range: 280,
         speed: 150,
         attack: 50,
         health: 250

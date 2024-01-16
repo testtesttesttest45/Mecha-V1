@@ -26,8 +26,8 @@ class Player {
 
     create() {
 
-        this.robotSprite = this.scene.add.sprite(this.position.x, this.position.y, this.idleAnimationKey);
-        this.robotSprite.setOrigin(0.5, 1);
+        this.robotSprite = this.scene.add.sprite(this.position.x, this.position.y);
+        this.robotSprite.setOrigin(0.5, 0.8);
 
 
         // for (let i = 0; i < 4; i++) {
@@ -42,31 +42,32 @@ class Player {
         for (let i = 0; i < 4; i++) {
             this.scene.anims.create({
                 key: `idle${i + 1}`,
-                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: i * 5, end: i * 5 + 4 }), // after the whole loop ends, the final frame will be 19
+                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: i * 5, end: i * 5 + 4 }),
                 frameRate: 6,
                 repeat: -1,
             });
         }
-
         this.robotSprite.play('idle1');
         this.lastAnimationChange = this.scene.time.now;
         this.robotSprite.setScale(0.5);
+
 
         const directions = ['southeast', 'southwest', 'south', 'east', 'west', 'northeast', 'northwest', 'north'];
         directions.forEach((dir, index) => {
             this.scene.anims.create({
                 key: `move${dir}`,
-                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 20 + index * 5, end: 24 + index * 5 }), // frame starts at 20, and when loop ends, the final frame will be 59
+                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 20 + (index * 5), end: 20 + (index * 5) + 4 }),
                 frameRate: 6,
                 repeat: -1
             });
         });
 
+
         // Create attacking animations
         directions.forEach((dir, index) => {
             this.scene.anims.create({
                 key: `attack${dir}`,
-                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 60 + index * 5, end: 64 + index * 5 }), // frame starts at 60, and when loop ends, the final frame will be 99
+                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 60 + (index * 5), end: 60 + (index * 5) + 4 }),
                 frameRate: 6,
                 repeat: -1
             });
@@ -75,8 +76,8 @@ class Player {
         // Create death animation
         this.scene.anims.create({
             key: 'death',
-            frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 99, end: 103 }), // frame starts at 99, and when loop ends, the final frame will be 103
-            frameRate: 10,
+            frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 100, end: 105 }), // 105 does not exist. i use it to hide the final frame
+            frameRate: 6,
             repeat: 0
         });
 
@@ -92,15 +93,14 @@ class Player {
 
         let targetDistance = Phaser.Math.Distance.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
 
-        // Check if the target is an enemy and within the attack range
-        if (this.scene.enemyClicked && targetDistance > this.range) {
+        if (this.scene.enemyClicked && targetDistance <= this.range) {
+            this.playAttackAnimation(this.scene.enemy);
+            return; // dont continue moving
+        } else if (this.scene.enemyClicked && targetDistance > this.range) {
             // Adjust the target position to stop at the attack range
             let angleToTarget = Phaser.Math.Angle.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
             newX = this.robotSprite.x + Math.cos(angleToTarget) * (targetDistance - this.range);
             newY = this.robotSprite.y + Math.sin(angleToTarget) * (targetDistance - this.range);
-        } else if (this.scene.enemyClicked && targetDistance <= this.range) {
-            newX = this.robotSprite.x;
-            newY = this.robotSprite.y;
         }
 
         const direction = this.determineDirection(newX, newY);
@@ -133,6 +133,7 @@ class Player {
     playAttackAnimation(enemy) {
         const direction = this.determineDirectionToEnemy();
         const currentAnim = this.robotSprite.anims.currentAnim;
+        console.log(direction)
         if (currentAnim && currentAnim.key.startsWith('attack')) {
             return; // If already playing an attack animation, do nothing
         }
@@ -174,7 +175,7 @@ class Player {
 
         // Transition back to idle animation
         if (!this.currentTween || !this.currentTween.isPlaying()) {
-            this.robotSprite.play(`idle1`); // Play the default idle animation
+            this.robotSprite.play(`death`); // Play the default idle animation
         }
     }
 

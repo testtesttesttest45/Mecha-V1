@@ -25,12 +25,12 @@ class Enemy {
         const character = characterMap[this.characterCode];
 
         this.sprite = this.scene.add.sprite(this.x, this.y, character.idle);
-        this.sprite.setOrigin(0.5, 1); // Set origin to bottom center
+        this.sprite.setOrigin(0.5, 0.8); // Set origin to bottom center
 
         for (let i = 0; i < 4; i++) {
             this.scene.anims.create({
                 key: `character${this.characterCode}Idle${i + 1}`, // character2Idle1
-                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: i * 5, end: i * 5 + 4 }), // after the whole loop ends, the final frame will be 19
+                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: i * 5, end: i * 5 + 4 }),
                 frameRate: 6,
                 repeat: -1,
             });
@@ -38,8 +38,7 @@ class Enemy {
 
         this.scene.anims.create({
             key: `character${this.characterCode}Death`, // character2Idle1
-            frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 99, end: 103 }), // frame starts at 99, and when loop ends, the final frame will be 103
-            frameRate: 6,
+            frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 100, end: 105 }),
             repeat: 0
         });
 
@@ -47,7 +46,7 @@ class Enemy {
         directions.forEach((dir, index) => {
             this.scene.anims.create({
                 key: `character${this.characterCode}Moving${dir}`,
-                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 20 + index * 5, end: 24 + index * 5 }), // frame starts at 20, and when loop ends, the final frame will be 59
+                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 20 + (index * 5), end: 20 + (index * 5) + 4 }),
                 frameRate: 6,
                 repeat: -1
             });
@@ -56,7 +55,7 @@ class Enemy {
         directions.forEach((dir, index) => {
             this.scene.anims.create({
                 key: `character${this.characterCode}Attack${dir}`,
-                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 60 + index * 5, end: 64 + index * 5 }), // frame starts at 60, and when loop ends, the final frame will be 99
+                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 60 + (index * 5), end: 60 + (index * 5) + 4 }),
                 frameRate: 6,
                 repeat: -1
             });
@@ -145,7 +144,7 @@ class Enemy {
         const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, playerX, playerY);
         
         if (distance < this.detectionRadius && !this.isMoving) {
-           // this.moveToPlayer(playerX, playerY);
+           this.moveToPlayer(playerX, playerY);
         } else if (distance >= this.detectionRadius && this.isMoving) {
             this.isMoving = false;
             if (this.moveTween) {
