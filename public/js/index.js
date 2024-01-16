@@ -10,7 +10,7 @@ class GameScene extends Phaser.Scene {
         this.enemy = null;
         this.land = null;
         this.ocean = null;
-        this.initialZoom = 0.7;
+        this.initialZoom = 0.75;
         this.isDragging = false;
         this.dragStartPoint = null;
     }
@@ -23,7 +23,6 @@ class GameScene extends Phaser.Scene {
 
         this.createEnemy();
         this.createPlayer();
-        // this.setupInputHandlers();
         this.setupCamera();
 
         this.messageText = this.add.text(0, 0, '', { font: '24px Orbitron', fill: '#ff0000', align: 'center' });
@@ -31,16 +30,15 @@ class GameScene extends Phaser.Scene {
     }
 
     createStaticBackground() {
-        // Ocean setup
         this.ocean = this.add.image(0, 0, 'ocean').setOrigin(0, 0);
-        this.ocean.setDisplaySize(8000, 4000);
+        this.ocean.setScale(2);
         this.ocean.setDepth(-1);
     }
 
     createLand() {
         // Place land image in the center of the ocean
         this.land = this.add.image(
-            2000, 1000, 'land').setOrigin(0.5, 0.5);
+            8000 /4, 4000 /4, 'land').setOrigin(0.5, 0.5);
     }
 
     setupCamera() {
@@ -51,7 +49,7 @@ class GameScene extends Phaser.Scene {
         this.isCameraFollowingPlayer = false;
 
         // Set the bounds and initial zoom of the camera
-        this.cameras.main.setBounds(0, 0, 4000, 2000);
+        this.cameras.main.setBounds(0, 0, this.sys.game.config.width * 2, this.sys.game.config.height * 2);
         this.cameras.main.setZoom(this.initialZoom);
 
         // Center the camera on the land initially
@@ -61,8 +59,9 @@ class GameScene extends Phaser.Scene {
         // Enhanced Zoom controls
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
             if (this.isZoomEnabled) {
-                const newZoom = deltaY > 0 ? Math.max(this.cameras.main.zoom - 0.4, 0.4) : Math.min(this.cameras.main.zoom + 0.4, 2.5);
+                const newZoom = deltaY > 0 ? Math.max(this.cameras.main.zoom - 0.25, 0.5) : Math.min(this.cameras.main.zoom + 0.25, 2.5);
                 this.cameras.main.zoomTo(newZoom, 300);
+                
             }
         });
 

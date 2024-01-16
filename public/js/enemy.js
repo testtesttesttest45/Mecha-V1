@@ -14,7 +14,7 @@ class Enemy {
         this.isDead = false;
         this.totalHealth = character.health; // Store the total health
         this.healthBar = null;
-        this.detectionRadius = 100;
+        this.detectionRadius = 1000;
         this.speed = character.speed;
         this.isMoving = false;
         this.moveTween = null;
@@ -153,6 +153,7 @@ class Enemy {
             }
         }
     }
+    
 
     determineDirectionToPlayer(playerX, playerY) {
         const dx = playerX - this.sprite.x
@@ -204,6 +205,7 @@ class Enemy {
 
         this.healthBar.destroy();
     }
+    
 
     createHealthBar() {
         this.healthBar = this.scene.add.graphics();
