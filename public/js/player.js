@@ -1,4 +1,5 @@
 import characterMap from './characters.js';
+
 class Player {
     constructor(scene, initialX, initialY, characterCode = 1) {
         this.scene = scene;
@@ -16,6 +17,7 @@ class Player {
         this.range = character.range;
         this.speed = character.speed;
         this.attack = character.attack;
+        this.attackSpeed = character.attackSpeed;
         this.spritesheetKey = character.spritesheetKey;
         this.isAttacking = false;
         this.attackEvent = null;
@@ -23,6 +25,7 @@ class Player {
         this.totalHealth = character.health; // Store the total health
         this.healthBar = null;
         this.isDead = false;
+        this.idleAnimations = ['idle1', 'idle2', 'idle3', 'idle4'];
     }
 
     create() {
@@ -48,7 +51,8 @@ class Player {
                 repeat: -1,
             });
         }
-        this.robotSprite.play('idle1');
+        const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
+        this.robotSprite.play(randomIdleAnimation);
         this.lastAnimationChange = this.scene.time.now;
         this.robotSprite.setScale(0.5);
 
@@ -69,7 +73,7 @@ class Player {
             this.scene.anims.create({
                 key: `attack${dir}`,
                 frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 60 + (index * 5), end: 60 + (index * 5) + 4 }),
-                frameRate: 6,
+                frameRate: 6 * this.attackSpeed,
                 repeat: -1
             });
         });
@@ -122,10 +126,15 @@ class Player {
             onComplete: () => {
                 if (this.scene.enemyClicked) {
                     this.scene.enemyClicked = false; // Reset the flag after attacking
+                } else {
+                    const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
+                    // Play the randomly selected idle animation
+                    this.robotSprite.play(randomIdleAnimation);
                 }
                 if (onCompleteCallback) {
                     onCompleteCallback();
                 }
+
             }
         });
 
@@ -177,7 +186,9 @@ class Player {
 
         // Transition back to idle animation
         if (!this.currentTween || !this.currentTween.isPlaying()) {
-            this.robotSprite.play(`idle1`); // Play the default idle animation
+            const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
+            // Play the randomly selected idle animation
+            this.robotSprite.play(randomIdleAnimation);
         }
     }
 
@@ -300,7 +311,7 @@ class Player {
     takeDamage(damage, enemy) {
         if (this.isDead) return;
         console.log('Player taking damage');
-        
+
 
         this.attacker = enemy; // Store reference to the attacking enemy
 
@@ -309,13 +320,30 @@ class Player {
         console.log(`Player took ${damage} damage. ${this.health} health remaining`);
 
         // Create and display damage text
-        // this.createDamageText(damage);
+        this.createDamageText(damage);
 
         if (this.health <= 0 && !this.isDead) {
             this.die();
         }
 
         this.updateHealthBar();
+    }
+
+    createDamageText(damage) {
+        const damageText = this.scene.add.text(this.robotSprite.x, this.robotSprite.y - 100, `-${damage}`, { font: '36px Orbitron', fill: '#000' });
+        damageText.setOrigin(0.5, 0.5);
+
+        // Animation for damage text (move up and fade out)
+        this.scene.tweens.add({
+            targets: damageText,
+            y: damageText.y - 30, // Move up
+            alpha: 0, // Fade out
+            duration: 800,
+            ease: 'Power2',
+            onComplete: () => {
+                damageText.destroy(); // Remove the text object
+            }
+        });
     }
 
     die() {

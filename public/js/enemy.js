@@ -202,7 +202,7 @@ class Enemy {
                 this.isMoving = false;
                 if (this.moveTween) {
                     this.moveTween.stop();
-                }                
+                }
                 if (!this.sprite.anims.currentAnim || !this.sprite.anims.currentAnim.key.includes('Attack')) {
                     this.attackPlayer(playerX, playerY, player);
                 }

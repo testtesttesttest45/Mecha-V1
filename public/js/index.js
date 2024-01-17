@@ -195,7 +195,7 @@ class GameScene extends Phaser.Scene {
         const scaleX = this.width / this.land.width;
         const scaleY = this.height / this.land.height;
 
-        this.player = new Player(this, 1500, 800, 1);
+        this.player = new Player(this, 1500, 800, 3);
         this.player.create();
     }
 
@@ -365,6 +365,7 @@ class LoadingScene extends Phaser.Scene {
 
         loadDynamicSpriteSheet.call(this, 'character1', 'assets/sprites/character_1.png', 6000, 6600);
         loadDynamicSpriteSheet.call(this, 'character2', 'assets/sprites/character_2.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character3', 'assets/sprites/character_3.png', 6000, 5280);
     }
 
 
