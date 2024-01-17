@@ -133,7 +133,6 @@ class Player {
     playAttackAnimation(enemy) {
         const direction = this.determineDirectionToEnemy();
         const currentAnim = this.robotSprite.anims.currentAnim;
-        console.log(direction)
         if (currentAnim && currentAnim.key.startsWith('attack')) {
             return; // If already playing an attack animation, do nothing
         }
@@ -175,7 +174,7 @@ class Player {
 
         // Transition back to idle animation
         if (!this.currentTween || !this.currentTween.isPlaying()) {
-            this.robotSprite.play(`death`); // Play the default idle animation
+            this.robotSprite.play(`idle1`); // Play the default idle animation
         }
     }
 
@@ -293,25 +292,6 @@ class Player {
         // fill style dark green
         this.healthBar.fillStyle(0x00ff00, 1);
         this.healthBar.fillRect(0, 0, healthBarWidth, 10);
-    }
-
-    takeDamage(damage, enemy) {
-        if (this.isDead) return;
-
-        this.attackingPlayer = player; // Store reference to the attacking player
-
-        this.health -= damage;
-        this.health = Math.max(this.health, 0);
-        console.log(`Enemy took ${damage} damage. ${this.health} health remaining`);
-
-        // Create and display damage text
-        this.createDamageText(damage);
-
-        if (this.health <= 0 && !this.isDead) {
-            this.die();
-        }
-
-        this.updateHealthBar();
     }
 
 }

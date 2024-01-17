@@ -67,7 +67,6 @@ class GameScene extends Phaser.Scene {
 
         // Implementing Camera Dragging
         this.input.on('pointerdown', pointer => {
-            console.log("Pointer down");
             pointerDownTime = Date.now();
             if (!this.isCameraDraggable) {
                 return;
@@ -98,16 +97,11 @@ class GameScene extends Phaser.Scene {
         });
 
         this.input.on('pointerup', pointer => {
-            console.log("Pointer up");
             const pointerUpTime = Date.now();
             const heldTime = pointerUpTime - pointerDownTime;
-            console.log(`Pointer was held down for ${heldTime} milliseconds`);
 
             if (!this.isDragging) {
-                console.log("Is not dragging, handling click");
                 this.handlePlayerClick(pointer);
-            } else {
-                console.log("Is dragging, so don't handle click");
             }
             this.dragStartPoint = null;
             this.isDragging = false;  // Reset the dragging flag
@@ -149,7 +143,6 @@ class GameScene extends Phaser.Scene {
 
     handlePlayerClick(pointer) {
         if (this.enemyClicked) {
-            console.log("Enemy clicked, dont come here");
             this.enemyClicked = false;
             return; // Click was on the enemy, skip the general click logic
         }
@@ -208,7 +201,7 @@ class GameScene extends Phaser.Scene {
 
     createEnemy() {
 
-        this.enemy = new Enemy(this, 1500, 900, 2);
+        this.enemy = new Enemy(this, 1500, 1200, 2);
         this.enemy.create();
 
         this.enemy.sprite.on('pointerover', () => {
@@ -294,18 +287,16 @@ class GameScene extends Phaser.Scene {
     }
 
 
-    update(time) {
+    update(time, delta) {
         if (this.player) {
             this.player.update(time);
         }
 
         if (this.enemy) {
             let x = this.player.getPosition().x;
-            // console.log("Player position:", this.player.getPosition().x, this.player.getPosition().y);
             let y = this.player.getPosition().y;
-            // console.log("Enemy position:", this.enemy.sprite.x, this.enemy.sprite.y);
-            this.enemy.updateEnemy(x, y);
-            this.enemy.update(time);
+            this.enemy.updateEnemy(x, y, this.player, delta);
+            this.enemy.update(time, delta);
         }
 
         if (this.isCameraFollowingPlayer) {
