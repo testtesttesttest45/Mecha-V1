@@ -27,6 +27,9 @@ class Enemy {
         this.timeInAlert = 0;
         this.hasPlayerBeenDetected = false;
         this.lastActionTime = 0;
+        this.isAttacking = false;
+        this.attackEvent = null;
+        this.damage = character.attack;
     }
 
     create() {
@@ -195,12 +198,14 @@ class Enemy {
             }
             this.timeOutOfDetection = 0;
             this.updateDetectionBar(1); // full bar
-            if (distance <= this.attackRange && !this.isAttacking) {
+            if (distance <= this.attackRange) {
                 this.isMoving = false;
                 if (this.moveTween) {
                     this.moveTween.stop();
+                }                
+                if (!this.sprite.anims.currentAnim || !this.sprite.anims.currentAnim.key.includes('Attack')) {
+                    this.attackPlayer(playerX, playerY, player);
                 }
-                this.attackPlayer(playerX, playerY); // Attack the player
             } else if (distance > this.attackRange && !this.isMoving) {
                 this.moveToPlayer(playerX, playerY); // Chase the player
             }
@@ -234,15 +239,57 @@ class Enemy {
         }
     }
 
-
-    attackPlayer(playerX, playerY) {
-        this.isAttacking = true;
-
-        // Determine the direction of the player for the attack animation
-        const attackDirection = this.determineDirectionToPlayer(playerX, playerY);
-        this.sprite.play(`character${this.characterCode}Attack${attackDirection}`);
-
+    getPosition() {
+        return {
+            x: this.sprite.x,
+            y: this.sprite.y
+        };
     }
+
+    attackPlayer(playerX, playerY, player) {
+
+        if (player.isDead) {
+            this.stopAttackingPlayer(); // Call a method to stop the attack if the player is dead
+            return;
+        }
+        // this.isAttacking = true;
+        // this.currentAttacker = player;
+        // // Determine the direction of the player for the attack animation
+        // const attackDirection = this.determineDirectionToPlayer(playerX, playerY);
+        // this.sprite.play(`character${this.characterCode}Attack${attackDirection}`);
+        // this.currentAttacker.takeDamage(this.damage, this);
+        const direction = this.determineDirectionToPlayer(playerX, playerY);
+        const currentAnimation = this.sprite.anims.currentAnim;
+        if (currentAnimation && currentAnimation.key.includes('Attack')) {
+            return;
+        }
+
+        this.isAttacking = true;
+        const attackAnimationKey = `character${this.characterCode}Attack${direction}`;
+        this.sprite.play(attackAnimationKey);
+
+        this.attacker = player;
+
+        if (this.attackEvent) {
+            this.attackEvent.remove(false);
+        }
+        this.sprite.off('animationupdate');
+        // Add a listener for the animation frame event
+        this.sprite.on('animationupdate', (anim, frame) => {
+            // Check if the current frame is the specific frame where damage should be applied
+            if (anim.key === attackAnimationKey && frame.index === 4) {
+                if (this.attacker) {
+                    this.attacker.takeDamage(this.damage, this); // now then apply the damage
+                }
+            }
+        }, this);
+
+        // Ensure that the listener is removed after the attack animation completes
+        this.sprite.once('animationcomplete', () => {
+            this.sprite.off('animationupdate');
+        }, this);
+    }
+
     determineDirectionToPlayer(playerX, playerY) {
         const dx = playerX - this.sprite.x
         const dy = playerY - this.sprite.y
@@ -294,7 +341,7 @@ class Enemy {
         setDefaultCursor(this.scene);
 
         if (this.attacker) {
-            this.attacker.stopAttacking();
+            this.attacker.stopAttackingEnemy();
         }
 
         this.healthBar.destroy();
@@ -348,6 +395,19 @@ class Enemy {
         }
     }
 
+    stopAttackingPlayer() {
+        if (this.attackEvent) {
+            this.attackEvent.remove(false);
+            this.attackEvent = null;
+        }
+        this.isAttacking = false;
+        this.attacker = null;
+
+        if (!this.sprite.anims.currentAnim || !this.sprite.anims.currentAnim.key.includes('Idle')) {
+            this.sprite.play(`character${this.characterCode}Idle1`);
+        }
+    }
+
     update(time, delta) {
         if (this.isDead) return;
         this.detectionField.setPosition(this.sprite.x, this.sprite.y);
@@ -366,22 +426,6 @@ class Enemy {
         } else {
             this.lastActionTime = time; // Reset the last action time if the enemy is moving or attacking
         }
-    }
-
-
-    scheduleNextAnimation() {
-        if (this.isDead) return;
-        this.scene.time.addEvent({
-            delay: 4000,
-            callback: () => {
-                if (this.isDead || this.isMoving) return;
-                this.currentAnimationIndex = (this.currentAnimationIndex + 1) % 4;
-                console.log('scheduleNextAnimation', this.currentAnimationIndex);
-                this.sprite.play(`character${this.characterCode}Idle${this.currentAnimationIndex + 1}`);
-
-                this.scheduleNextAnimation();
-            }
-        });
     }
 
 }

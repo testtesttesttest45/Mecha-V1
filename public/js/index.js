@@ -297,12 +297,15 @@ class GameScene extends Phaser.Scene {
             let y = this.player.getPosition().y;
             this.enemy.updateEnemy(x, y, this.player, delta);
             this.enemy.update(time, delta);
+            // console.log(this.enemy.getPosition().x, this.player.getPosition().x);
         }
 
         if (this.isCameraFollowingPlayer) {
             // Update the camera to follow the player's current position
             this.cameras.main.startFollow(this.player.getPosition(), true, 0.01, 0.01);
         }
+
+        
     }
 }
 

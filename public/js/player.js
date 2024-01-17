@@ -22,6 +22,7 @@ class Player {
         this.health = character.health;
         this.totalHealth = character.health; // Store the total health
         this.healthBar = null;
+        this.isDead = false;
     }
 
     create() {
@@ -86,7 +87,8 @@ class Player {
     }
 
     moveStraight(newX, newY, onCompleteCallback = null) {
-        this.stopAttacking();
+        if (this.isDead) return;
+        this.stopAttackingEnemy();
         if (this.currentTween) {
             this.currentTween.stop();
         }
@@ -140,7 +142,7 @@ class Player {
         this.isAttacking = true; // Set the flag to true when attack starts
         const attackAnimationKey = `attack${direction}`;
         this.robotSprite.play(attackAnimationKey);
-        this.currentEnemy = enemy; // Store a reference to the current enemy being attacked
+        this.attacker = enemy; // Store a reference to the current enemy being attacked
 
         if (this.attackEvent) {
             this.attackEvent.remove(false);
@@ -152,8 +154,8 @@ class Player {
         this.robotSprite.on('animationupdate', (anim, frame) => {
             // Check if the current frame is the specific frame where damage should be applied
             if (anim.key === attackAnimationKey && frame.index === 4) {
-                if (this.currentEnemy) {
-                    this.currentEnemy.takeDamage(this.attack, this); // now then apply the damage
+                if (this.attacker) {
+                    this.attacker.takeDamage(this.attack, this); // now then apply the damage
                 }
             }
         }, this);
@@ -164,13 +166,14 @@ class Player {
         }, this);
     }
 
-    stopAttacking() {
+    stopAttackingEnemy() {
+        console.log('Stopping attack');
         if (this.attackEvent) {
             this.attackEvent.remove(false);
             this.attackEvent = null;
         }
         this.isAttacking = false;
-        this.currentEnemy = null;
+        this.attacker = null;
 
         // Transition back to idle animation
         if (!this.currentTween || !this.currentTween.isPlaying()) {
@@ -239,7 +242,7 @@ class Player {
         const isAttacking = this.robotSprite.anims.isPlaying && this.robotSprite.anims.currentAnim.key.startsWith('attack');
 
         // If the player is neither moving nor attacking
-        if (!isMoving && !isAttacking) {
+        if (!isMoving && !isAttacking && !this.isDead) {
             if (time - this.lastActionTime > 5000) { // 5 seconds of inactivity
                 if (time - this.lastAnimationChange > 5000) {
                     this.idleAnimationIndex = (this.idleAnimationIndex + 1) % 4;
@@ -292,6 +295,51 @@ class Player {
         // fill style dark green
         this.healthBar.fillStyle(0x00ff00, 1);
         this.healthBar.fillRect(0, 0, healthBarWidth, 10);
+    }
+
+    takeDamage(damage, enemy) {
+        if (this.isDead) return;
+        console.log('Player taking damage');
+        
+
+        this.attacker = enemy; // Store reference to the attacking enemy
+
+        this.health -= damage;
+        this.health = Math.max(this.health, 0);
+        console.log(`Player took ${damage} damage. ${this.health} health remaining`);
+
+        // Create and display damage text
+        // this.createDamageText(damage);
+
+        if (this.health <= 0 && !this.isDead) {
+            this.die();
+        }
+
+        this.updateHealthBar();
+    }
+
+    die() {
+        if (this.isDead) return;
+
+        this.isDead = true;
+        console.log('Player died');
+
+        // Stop any ongoing movement
+        if (this.moveTween) {
+            this.moveTween.stop();
+        }
+        this.isMoving = false;
+
+        // Stop any ongoing animation and play the death animation
+        this.robotSprite.stop();
+        this.robotSprite.play(`death`);
+
+        if (this.attacker) {
+            console.log('Stopping attacker');
+            this.attacker.stopAttackingPlayer();
+        }
+
+        this.healthBar.destroy();
     }
 
 }
