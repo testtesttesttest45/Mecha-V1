@@ -195,7 +195,7 @@ class GameScene extends Phaser.Scene {
         const scaleX = this.width / this.land.width;
         const scaleY = this.height / this.land.height;
 
-        this.player = new Player(this, 1500, 800, 3);
+        this.player = new Player(this, 1500, 800, 1);
         this.player.create();
     }
 

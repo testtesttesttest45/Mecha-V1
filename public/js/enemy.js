@@ -125,6 +125,7 @@ class Enemy {
         if (this.isDead) return;
 
         this.isMoving = true;
+        this.isAttacking = false;
 
         const updateMovement = () => {
             if (!this.attacker || !this.attacker.getPosition || this.isDead) {
@@ -184,53 +185,64 @@ class Enemy {
     updateEnemy(playerX, playerY, player, delta) {
         this.attacker = player;
         if (this.isDead) return;
-
+    
         const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, playerX, playerY);
-
-        // Player is within detection radius
-        if (distance < this.detectionRadius) {
+    
+        // Determine the direction to the player
+        const direction = this.determineDirectionToPlayer(playerX, playerY);
+        const attackAnimationKey = `character${this.characterCode}Attack${direction}`;
+    
+        // Player is within detection radius or the enemy is attacking
+        if (distance < this.detectionRadius || this.isAttacking) {
             if (!this.hasPlayerBeenDetected) {
                 this.hasPlayerBeenDetected = true; // Player detected for the first time
             }
-            if (!this.isAlert) {
-                this.isAlert = true;
-                this.timeInAlert = 0; // Reset alert timer
-            }
-            this.timeOutOfDetection = 0;
+    
+            this.isAlert = true;
+            this.timeOutOfDetection = 0; // Reset out-of-detection timer
             this.updateDetectionBar(1); // full bar
+    
             if (distance <= this.attackRange) {
                 this.isMoving = false;
                 if (this.moveTween) {
                     this.moveTween.stop();
                 }
-                if (!this.sprite.anims.currentAnim || !this.sprite.anims.currentAnim.key.includes('Attack')) {
-                    this.attackPlayer(playerX, playerY, player);
+                if (!this.sprite.anims.currentAnim || this.sprite.anims.currentAnim.key !== attackAnimationKey) {
+                    this.sprite.play(attackAnimationKey);
                 }
+                this.attackPlayer(player);
             } else if (distance > this.attackRange && !this.isMoving) {
                 this.moveToPlayer(playerX, playerY); // Chase the player
             }
+    
+            if (this.isAttacking) {
+                this.timeInAlert = 0; // Reset alert timer when attacking
+            } else {
+                this.timeInAlert += Math.round(delta); // Increment alert timer when not attacking
+            }
+    
         } else {
             if (!this.hasPlayerBeenDetected) {
                 return;
             }
-            // Player is outside the detection radius
-            if (this.isAlert) {
-                this.timeInAlert += Math.round(delta);
+    
+            // Player is outside the detection radius and not attacking
+            if (this.isAlert && !this.isAttacking) {
                 if (this.timeInAlert >= this.alertTime) {
-                    this.isAlert = false; // End alert state after 3 seconds
+                    this.isAlert = false; // End alert state after specified time
+                } else {
+                    this.timeInAlert += Math.round(delta); // Increment alert timer
                 }
                 this.updateDetectionBar(1);
             } else {
                 this.timeOutOfDetection += Math.round(delta);
-                // console.log('time out of detection', this.timeOutOfDetection);
                 const detectionPercentage = 1 - (this.timeOutOfDetection / 4000);
-                this.updateDetectionBar(Math.max(detectionPercentage, 0),);
-                if (this.timeOutOfDetection >= 4000) { // stay away for 4 second, enemy will give up chasing
+                this.updateDetectionBar(Math.max(detectionPercentage, 0));
+                if (this.timeOutOfDetection >= 4000) {
                     this.isMoving = false;
                     if (this.moveTween) {
                         this.moveTween.stop();
                     }
-                    // Transition to idle animation only if not already in idle, since its getting called every frame, only do this once
                     if (!this.sprite.anims.currentAnim || !this.sprite.anims.currentAnim.key.includes('Idle')) {
                         this.sprite.play(`character${this.characterCode}Idle1`);
                     }
@@ -238,7 +250,9 @@ class Enemy {
             }
         }
     }
-
+    
+    
+    
     getPosition() {
         return {
             x: this.sprite.x,
@@ -246,49 +260,39 @@ class Enemy {
         };
     }
 
-    attackPlayer(playerX, playerY, player) {
-
+    attackPlayer(player) {
+        console.log('Enemy attacking player');
         if (player.isDead) {
-            this.stopAttackingPlayer(); // Call a method to stop the attack if the player is dead
+            this.stopAttackingPlayer();
             return;
         }
-        // this.isAttacking = true;
-        // this.currentAttacker = player;
-        // // Determine the direction of the player for the attack animation
-        // const attackDirection = this.determineDirectionToPlayer(playerX, playerY);
-        // this.sprite.play(`character${this.characterCode}Attack${attackDirection}`);
-        // this.currentAttacker.takeDamage(this.damage, this);
-        const direction = this.determineDirectionToPlayer(playerX, playerY);
-        const currentAnimation = this.sprite.anims.currentAnim;
-        if (currentAnimation && currentAnimation.key.includes('Attack')) {
-            return;
-        }
-
+    
         this.isAttacking = true;
-        const attackAnimationKey = `character${this.characterCode}Attack${direction}`;
-        this.sprite.play(attackAnimationKey);
-
         this.attacker = player;
-
+    
+        // Setting up the damage application logic
         if (this.attackEvent) {
             this.attackEvent.remove(false);
         }
         this.sprite.off('animationupdate');
+    
         // Add a listener for the animation frame event
         this.sprite.on('animationupdate', (anim, frame) => {
             // Check if the current frame is the specific frame where damage should be applied
-            if (anim.key === attackAnimationKey && frame.index === 4) {
+            if (anim.key.includes('Attack') && frame.index === 4) {
                 if (this.attacker) {
-                    this.attacker.takeDamage(this.damage, this); // now then apply the damage
+                    this.attacker.takeDamage(this.damage, this); // Apply the damage
                 }
             }
         }, this);
-
+    
         // Ensure that the listener is removed after the attack animation completes
         this.sprite.once('animationcomplete', () => {
             this.sprite.off('animationupdate');
+            this.isAttacking = false;
         }, this);
     }
+    
 
     determineDirectionToPlayer(playerX, playerY) {
         const dx = playerX - this.sprite.x

@@ -26,6 +26,7 @@ class Player {
         this.healthBar = null;
         this.isDead = false;
         this.idleAnimations = ['idle1', 'idle2', 'idle3', 'idle4'];
+        this.isMovingTowardsEnemy = false;
     }
 
     create() {
@@ -100,9 +101,11 @@ class Player {
         let targetDistance = Phaser.Math.Distance.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
 
         if (this.scene.enemyClicked && targetDistance <= this.range) {
+            this.isMovingTowardsEnemy = true;
             this.playAttackAnimation(this.scene.enemy);
             return; // dont continue moving
         } else if (this.scene.enemyClicked && targetDistance > this.range) {
+            this.isMovingTowardsEnemy = true;
             // Adjust the target position to stop at the attack range
             let angleToTarget = Phaser.Math.Angle.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
             newX = this.robotSprite.x + Math.cos(angleToTarget) * (targetDistance - this.range);
@@ -122,8 +125,11 @@ class Player {
             y: newY,
             duration: duration,
             ease: 'Linear',
-            onUpdate: () => this.updatePosition(),
+            onUpdate: () => {
+                this.updatePosition();
+            },
             onComplete: () => {
+                if (this.isDead) return;
                 if (this.scene.enemyClicked) {
                     this.scene.enemyClicked = false; // Reset the flag after attacking
                 } else {
@@ -162,7 +168,7 @@ class Player {
         // Add a listener for the animation frame event
         this.robotSprite.on('animationupdate', (anim, frame) => {
             // Check if the current frame is the specific frame where damage should be applied
-            if (anim.key === attackAnimationKey && frame.index === 4) {
+            if (anim.key === attackAnimationKey && frame.index === 5) {
                 if (this.attacker) {
                     this.attacker.takeDamage(this.attack, this); // now then apply the damage
                 }
@@ -176,7 +182,8 @@ class Player {
     }
 
     stopAttackingEnemy() {
-        console.log('Stopping attack');
+        this.isMovingTowardsEnemy = false;
+        // console.log('Stopping attack');
         if (this.attackEvent) {
             this.attackEvent.remove(false);
             this.attackEvent = null;
@@ -243,6 +250,7 @@ class Player {
     }
 
     updatePosition() {
+        if (this.isDead) return;
         this.position.x = this.robotSprite.x;
         this.position.y = this.robotSprite.y;
     }
@@ -272,6 +280,17 @@ class Player {
         const currentAnim = this.robotSprite.anims.currentAnim;
         if (!currentAnim || !currentAnim.key.startsWith('attack')) {
             this.isAttacking = false;
+        }
+
+        if (this.isMovingTowardsEnemy && !this.isDead && this.scene.enemy) {
+            let enemyPosition = this.scene.enemy.getPosition();
+            let distanceToEnemy = Phaser.Math.Distance.Between(this.position.x, this.position.y, enemyPosition.x, enemyPosition.y);
+            
+            if (distanceToEnemy <= this.range) {
+                this.currentTween.stop();
+                this.isMovingTowardsEnemy = false;
+                this.playAttackAnimation(this.scene.enemy);
+            }
         }
 
         this.updateHealthBar();
