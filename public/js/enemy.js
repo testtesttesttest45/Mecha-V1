@@ -19,7 +19,7 @@ class Enemy {
         this.isMoving = false;
         this.moveTween = null;
         this.spritesheetKey = character.spritesheetKey;
-        this.detectionRadius = 150;
+        this.detectionRadius = 200;
         this.timeOutOfDetection = 0;
         this.detectionBar = null;
         this.isAlert = false; // enemy is on alert. during alert, enemy will never stop chasing player
@@ -30,13 +30,14 @@ class Enemy {
         this.isAttacking = false;
         this.attackEvent = null;
         this.damage = character.attack;
+        this.attackRangeRect = null;
     }
 
     create() {
         const character = characterMap[this.characterCode];
 
         this.sprite = this.scene.add.sprite(this.x, this.y, character.idle);
-        this.sprite.setOrigin(0.5, 0.8); // Set origin to bottom center
+        this.sprite.setOrigin(0.5, 0.5); // Set origin to bottom center
 
         for (let i = 0; i < 4; i++) {
             this.scene.anims.create({
@@ -68,8 +69,8 @@ class Enemy {
             this.scene.anims.create({
                 key: `character${this.characterCode}Attack${dir}`,
                 frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 60 + (index * 5), end: 60 + (index * 5) + 4 }),
-                frameRate: 5,
-                repeat: -1
+                frameRate: 5 * character.attackSpeed,
+                repeat: 0
             });
         });
 
@@ -94,11 +95,15 @@ class Enemy {
 
         this.createHealthBar();
 
-        this.detectionField = this.scene.add.circle(this.x, this.y, 150);
+        this.detectionField = this.scene.add.circle(this.x, this.y, 200);
         this.detectionField.setStrokeStyle(4, 0xff0000);
 
         this.detectionBar = this.scene.add.graphics();
         this.updateDetectionBar(1);
+
+        let dot = this.scene.add.graphics();
+        dot.fillStyle(0xffffff, 1); // White color
+        dot.fillCircle(this.sprite.x, this.sprite.y, 5);
     }
 
     takeDamage(damage, player) {
@@ -122,11 +127,10 @@ class Enemy {
     }
 
     moveToPlayer(playerX, playerY) {
-        if (this.isDead) return;
+        if (this.isDead || this.isMoving || this.isAttacking) return;
 
         this.isMoving = true;
         this.isAttacking = false;
-
         const updateMovement = () => {
             if (!this.attacker || !this.attacker.getPosition || this.isDead) {
                 console.warn("Attacking player is undefined or getPosition method is not available");
@@ -183,85 +187,81 @@ class Enemy {
     }
 
     updateEnemy(playerX, playerY, player, delta) {
+        // console.log('fckng cb', this.isAttacking)
         this.attacker = player;
-        if (this.isDead) return;
-    
+        if (this.isDead || this.attacker.isDead) return;
+
         const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, playerX, playerY);
-    
+
         // Determine the direction to the player
         const direction = this.determineDirectionToPlayer(playerX, playerY);
         const attackAnimationKey = `character${this.characterCode}Attack${direction}`;
-    
+
         // Player is within detection radius or the enemy is attacking
-        if (distance < this.detectionRadius || this.isAttacking) {
-            if (!this.hasPlayerBeenDetected) {
-                this.hasPlayerBeenDetected = true; // Player detected for the first time
+        if (distance < this.detectionRadius || (distance <= this.attackRange && this.hasPlayerBeenDetected)) {
+            // Set player as detected if within detection radius for the first time
+            if (!this.hasPlayerBeenDetected && distance < this.detectionRadius) {
+                this.hasPlayerBeenDetected = true;
             }
-    
+
             this.isAlert = true;
             this.timeOutOfDetection = 0; // Reset out-of-detection timer
             this.updateDetectionBar(1); // full bar
-    
-            if (distance <= this.attackRange) {
+            if (distance <= this.attackRange && !this.isAttacking) {
                 this.isMoving = false;
                 if (this.moveTween) {
                     this.moveTween.stop();
                 }
-                if (!this.sprite.anims.currentAnim || this.sprite.anims.currentAnim.key !== attackAnimationKey) {
-                    this.sprite.play(attackAnimationKey);
-                }
+                const direction = this.determineDirectionToPlayer(playerX, playerY);
+                const attackAnimationKey = `character${this.characterCode}Attack${direction}`;
+                this.sprite.play(attackAnimationKey);
                 this.attackPlayer(player);
             } else if (distance > this.attackRange && !this.isMoving) {
-                this.moveToPlayer(playerX, playerY); // Chase the player
+                this.moveToPlayer(playerX, playerY);
             }
-    
             if (this.isAttacking) {
                 this.timeInAlert = 0; // Reset alert timer when attacking
             } else {
                 this.timeInAlert += Math.round(delta); // Increment alert timer when not attacking
             }
-    
-        } else {
-            if (!this.hasPlayerBeenDetected) {
-                return;
-            }
-    
-            // Player is outside the detection radius and not attacking
-            if (this.isAlert && !this.isAttacking) {
-                if (this.timeInAlert >= this.alertTime) {
-                    this.isAlert = false; // End alert state after specified time
-                } else {
-                    this.timeInAlert += Math.round(delta); // Increment alert timer
+        }
+        else {
+            // Player is outside the detection radius and attack range
+            if (this.hasPlayerBeenDetected) {
+                // Enemy will try to move closer to the player if out of attack range
+                if (distance > this.attackRange && !this.isMoving) {
+                    this.moveToPlayer(playerX, playerY);
                 }
-                this.updateDetectionBar(1);
-            } else {
-                this.timeOutOfDetection += Math.round(delta);
-                const detectionPercentage = 1 - (this.timeOutOfDetection / 4000);
-                this.updateDetectionBar(Math.max(detectionPercentage, 0));
-                if (this.timeOutOfDetection >= 4000) {
-                    this.isMoving = false;
-                    if (this.moveTween) {
-                        this.moveTween.stop();
+
+                // Handling alert time and going idle
+                if (this.isAlert && !this.isAttacking) {
+                    if (distance > this.attackRange && this.timeInAlert >= this.alertTime) {
+                        this.isAlert = false;
+                        this.timeOutOfDetection += Math.round(delta);
+                    } else {
+                        this.timeInAlert += Math.round(delta);
+                        this.updateDetectionBar(1);
                     }
-                    if (!this.sprite.anims.currentAnim || !this.sprite.anims.currentAnim.key.includes('Idle')) {
-                        this.sprite.play(`character${this.characterCode}Idle1`);
+                } else if (distance > this.attackRange) {
+                    this.timeOutOfDetection += Math.round(delta);
+                    const detectionPercentage = 1 - (this.timeOutOfDetection / 4000);
+                    this.updateDetectionBar(Math.max(detectionPercentage, 0));
+                    if (this.timeOutOfDetection >= 4000) {
+                        this.isMoving = false;
+                        if (this.moveTween) {
+                            this.moveTween.stop();
+                        }
+                        if (!this.sprite.anims.currentAnim || !this.sprite.anims.currentAnim.key.includes('Idle')) {
+                            this.sprite.play(`character${this.characterCode}Idle1`);
+                        }
+                        this.hasPlayerBeenDetected = false;
                     }
                 }
             }
         }
     }
-    
-    
-    
-    getPosition() {
-        return {
-            x: this.sprite.x,
-            y: this.sprite.y
-        };
-    }
 
     attackPlayer(player) {
-        console.log('Enemy attacking player');
         if (player.isDead) {
             this.stopAttackingPlayer();
             return;
@@ -270,29 +270,71 @@ class Enemy {
         this.isAttacking = true;
         this.attacker = player;
     
-        // Setting up the damage application logic
-        if (this.attackEvent) {
-            this.attackEvent.remove(false);
-        }
-        this.sprite.off('animationupdate');
+        // Determine the direction to the player and play the attack animation
+        const direction = this.determineDirectionToPlayer(player.getPosition().x, player.getPosition().y);
+        const attackAnimationKey = `character${this.characterCode}Attack${direction}`;
+        this.sprite.play(attackAnimationKey);
     
-        // Add a listener for the animation frame event
+        // Calculate the angle towards the player
+        const angleToPlayer = Phaser.Math.Angle.Between(this.sprite.x, this.sprite.y, player.getPosition().x, player.getPosition().y);
+    
+        // Define the start and end angles for the arcs
+        const startAngle = angleToPlayer - Math.PI / 6;
+        const endAngle = angleToPlayer + Math.PI / 6;
+    
+        // Draw the attack area with curved edges
+        if (this.attackRangeArc) {
+            this.attackRangeArc.destroy(); // Destroy existing shape if any
+        }
+        this.attackRangeArc = this.scene.add.graphics({ fillStyle: { color: 0xff0000, alpha: 0.5 } });
+        this.attackRangeArc.beginPath(); // Phaser's graphics API to draw two arcs that form the outer edges
+        // https://newdocs.phaser.io/docs/3.54.0/focus/Phaser.GameObjects.Graphics-arc
+        this.attackRangeArc.moveTo(this.sprite.x, this.sprite.y); // Move to sprite's position
+        this.attackRangeArc.arc(this.sprite.x, this.sprite.y, this.attackRange, startAngle, endAngle, false);
+        this.attackRangeArc.closePath();
+        this.attackRangeArc.fillPath();
+        this.attackRangeArc.strokePath();
+    
+        // Listen for the specific frame of the attack animation
         this.sprite.on('animationupdate', (anim, frame) => {
-            // Check if the current frame is the specific frame where damage should be applied
-            if (anim.key.includes('Attack') && frame.index === 4) {
-                if (this.attacker) {
-                    this.attacker.takeDamage(this.damage, this); // Apply the damage
+            if (anim.key === attackAnimationKey && frame.index === 5) {
+                const playerPos = player.getPosition();
+                // Check if player is within the curved area (this check will be more complex)
+                // You need a custom function to check if the point is within the arc
+                if (this.isPlayerInArc(playerPos, this.sprite, this.attackRange, startAngle, endAngle)) {
+                    player.takeDamage(this.damage, this);
                 }
             }
-        }, this);
+        });
     
-        // Ensure that the listener is removed after the attack animation completes
-        this.sprite.once('animationcomplete', () => {
-            this.sprite.off('animationupdate');
-            this.isAttacking = false;
-        }, this);
+        // On animation completion
+        this.sprite.once('animationcomplete', anim => {
+            if (anim.key === attackAnimationKey) {
+                this.isAttacking = false;
+                this.attackRangeArc.destroy();
+            }
+        });
     }
     
+    isPlayerInArc(playerPos, spritePos, range, startAngle, endAngle) {
+        const angleToPlayer = Phaser.Math.Angle.Between(spritePos.x, spritePos.y, playerPos.x, playerPos.y);
+        const distanceToPlayer = Phaser.Math.Distance.Between(spritePos.x, spritePos.y, playerPos.x, playerPos.y);
+        return distanceToPlayer <= range && angleToPlayer >= startAngle && angleToPlayer <= endAngle;
+    }
+
+    playerWithinPursuitRange() { // to fix a rare bug where enemy stops chasing player 
+        const playerPosition = this.attacker.getPosition();
+        const distanceToPlayer = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, playerPosition.x, playerPosition.y);
+        const pursuitRange = this.attackRange + 100;
+        return distanceToPlayer <= pursuitRange;
+    }
+
+    getPosition() {
+        return {
+            x: this.sprite.x,
+            y: this.sprite.y
+        };
+    }
 
     determineDirectionToPlayer(playerX, playerY) {
         const dx = playerX - this.sprite.x
@@ -408,6 +450,7 @@ class Enemy {
         this.attacker = null;
 
         if (!this.sprite.anims.currentAnim || !this.sprite.anims.currentAnim.key.includes('Idle')) {
+            console.log("Going idle");
             this.sprite.play(`character${this.characterCode}Idle1`);
         }
     }
@@ -418,7 +461,7 @@ class Enemy {
         this.updateHealthBar();
 
         const isMoving = this.moveTween && this.moveTween.isPlaying();
-        const isAttacking = this.sprite.anims.isPlaying && this.sprite.anims.currentAnim.key.startsWith('Attack');
+        const isAttacking = this.sprite.anims.isPlaying && this.sprite.anims.currentAnim.key.includes('Attack');
 
         if (!isMoving && !isAttacking) {
             // Check if enough time has passed to change the animation

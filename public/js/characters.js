@@ -10,14 +10,14 @@ const characterMap = {
     2: {
         spritesheetKey: 'character2',
         health: 220,
-        attack: 100,
-        range: 200,
+        attack: 10000,
+        range: 250,
         speed: 100,
-        attackSpeed: 1,
+        attackSpeed: 0.4,
     },
     3: {
         spritesheetKey: 'character3',
-        health: 1000,
+        health: 6000,
         attack: 100,
         range: 80,
         speed: 200,

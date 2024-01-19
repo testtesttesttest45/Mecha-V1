@@ -32,7 +32,7 @@ class Player {
     create() {
 
         this.robotSprite = this.scene.add.sprite(this.position.x, this.position.y);
-        this.robotSprite.setOrigin(0.5, 0.8);
+        this.robotSprite.setOrigin(0.5, 0.5);
 
 
         // for (let i = 0; i < 4; i++) {
