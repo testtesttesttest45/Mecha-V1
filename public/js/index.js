@@ -195,13 +195,13 @@ class GameScene extends Phaser.Scene {
         const scaleX = this.width / this.land.width;
         const scaleY = this.height / this.land.height;
 
-        this.player = new Player(this, 1500, 800, 1);
+        this.player = new Player(this, 1500, 800, 3);
         this.player.create();
     }
 
     createEnemy() {
 
-        this.enemy = new Enemy(this, 1500, 1200, 2);
+        this.enemy = new Enemy(this, 1500, 1200, 3);
         this.enemy.create();
 
         this.enemy.sprite.on('pointerover', () => {

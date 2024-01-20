@@ -15,6 +15,7 @@ class Enemy {
         this.totalHealth = character.health; // Store the total health
         this.healthBar = null;
         this.speed = character.speed;
+        this.attackSpeed = character.attackSpeed;
         this.attackRange = character.range;
         this.isMoving = false;
         this.moveTween = null;
@@ -36,8 +37,8 @@ class Enemy {
     create() {
         const character = characterMap[this.characterCode];
 
-        this.sprite = this.scene.add.sprite(this.x, this.y, character.idle);
-        this.sprite.setOrigin(0.5, 0.5); // Set origin to bottom center
+       this.sprite = this.scene.add.sprite(this.x, this.y, character.idle);
+    this.sprite.setOrigin(0.5, 0.5);
 
         for (let i = 0; i < 4; i++) {
             this.scene.anims.create({
@@ -69,7 +70,7 @@ class Enemy {
             this.scene.anims.create({
                 key: `character${this.characterCode}Attack${dir}`,
                 frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 60 + (index * 5), end: 60 + (index * 5) + 4 }),
-                frameRate: 5 * character.attackSpeed,
+                frameRate: 6 * this.attackSpeed,
                 repeat: 0
             });
         });
@@ -79,10 +80,12 @@ class Enemy {
         this.sprite.setScale(0.5);
         this.scene.physics.world.enable(this.sprite);
 
-        const bodyWidth = 160;
-        const bodyHeight = 180;
+        // const bodyWidth = 350;
+        // const bodyHeight = 300;
+        const bodyWidth = this.sprite.width * 0.6;
+        const bodyHeight = this.sprite.height * 0.6;
         const offsetX = (this.sprite.width - bodyWidth) / 2;
-        const offsetY = this.sprite.height - 280;
+        const offsetY = (this.sprite.height - bodyHeight) /2;
 
         this.sprite.body.setSize(bodyWidth, bodyHeight);
         this.sprite.body.setOffset(offsetX, offsetY);
@@ -286,7 +289,7 @@ class Enemy {
         if (this.attackRangeArc) {
             this.attackRangeArc.destroy(); // Destroy existing shape if any
         }
-        this.attackRangeArc = this.scene.add.graphics({ fillStyle: { color: 0xff0000, alpha: 0.5 } });
+        this.attackRangeArc = this.scene.add.graphics({ fillStyle: { color: 0xffff00, alpha: 0.4 } });
         this.attackRangeArc.beginPath(); // Phaser's graphics API to draw two arcs that form the outer edges
         // https://newdocs.phaser.io/docs/3.54.0/focus/Phaser.GameObjects.Graphics-arc
         this.attackRangeArc.moveTo(this.sprite.x, this.sprite.y); // Move to sprite's position
@@ -294,7 +297,7 @@ class Enemy {
         this.attackRangeArc.closePath();
         this.attackRangeArc.fillPath();
         this.attackRangeArc.strokePath();
-    
+        this.sprite.off('animationupdate');
         // Listen for the specific frame of the attack animation
         this.sprite.on('animationupdate', (anim, frame) => {
             if (anim.key === attackAnimationKey && frame.index === 5) {
@@ -403,8 +406,7 @@ class Enemy {
 
     updateHealthBar() {
         const barX = this.sprite.x - 30;
-        const barY = this.sprite.y - this.sprite.displayHeight + 80;
-
+        const barY = this.sprite.y - this.sprite.body.height / 2;
         this.healthBar.clear();
         this.healthBar.setPosition(barX, barY);
 
@@ -422,7 +424,7 @@ class Enemy {
     updateDetectionBar(percentage) {
         if (!this.hasPlayerBeenDetected) return;
         const barX = this.sprite.x - 30; // same x as the health bar
-        const barY = this.sprite.y - this.sprite.displayHeight + 90; // slightly below the health bar
+        const barY = (this.sprite.y - this.sprite.body.height / 2) + 8;
 
         this.detectionField.alpha = percentage;
         this.detectionBar.clear();

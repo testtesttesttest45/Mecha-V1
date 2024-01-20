@@ -97,13 +97,13 @@ class Player {
         if (this.currentTween) {
             this.currentTween.stop();
         }
-
+    
         let targetDistance = Phaser.Math.Distance.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
-
+    
         if (this.scene.enemyClicked && targetDistance <= this.range) {
             this.isMovingTowardsEnemy = true;
             this.playAttackAnimation(this.scene.enemy);
-            return; // dont continue moving
+            return; // Don't continue moving
         } else if (this.scene.enemyClicked && targetDistance > this.range) {
             this.isMovingTowardsEnemy = true;
             // Adjust the target position to stop at the attack range
@@ -111,12 +111,15 @@ class Player {
             newX = this.robotSprite.x + Math.cos(angleToTarget) * (targetDistance - this.range);
             newY = this.robotSprite.y + Math.sin(angleToTarget) * (targetDistance - this.range);
         }
-
+    
         const direction = this.determineDirection(newX, newY);
-        this.robotSprite.play(`move${direction}`);
-        this.lastDirection = direction;
-        // console.log('lastDirection: ' + this.lastDirection);
-
+        
+        // Check if the player is already moving in the same direction. this prevents player from restarting animation if its already on same direction
+        if (this.lastDirection !== direction) {
+            this.robotSprite.play(`move${direction}`);
+            this.lastDirection = direction;
+        }
+    
         let distance = Phaser.Math.Distance.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
         let duration = distance / this.speed * 1000;  // Duration based on speed
         this.currentTween = this.scene.tweens.add({
@@ -140,12 +143,12 @@ class Player {
                 if (onCompleteCallback) {
                     onCompleteCallback();
                 }
-
             }
         });
-
+    
         this.lastActionTime = this.scene.time.now; // Reset last action time on movement
     }
+    
 
     playAttackAnimation(enemy) {
         const direction = this.determineDirectionToEnemy();
@@ -168,7 +171,7 @@ class Player {
         // Add a listener for the animation frame event
         this.robotSprite.on('animationupdate', (anim, frame) => {
             // Check if the current frame is the specific frame where damage should be applied
-            if (anim.key === attackAnimationKey && frame.index === 5) {
+            if (anim.key === attackAnimationKey && frame.index === 4) {
                 if (this.attacker) {
                     this.attacker.takeDamage(this.attack, this); // now then apply the damage
                 }
@@ -287,7 +290,9 @@ class Player {
             let distanceToEnemy = Phaser.Math.Distance.Between(this.position.x, this.position.y, enemyPosition.x, enemyPosition.y);
             
             if (distanceToEnemy <= this.range) {
-                this.currentTween.stop();
+                if (this.currentTween) {
+                    this.currentTween.stop();
+                }
                 this.isMovingTowardsEnemy = false;
                 this.playAttackAnimation(this.scene.enemy);
             }
