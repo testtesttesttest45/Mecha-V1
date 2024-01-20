@@ -32,17 +32,7 @@ class Player {
     create() {
 
         this.robotSprite = this.scene.add.sprite(this.position.x, this.position.y);
-        this.robotSprite.setOrigin(0.5, 0.5);
-
-
-        // for (let i = 0; i < 4; i++) {
-        //     this.scene.anims.create({
-        //         key: `idle${i + 1}`,
-        //         frames: this.scene.anims.generateFrameNumbers(this.idleAnimationKey, { start: i * 15, end: (i + 1) * 15 - 1 }),
-        //         frameRate: 10,
-        //         repeat: -1
-        //     });
-        // }// the above code looops through the idle animation and creates a new animation for each of the 4 directions
+        this.robotSprite.setOrigin(0.5, 0.7);
 
         for (let i = 0; i < 4; i++) {
             this.scene.anims.create({
@@ -50,12 +40,11 @@ class Player {
                 frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: i * 5, end: i * 5 + 4 }),
                 frameRate: 6,
                 repeat: -1,
-            });
+            }); // the above code looops through the idle animation and creates a new animation for each of the 4 directions
         }
         const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
         this.robotSprite.play(randomIdleAnimation);
         this.lastAnimationChange = this.scene.time.now;
-        this.robotSprite.setScale(0.5);
 
 
         const directions = ['southeast', 'southwest', 'south', 'east', 'west', 'northeast', 'northwest', 'north'];
@@ -67,7 +56,6 @@ class Player {
                 repeat: -1
             });
         });
-
 
         // Create attacking animations
         directions.forEach((dir, index) => {
@@ -94,12 +82,25 @@ class Player {
     moveStraight(newX, newY, onCompleteCallback = null) {
         if (this.isDead) return;
         this.stopAttackingEnemy();
+
+        const currentAnim = this.robotSprite.anims.currentAnim;
+        const hasReachedTarget = Math.round(this.robotSprite.x) === Math.round(newX) && Math.round(this.robotSprite.y) === Math.round(newY);
+
+        // Check if already at the target and playing an idle animation
+        if (hasReachedTarget && currentAnim && currentAnim.key.startsWith('idle')) {
+            return; // Do nothing if already at the target and idle
+        }
+
         if (this.currentTween) {
             this.currentTween.stop();
         }
-    
+        console.log(currentAnim.key);
+        if (currentAnim && currentAnim.key.startsWith('idle') && this.lastDirection) { // to fix a rare bug where the bug is moving in idle animation
+            this.robotSprite.play(`move${this.lastDirection}`);
+        }
+
         let targetDistance = Phaser.Math.Distance.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
-    
+
         if (this.scene.enemyClicked && targetDistance <= this.range) {
             this.isMovingTowardsEnemy = true;
             this.playAttackAnimation(this.scene.enemy);
@@ -111,15 +112,15 @@ class Player {
             newX = this.robotSprite.x + Math.cos(angleToTarget) * (targetDistance - this.range);
             newY = this.robotSprite.y + Math.sin(angleToTarget) * (targetDistance - this.range);
         }
-    
+
         const direction = this.determineDirection(newX, newY);
-        
+
         // Check if the player is already moving in the same direction. this prevents player from restarting animation if its already on same direction
         if (this.lastDirection !== direction) {
             this.robotSprite.play(`move${direction}`);
             this.lastDirection = direction;
         }
-    
+
         let distance = Phaser.Math.Distance.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
         let duration = distance / this.speed * 1000;  // Duration based on speed
         this.currentTween = this.scene.tweens.add({
@@ -133,22 +134,26 @@ class Player {
             },
             onComplete: () => {
                 if (this.isDead) return;
+
                 if (this.scene.enemyClicked) {
-                    this.scene.enemyClicked = false; // Reset the flag after attacking
+                    this.scene.enemyClicked = false;
                 } else {
-                    const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
-                    // Play the randomly selected idle animation
-                    this.robotSprite.play(randomIdleAnimation);
+                    // Check if the sprite has reached the target
+                    if (Math.round(this.robotSprite.x) === Math.round(newX) && Math.round(this.robotSprite.y) === Math.round(newY)) {
+                        // Play a random idle animation
+                        const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
+                        this.robotSprite.play(randomIdleAnimation);
+                    }
                 }
                 if (onCompleteCallback) {
                     onCompleteCallback();
                 }
             }
         });
-    
+
         this.lastActionTime = this.scene.time.now; // Reset last action time on movement
     }
-    
+
 
     playAttackAnimation(enemy) {
         const direction = this.determineDirectionToEnemy();
@@ -186,22 +191,17 @@ class Player {
 
     stopAttackingEnemy() {
         this.isMovingTowardsEnemy = false;
-        // console.log('Stopping attack');
         if (this.attackEvent) {
             this.attackEvent.remove(false);
             this.attackEvent = null;
         }
         this.isAttacking = false;
         this.attacker = null;
-
+    
         // Transition back to idle animation
-        if (!this.currentTween || !this.currentTween.isPlaying()) {
-            const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
-            // Play the randomly selected idle animation
-            this.robotSprite.play(randomIdleAnimation);
-        }
+        const currentAnim = this.robotSprite.anims.currentAnim;
+        
     }
-
     calculateAverageDirection(directions) {
         // Calculate the most frequent direction in the array
         const directionCounts = directions.reduce((acc, dir) => {
@@ -288,7 +288,7 @@ class Player {
         if (this.isMovingTowardsEnemy && !this.isDead && this.scene.enemy) {
             let enemyPosition = this.scene.enemy.getPosition();
             let distanceToEnemy = Phaser.Math.Distance.Between(this.position.x, this.position.y, enemyPosition.x, enemyPosition.y);
-            
+
             if (distanceToEnemy <= this.range) {
                 if (this.currentTween) {
                     this.currentTween.stop();

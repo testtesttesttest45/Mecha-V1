@@ -31,7 +31,7 @@ class GameScene extends Phaser.Scene {
 
     createStaticBackground() {
         this.ocean = this.add.image(0, 0, 'ocean').setOrigin(0, 0);
-        this.ocean.setScale(2);
+        this.ocean.setScale(8);
         this.ocean.setDepth(-1);
     }
 
@@ -195,13 +195,13 @@ class GameScene extends Phaser.Scene {
         const scaleX = this.width / this.land.width;
         const scaleY = this.height / this.land.height;
 
-        this.player = new Player(this, 1500, 800, 3);
+        this.player = new Player(this, 1500, 800, 5);
         this.player.create();
     }
 
     createEnemy() {
 
-        this.enemy = new Enemy(this, 1500, 1200, 3);
+        this.enemy = new Enemy(this, 1500, 1200, 2);
         this.enemy.create();
 
         this.enemy.sprite.on('pointerover', () => {
@@ -363,9 +363,11 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('mouse_cursor', 'assets/images/mouse_cursor.png');
         this.load.image('mouse_cursor_attack', 'assets/images/mouse_cursor_attack.png');
 
-        loadDynamicSpriteSheet.call(this, 'character1', 'assets/sprites/character_1.png', 6000, 6600);
+        loadDynamicSpriteSheet.call(this, 'character1', 'assets/sprites/character_1.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character2', 'assets/sprites/character_2.png', 4000, 4400);
-        loadDynamicSpriteSheet.call(this, 'character3', 'assets/sprites/character_3.png', 6000, 5280);
+        loadDynamicSpriteSheet.call(this, 'character3', 'assets/sprites/character_3.png', 4000, 3520);
+        loadDynamicSpriteSheet.call(this, 'character4', 'assets/sprites/character_4.png', 4000, 5280);
+        loadDynamicSpriteSheet.call(this, 'character5', 'assets/sprites/character_5.png', 4000, 2640);
     }
 
 

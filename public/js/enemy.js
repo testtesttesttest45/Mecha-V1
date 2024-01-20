@@ -38,7 +38,7 @@ class Enemy {
         const character = characterMap[this.characterCode];
 
        this.sprite = this.scene.add.sprite(this.x, this.y, character.idle);
-    this.sprite.setOrigin(0.5, 0.5);
+       this.sprite.setOrigin(0.5, 0.5);
 
         for (let i = 0; i < 4; i++) {
             this.scene.anims.create({

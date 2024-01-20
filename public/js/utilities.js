@@ -74,6 +74,7 @@ export function loadDynamicSpriteSheet(key, path, width, height) {
 
     this.load.spritesheet(key, path, { frameWidth: frameWidth, frameHeight: frameHeight });
 }
+
 export function setAttackCursor(game) {
     game.input.setDefaultCursor(`url('assets/images/mouse_cursor_attack.png') 15 10, pointer`);
 }
