@@ -112,22 +112,32 @@ class Enemy {
     takeDamage(damage, player) {
         console.log('Enemy taking damage');
         if (this.isDead) return;
-
+    
         this.attacker = player; // Store reference to the attacking player
-
+    
         this.health -= damage;
         this.health = Math.max(this.health, 0);
+        this.hasPlayerBeenDetected = true;
         console.log(`Enemy took ${damage} damage. ${this.health} health remaining`);
-
+    
         // Create and display damage text
         this.createDamageText(damage);
-
+    
         if (this.health <= 0 && !this.isDead) {
             this.die();
         }
-
+    
         this.updateHealthBar();
+    
+        // Reset alert time and detection countdown on taking damage
+        if (this.hasPlayerBeenDetected) {
+            this.timeInAlert = 0;
+            this.timeOutOfDetection = 0;
+            this.isAlert = true; // Ensure the enemy is in an alert state
+            this.updateDetectionBar(1); // Full detection bar
+        }
     }
+    
 
     moveToPlayer(playerX, playerY) {
         if (this.isDead || this.isMoving || this.isAttacking) return;
@@ -190,10 +200,15 @@ class Enemy {
     }
 
     updateEnemy(playerX, playerY, player, delta) {
+        // console.log('fckng cb', this.isAttacking)
         this.attacker = player;
         if (this.isDead || this.attacker.isDead) return;
 
         const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, playerX, playerY);
+
+        // Determine the direction to the player
+        const direction = this.determineDirectionToPlayer(playerX, playerY);
+        const attackAnimationKey = `character${this.characterCode}Attack${direction}`;
 
         // Player is within detection radius or the enemy is attacking
         if (distance < this.detectionRadius || (distance <= this.attackRange && this.hasPlayerBeenDetected)) {

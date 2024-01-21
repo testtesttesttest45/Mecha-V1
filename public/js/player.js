@@ -161,33 +161,28 @@ class Player {
         const attackAnimationKey = `attack${direction}`;
     
         if (this.isAttacking && !this.attackAnimationComplete) {
-            return; // If already playing an attack animation and not yet complete, do nothing
-        }
+            return; // prevent animation stuck at first frame
     
-        this.isAttacking = true; // Flag to indicate attack start
-        this.attackAnimationComplete = false; // Flag to indicate animation completion
-        this.attacker = enemy; // Reference to the enemy being attacked
+        this.isAttacking = true;
+        this.attackAnimationComplete = false;
+        this.attacker = enemy;
         this.robotSprite.play(attackAnimationKey);
         
-        // Reset existing listeners to avoid duplicates
         this.robotSprite.off('animationupdate');
         this.robotSprite.off('animationcomplete');
     
-        // Add listener for the animation frame event
         this.robotSprite.on('animationupdate', (anim, frame) => {
-            if (anim.key === attackAnimationKey && frame.index === 5) { // Assuming damage frame is 4
+            if (anim.key === attackAnimationKey && frame.index === 4) {
                 if (this.attacker) {
                     this.attacker.takeDamage(this.attack, this); // Apply damage
                 }
             }
         });
     
-        // Listener to reset the attack animation completion flag
         this.robotSprite.once('animationcomplete', anim => {
-            console.log('Attack animation complete');
             if (anim.key === attackAnimationKey) {
-                this.attackAnimationComplete = true; // Reset flag at end of animation
-                this.robotSprite.play(attackAnimationKey); // Replay the animation
+                this.attackAnimationComplete = true;
+                this.robotSprite.play(attackAnimationKey);
             }
         });
     }
@@ -220,7 +215,6 @@ class Player {
         }
 
         if (this.isMovingTowardsEnemy && !this.isDead && this.scene.enemy) {
-            console.log('moving towards enemy')
             let enemyPosition = this.scene.enemy.getPosition();
             let distanceToEnemy = Phaser.Math.Distance.Between(this.position.x, this.position.y, enemyPosition.x, enemyPosition.y);
 
