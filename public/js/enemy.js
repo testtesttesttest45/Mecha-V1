@@ -32,13 +32,14 @@ class Enemy {
         this.attackEvent = null;
         this.damage = character.damage;
         this.attackRangeRect = null;
+        this.projectile = character.projectile;
     }
 
     create() {
         const character = characterMap[this.characterCode];
 
-       this.sprite = this.scene.add.sprite(this.x, this.y, character.idle);
-       this.sprite.setOrigin(0.5, 0.5);
+        this.sprite = this.scene.add.sprite(this.x, this.y, character.idle);
+        this.sprite.setOrigin(0.5, 0.5);
 
         for (let i = 0; i < 4; i++) {
             this.scene.anims.create({
@@ -85,7 +86,7 @@ class Enemy {
         const bodyWidth = this.sprite.width * 0.6;
         const bodyHeight = this.sprite.height * 0.6;
         const offsetX = (this.sprite.width - bodyWidth) / 2;
-        const offsetY = (this.sprite.height - bodyHeight) /2;
+        const offsetY = (this.sprite.height - bodyHeight) / 2;
 
         this.sprite.body.setSize(bodyWidth, bodyHeight);
         this.sprite.body.setOffset(offsetX, offsetY);
@@ -112,32 +113,22 @@ class Enemy {
     takeDamage(damage, player) {
         console.log('Enemy taking damage');
         if (this.isDead) return;
-    
+
         this.attacker = player; // Store reference to the attacking player
-    
+
         this.health -= damage;
         this.health = Math.max(this.health, 0);
-        this.hasPlayerBeenDetected = true;
         console.log(`Enemy took ${damage} damage. ${this.health} health remaining`);
-    
+
         // Create and display damage text
         this.createDamageText(damage);
-    
+
         if (this.health <= 0 && !this.isDead) {
             this.die();
         }
-    
+
         this.updateHealthBar();
-    
-        // Reset alert time and detection countdown on taking damage
-        if (this.hasPlayerBeenDetected) {
-            this.timeInAlert = 0;
-            this.timeOutOfDetection = 0;
-            this.isAlert = true; // Ensure the enemy is in an alert state
-            this.updateDetectionBar(1); // Full detection bar
-        }
     }
-    
 
     moveToPlayer(playerX, playerY) {
         if (this.isDead || this.isMoving || this.isAttacking) return;
@@ -283,24 +274,97 @@ class Enemy {
         this.isAttacking = true;
         this.attacker = player;
     
-        // Determine the direction to the player and play the attack animation
         const direction = this.determineDirectionToPlayer(player.getPosition().x, player.getPosition().y);
         const attackAnimationKey = `character${this.characterCode}Attack${direction}`;
         this.sprite.play(attackAnimationKey);
     
-        // Calculate the angle towards the player
         const angleToPlayer = Phaser.Math.Angle.Between(this.sprite.x, this.sprite.y, player.getPosition().x, player.getPosition().y);
+        const hasProjectile = this.projectile !== '';
     
+        if (hasProjectile) {
+            this.createAttackRangeRectangle(angleToPlayer);
+        } else {
+            this.createAttackRangeArc(angleToPlayer);
+        }
+    
+        this.sprite.off('animationupdate');
+        this.sprite.on('animationupdate', (anim, frame) => {
+            if (anim.key === attackAnimationKey) {
+                if (frame.index === 4 && hasProjectile) {
+                    this.launchProjectile(player, angleToPlayer);
+                } else if (frame.index === 5 && !hasProjectile) {
+                    const playerPos = player.getPosition();
+                    if (this.isPlayerInArc(playerPos, this.sprite, this.attackRange, angleToPlayer - Math.PI / 6, angleToPlayer + Math.PI / 6)) {
+                        player.takeDamage(this.damage, this);
+                    }
+                }
+            }
+        });
+    
+        this.sprite.once('animationcomplete', anim => {
+            if (anim.key === attackAnimationKey) {
+                this.isAttacking = false;
+                if (this.attackRangeArc) this.attackRangeArc.destroy();
+                if (this.attackRangeRect) this.attackRangeRect.destroy();
+            }
+        });
+    }
+    
+    
+    launchProjectile(player, angleToPlayer) {
+        let projectile = this.scene.add.sprite(this.sprite.x, this.sprite.y, this.projectile);
+        projectile.setOrigin(0.5, 0.5);
+        projectile.setScale(0.5);
+        projectile.setRotation(angleToPlayer + Math.PI / 2); // Rotate the projectile
+    
+        const projectileSpeed = 500;
+        const maxDistance = this.attackRange;
+    
+        // Calculate the end point of the projectile's path within the rectangle path
+        const endPointX = this.sprite.x + Math.cos(angleToPlayer) * maxDistance;
+        const endPointY = this.sprite.y + Math.sin(angleToPlayer) * maxDistance;
+    
+        // Calculate the duration for the projectile to travel to the end point
+        const distanceToEndPoint = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, endPointX, endPointY);
+        const duration = (distanceToEndPoint / projectileSpeed) * 1000;
+    
+        this.scene.tweens.add({
+            targets: projectile,
+            x: endPointX,
+            y: endPointY,
+            duration: duration,
+            ease: 'Linear',
+            onUpdate: () => {
+                // Check if projectile is close to the player for hit detection
+                if (Phaser.Math.Distance.Between(projectile.x, projectile.y, player.getPosition().x, player.getPosition().y) < 20) { 
+                    player.takeDamage(this.damage, this);
+                    // Stop the tween before destroying the projectile
+                    projectile.destroy();
+                }
+            },
+            onComplete: () => {
+                // Only destroy the projectile if it still exists
+                if (projectile.active) {
+                    projectile.destroy();
+                }
+            }
+        });
+    }
+    
+    
+    
+    
+
+    createAttackRangeArc(angleToPlayer) {
         // Define the start and end angles for the arcs
         const startAngle = angleToPlayer - Math.PI / 6;
         const endAngle = angleToPlayer + Math.PI / 6;
-    
+
         // Draw the attack area with curved edges
         if (this.attackRangeArc) {
             this.attackRangeArc.destroy(); // Destroy existing shape if any
         }
-
-        this.attackRangeArc = this.scene.add.graphics({ fillStyle: { alpha: 0.4, color: 0x4000ff } });
+        this.attackRangeArc = this.scene.add.graphics({ fillStyle: { color: 0xffff00, alpha: 0.4 } });
         this.attackRangeArc.beginPath(); // Phaser's graphics API to draw two arcs that form the outer edges
         // https://newdocs.phaser.io/docs/3.54.0/focus/Phaser.GameObjects.Graphics-arc
         this.attackRangeArc.moveTo(this.sprite.x, this.sprite.y); // Move to sprite's position
@@ -308,30 +372,19 @@ class Enemy {
         this.attackRangeArc.closePath();
         this.attackRangeArc.fillPath();
         this.attackRangeArc.strokePath();
-        this.sprite.off('animationupdate');
-        // Listen for the specific frame of the attack animation
-        this.sprite.on('animationupdate', (anim, frame) => {
-            if (anim.key === attackAnimationKey && frame.index === 5) {
-                const playerPos = player.getPosition();
-                // Check if player is within the curved area (this check will be more complex)
-                // You need a custom function to check if the point is within the arc
-                if (this.isPlayerInArc(playerPos, this.sprite, this.attackRange, startAngle, endAngle)) {
-                    player.takeDamage(this.damage, this);
-                } else {
-                    this.createDodgeText();
-                }
-            }
-        });
-    
-        // On animation completion
-        this.sprite.once('animationcomplete', anim => {
-            if (anim.key === attackAnimationKey) {
-                this.isAttacking = false;
-                this.attackRangeArc.destroy();
-            }
-        });
     }
-    
+
+    createAttackRangeRectangle(angleToPlayer) {
+        if (this.attackRangeRect) {
+            this.attackRangeRect.destroy();
+        }
+        const rectWidth = this.attackRange;
+        const rectHeight = 45; // Adjust this value as needed
+        this.attackRangeRect = this.scene.add.rectangle(this.sprite.x, this.sprite.y, rectWidth, rectHeight, 0xff0000, 0.4);
+        this.attackRangeRect.setOrigin(0, 0.5);
+        this.attackRangeRect.setRotation(angleToPlayer);
+    }
+
     isPlayerInArc(playerPos, spritePos, range, startAngle, endAngle) {
         const angleToPlayer = Phaser.Math.Angle.Between(spritePos.x, spritePos.y, playerPos.x, playerPos.y);
         const distanceToPlayer = Phaser.Math.Distance.Between(spritePos.x, spritePos.y, playerPos.x, playerPos.y);
@@ -384,23 +437,6 @@ class Enemy {
         });
     }
 
-    createDodgeText() {
-        const dodgeText = this.scene.add.text(this.attacker.getPosition().x, this.attacker.getPosition().y - 100, 'Dodged!', { font: '24px Orbitron', fill: '#fff' });
-        dodgeText.setOrigin(0.5, 0.5);
-
-        // Animation for damage text (move up and fade out)
-        this.scene.tweens.add({
-            targets: dodgeText,
-            y: dodgeText.y - 30, // Move up
-            alpha: 0, // Fade out
-            duration: 800,
-            ease: 'Power2',
-            onComplete: () => {
-                dodgeText.destroy(); // Remove the text object
-            }
-        });
-    }
-
     die() {
         if (this.isDead) return;
 
@@ -424,7 +460,6 @@ class Enemy {
         }
 
         this.healthBar.destroy();
-        if(this.attackRangeArc) this.attackRangeArc.destroy();
 
         this.detectionBar.clear();
         this.detectionField.setVisible(false);
@@ -453,7 +488,6 @@ class Enemy {
     }
 
     updateDetectionBar(percentage) {
-        if (this.isDead) return;
         if (!this.hasPlayerBeenDetected) return;
         const barX = this.sprite.x - 30; // same x as the health bar
         const barY = (this.sprite.y - this.sprite.body.height / 2) + 8;
