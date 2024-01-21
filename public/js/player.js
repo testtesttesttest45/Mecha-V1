@@ -161,7 +161,8 @@ class Player {
         const attackAnimationKey = `attack${direction}`;
     
         if (this.isAttacking && !this.attackAnimationComplete) {
-            return; // prevent animation stuck at first frame
+            return; //
+        }
     
         this.isAttacking = true;
         this.attackAnimationComplete = false;

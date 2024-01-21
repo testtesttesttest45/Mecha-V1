@@ -299,7 +299,8 @@ class Enemy {
         if (this.attackRangeArc) {
             this.attackRangeArc.destroy(); // Destroy existing shape if any
         }
-        this.attackRangeArc = this.scene.add.graphics({ fillStyle: { color: 0xffff00, alpha: 0.4 } });
+        
+        this.attackRangeArc = this.scene.add.graphics({ fillStyle: { alpha: 0.4, color: 0x4000ff } });
         this.attackRangeArc.beginPath(); // Phaser's graphics API to draw two arcs that form the outer edges
         // https://newdocs.phaser.io/docs/3.54.0/focus/Phaser.GameObjects.Graphics-arc
         this.attackRangeArc.moveTo(this.sprite.x, this.sprite.y); // Move to sprite's position
@@ -316,6 +317,8 @@ class Enemy {
                 // You need a custom function to check if the point is within the arc
                 if (this.isPlayerInArc(playerPos, this.sprite, this.attackRange, startAngle, endAngle)) {
                     player.takeDamage(this.damage, this);
+                } else {
+                    this.createDodgeText();
                 }
             }
         });
@@ -381,6 +384,23 @@ class Enemy {
         });
     }
 
+    createDodgeText() {
+        const dodgeText = this.scene.add.text(this.attacker.getPosition().x, this.attacker.getPosition().y - 100, 'Dodged!', { font: '24px Orbitron', fill: '#fff' });
+        dodgeText.setOrigin(0.5, 0.5);
+
+        // Animation for damage text (move up and fade out)
+        this.scene.tweens.add({
+            targets: dodgeText,
+            y: dodgeText.y - 30, // Move up
+            alpha: 0, // Fade out
+            duration: 800,
+            ease: 'Power2',
+            onComplete: () => {
+                dodgeText.destroy(); // Remove the text object
+            }
+        });
+    }
+
     die() {
         if (this.isDead) return;
 
@@ -404,6 +424,7 @@ class Enemy {
         }
 
         this.healthBar.destroy();
+        this.attackRangeArc.destroy();
 
         this.detectionBar.clear();
         this.detectionField.setVisible(false);
@@ -432,6 +453,7 @@ class Enemy {
     }
 
     updateDetectionBar(percentage) {
+        if (this.isDead) return;
         if (!this.hasPlayerBeenDetected) return;
         const barX = this.sprite.x - 30; // same x as the health bar
         const barY = (this.sprite.y - this.sprite.body.height / 2) + 8;
