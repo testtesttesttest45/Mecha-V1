@@ -27,10 +27,11 @@ class Player {
         this.isDead = false;
         this.idleAnimations = ['idle1', 'idle2', 'idle3', 'idle4'];
         this.isMovingTowardsEnemy = false;
+        this.continueAttacking = false;
+        this.attackAnimationComplete = true;
     }
 
     create() {
-
         this.robotSprite = this.scene.add.sprite(this.position.x, this.position.y);
         this.robotSprite.setOrigin(0.5, 0.7);
 
@@ -63,7 +64,7 @@ class Player {
                 key: `attack${dir}`,
                 frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 60 + (index * 5), end: 60 + (index * 5) + 4 }),
                 frameRate: 6 * this.attackSpeed,
-                repeat: -1
+                repeat: 0
             });
         });
 
@@ -94,16 +95,17 @@ class Player {
         if (this.currentTween) {
             this.currentTween.stop();
         }
-        console.log(currentAnim.key);
-        if (currentAnim && currentAnim.key.startsWith('idle') && this.lastDirection) { // to fix a rare bug where the bug is moving in idle animation
-            this.robotSprite.play(`move${this.lastDirection}`);
+        if (currentAnim && currentAnim.key.startsWith('idle') || currentAnim.key.startsWith('attack')) {
+            if (this.lastDirection !== null) {
+                this.robotSprite.play(`move${this.lastDirection}`);
+            }
         }
 
         let targetDistance = Phaser.Math.Distance.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
 
         if (this.scene.enemyClicked && targetDistance <= this.range) {
             this.isMovingTowardsEnemy = true;
-            this.playAttackAnimation(this.scene.enemy);
+            // this.playAttackAnimation(this.scene.enemy);
             return; // Don't continue moving
         } else if (this.scene.enemyClicked && targetDistance > this.range) {
             this.isMovingTowardsEnemy = true;
@@ -154,54 +156,103 @@ class Player {
         this.lastActionTime = this.scene.time.now; // Reset last action time on movement
     }
 
-
     playAttackAnimation(enemy) {
         const direction = this.determineDirectionToEnemy();
-        const currentAnim = this.robotSprite.anims.currentAnim;
-        if (currentAnim && currentAnim.key.startsWith('attack')) {
-            return; // If already playing an attack animation, do nothing
-        }
-
-        this.isAttacking = true; // Set the flag to true when attack starts
         const attackAnimationKey = `attack${direction}`;
-        this.robotSprite.play(attackAnimationKey);
-        this.attacker = enemy; // Store a reference to the current enemy being attacked
-
-        if (this.attackEvent) {
-            this.attackEvent.remove(false);
+    
+        if (this.isAttacking && !this.attackAnimationComplete) {
+            return; // If already playing an attack animation and not yet complete, do nothing
         }
-
-        // Remove any existing listeners to avoid duplicates
+    
+        this.isAttacking = true; // Flag to indicate attack start
+        this.attackAnimationComplete = false; // Flag to indicate animation completion
+        this.attacker = enemy; // Reference to the enemy being attacked
+        this.robotSprite.play(attackAnimationKey);
+        
+        // Reset existing listeners to avoid duplicates
         this.robotSprite.off('animationupdate');
-        // Add a listener for the animation frame event
+        this.robotSprite.off('animationcomplete');
+    
+        // Add listener for the animation frame event
         this.robotSprite.on('animationupdate', (anim, frame) => {
-            // Check if the current frame is the specific frame where damage should be applied
-            if (anim.key === attackAnimationKey && frame.index === 4) {
+            if (anim.key === attackAnimationKey && frame.index === 5) { // Assuming damage frame is 4
                 if (this.attacker) {
-                    this.attacker.takeDamage(this.attack, this); // now then apply the damage
+                    this.attacker.takeDamage(this.attack, this); // Apply damage
                 }
             }
-        }, this);
+        });
+    
+        // Listener to reset the attack animation completion flag
+        this.robotSprite.once('animationcomplete', anim => {
+            console.log('Attack animation complete');
+            if (anim.key === attackAnimationKey) {
+                this.attackAnimationComplete = true; // Reset flag at end of animation
+                this.robotSprite.play(attackAnimationKey); // Replay the animation
+            }
+        });
+    }
+    
+    update(time, delta) {
+        // Check if the player is currently moving or attacking
+        const isMoving = this.currentTween && this.currentTween.isPlaying();
+        const isAttacking = this.robotSprite.anims.isPlaying && this.robotSprite.anims.currentAnim.key.startsWith('attack');
 
-        // Ensure that the listener is removed after the attack animation completes
-        this.robotSprite.once('animationcomplete', () => {
-            this.robotSprite.off('animationupdate');
-        }, this);
+        // If the player is neither moving nor attacking
+        if (!isMoving && !isAttacking && !this.isDead) {
+            if (time - this.lastActionTime > 5000) { // 5 seconds of inactivity
+                if (time - this.lastAnimationChange > 5000) {
+                    this.idleAnimationIndex = (this.idleAnimationIndex + 1) % 4;
+                    this.robotSprite.play(`idle${this.idleAnimationIndex + 1}`);
+                    this.lastAnimationChange = time;
+                }
+            }
+        } else {
+            this.lastActionTime = time; // Reset the last action time if the player is moving or attacking
+        }
+
+        if (this.currentTween && this.currentTween.isPlaying()) {
+            this.robotSprite.setPosition(this.position.x, this.position.y);
+        }
+
+        const currentAnim = this.robotSprite.anims.currentAnim;
+        if (!currentAnim || !currentAnim.key.startsWith('attack')) {
+            this.isAttacking = false;
+        }
+
+        if (this.isMovingTowardsEnemy && !this.isDead && this.scene.enemy) {
+            console.log('moving towards enemy')
+            let enemyPosition = this.scene.enemy.getPosition();
+            let distanceToEnemy = Phaser.Math.Distance.Between(this.position.x, this.position.y, enemyPosition.x, enemyPosition.y);
+
+            if (distanceToEnemy <= this.range) {
+                if (this.currentTween) {
+                    this.currentTween.stop();
+                }
+                this.isMovingTowardsEnemy = false;
+                this.continueAttacking = true;
+            }
+        }
+
+        if (this.continueAttacking && !this.isDead && this.scene.enemy) {
+            console.log('continuing attack');
+            this.playAttackAnimation(this.scene.enemy);
+        }
+        
+
+        this.updateHealthBar();
     }
 
     stopAttackingEnemy() {
         this.isMovingTowardsEnemy = false;
+        this.continueAttacking = false;
+        this.isAttacking = false;
+        this.attacker = null;
         if (this.attackEvent) {
             this.attackEvent.remove(false);
             this.attackEvent = null;
         }
-        this.isAttacking = false;
-        this.attacker = null;
-    
-        // Transition back to idle animation
-        const currentAnim = this.robotSprite.anims.currentAnim;
-        
     }
+
     calculateAverageDirection(directions) {
         // Calculate the most frequent direction in the array
         const directionCounts = directions.reduce((acc, dir) => {
@@ -256,49 +307,6 @@ class Player {
         if (this.isDead) return;
         this.position.x = this.robotSprite.x;
         this.position.y = this.robotSprite.y;
-    }
-
-    update(time, delta) {
-        // Check if the player is currently moving or attacking
-        const isMoving = this.currentTween && this.currentTween.isPlaying();
-        const isAttacking = this.robotSprite.anims.isPlaying && this.robotSprite.anims.currentAnim.key.startsWith('attack');
-
-        // If the player is neither moving nor attacking
-        if (!isMoving && !isAttacking && !this.isDead) {
-            if (time - this.lastActionTime > 5000) { // 5 seconds of inactivity
-                if (time - this.lastAnimationChange > 5000) {
-                    this.idleAnimationIndex = (this.idleAnimationIndex + 1) % 4;
-                    this.robotSprite.play(`idle${this.idleAnimationIndex + 1}`);
-                    this.lastAnimationChange = time;
-                }
-            }
-        } else {
-            this.lastActionTime = time; // Reset the last action time if the player is moving or attacking
-        }
-
-        if (this.currentTween && this.currentTween.isPlaying()) {
-            this.robotSprite.setPosition(this.position.x, this.position.y);
-        }
-
-        const currentAnim = this.robotSprite.anims.currentAnim;
-        if (!currentAnim || !currentAnim.key.startsWith('attack')) {
-            this.isAttacking = false;
-        }
-
-        if (this.isMovingTowardsEnemy && !this.isDead && this.scene.enemy) {
-            let enemyPosition = this.scene.enemy.getPosition();
-            let distanceToEnemy = Phaser.Math.Distance.Between(this.position.x, this.position.y, enemyPosition.x, enemyPosition.y);
-
-            if (distanceToEnemy <= this.range) {
-                if (this.currentTween) {
-                    this.currentTween.stop();
-                }
-                this.isMovingTowardsEnemy = false;
-                this.playAttackAnimation(this.scene.enemy);
-            }
-        }
-
-        this.updateHealthBar();
     }
 
     getPosition() {

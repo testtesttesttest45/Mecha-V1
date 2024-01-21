@@ -5,9 +5,9 @@ const characterMap = {
         class: 'player',
         range: 400,
         speed: 200,
-        attack: 100,
+        attack: 1,
         health: 500,
-        attackSpeed: 0.7,
+        attackSpeed: 1,
         doubleAttack: false,
     },
     2: {
@@ -47,9 +47,9 @@ const characterMap = {
         class: 'player',
         range: 500,
         speed: 200,
-        attack: 1,
+        attack: 2,
         health: 500,
-        attackSpeed: 5,
+        attackSpeed: 2,
         doubleAttack: false,
     },
 };

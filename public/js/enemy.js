@@ -77,7 +77,7 @@ class Enemy {
 
         this.sprite.play(`character${this.characterCode}Idle1`);
         // this.scheduleNextAnimation();
-        this.sprite.setScale(0.5);
+        this.sprite.setScale(1);
         this.scene.physics.world.enable(this.sprite);
 
         // const bodyWidth = 350;
@@ -190,15 +190,10 @@ class Enemy {
     }
 
     updateEnemy(playerX, playerY, player, delta) {
-        // console.log('fckng cb', this.isAttacking)
         this.attacker = player;
         if (this.isDead || this.attacker.isDead) return;
 
         const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, playerX, playerY);
-
-        // Determine the direction to the player
-        const direction = this.determineDirectionToPlayer(playerX, playerY);
-        const attackAnimationKey = `character${this.characterCode}Attack${direction}`;
 
         // Player is within detection radius or the enemy is attacking
         if (distance < this.detectionRadius || (distance <= this.attackRange && this.hasPlayerBeenDetected)) {

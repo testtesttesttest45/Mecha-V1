@@ -10,7 +10,7 @@ class GameScene extends Phaser.Scene {
         this.enemy = null;
         this.land = null;
         this.ocean = null;
-        this.initialZoom = 0.75;
+        this.initialZoom = 0.8;
         this.isDragging = false;
         this.dragStartPoint = null;
     }
@@ -192,16 +192,13 @@ class GameScene extends Phaser.Scene {
 
 
     createPlayer() {
-        const scaleX = this.width / this.land.width;
-        const scaleY = this.height / this.land.height;
-
         this.player = new Player(this, 1500, 800, 5);
         this.player.create();
     }
 
     createEnemy() {
 
-        this.enemy = new Enemy(this, 1500, 1200, 2);
+        this.enemy = new Enemy(this, 1500, 1200, 1);
         this.enemy.create();
 
         this.enemy.sprite.on('pointerover', () => {
@@ -289,7 +286,7 @@ class GameScene extends Phaser.Scene {
 
     update(time, delta) {
         if (this.player) {
-            this.player.update(time);
+            this.player.update(time, delta);
         }
 
         if (this.enemy) {
