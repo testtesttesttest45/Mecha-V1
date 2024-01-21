@@ -30,7 +30,7 @@ class Enemy {
         this.lastActionTime = 0;
         this.isAttacking = false;
         this.attackEvent = null;
-        this.damage = character.attack;
+        this.damage = character.damage;
         this.attackRangeRect = null;
     }
 
@@ -299,7 +299,7 @@ class Enemy {
         if (this.attackRangeArc) {
             this.attackRangeArc.destroy(); // Destroy existing shape if any
         }
-        
+
         this.attackRangeArc = this.scene.add.graphics({ fillStyle: { alpha: 0.4, color: 0x4000ff } });
         this.attackRangeArc.beginPath(); // Phaser's graphics API to draw two arcs that form the outer edges
         // https://newdocs.phaser.io/docs/3.54.0/focus/Phaser.GameObjects.Graphics-arc
@@ -424,7 +424,7 @@ class Enemy {
         }
 
         this.healthBar.destroy();
-        this.attackRangeArc.destroy();
+        if(this.attackRangeArc) this.attackRangeArc.destroy();
 
         this.detectionBar.clear();
         this.detectionField.setVisible(false);

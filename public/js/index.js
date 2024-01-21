@@ -198,7 +198,7 @@ class GameScene extends Phaser.Scene {
 
     createEnemy() {
 
-        this.enemy = new Enemy(this, 1500, 1200, 1);
+        this.enemy = new Enemy(this, 1500, 1200, 3);
         this.enemy.create();
 
         this.enemy.sprite.on('pointerover', () => {
@@ -365,6 +365,8 @@ class LoadingScene extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'character3', 'assets/sprites/character_3.png', 4000, 3520);
         loadDynamicSpriteSheet.call(this, 'character4', 'assets/sprites/character_4.png', 4000, 5280);
         loadDynamicSpriteSheet.call(this, 'character5', 'assets/sprites/character_5.png', 4000, 2640);
+
+        this.load.image('blueBullet', 'assets/projectiles/blue_bullet.png');
     }
 
 

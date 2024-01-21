@@ -16,7 +16,7 @@ class Player {
         const character = characterMap[this.characterCode];
         this.range = character.range;
         this.speed = character.speed;
-        this.attack = character.attack;
+        this.damage = character.damage;
         this.attackSpeed = character.attackSpeed;
         this.spritesheetKey = character.spritesheetKey;
         this.isAttacking = false;
@@ -29,12 +29,13 @@ class Player {
         this.isMovingTowardsEnemy = false;
         this.continueAttacking = false;
         this.attackAnimationComplete = true;
+        this.projectile = character.projectile;
     }
 
     create() {
         this.robotSprite = this.scene.add.sprite(this.position.x, this.position.y);
         this.robotSprite.setOrigin(0.5, 0.7);
-
+        console.log(this.projectile);
         for (let i = 0; i < 4; i++) {
             this.scene.anims.create({
                 key: `idle${i + 1}`,
@@ -161,7 +162,7 @@ class Player {
         const attackAnimationKey = `attack${direction}`;
     
         if (this.isAttacking && !this.attackAnimationComplete) {
-            return; //
+            return;
         }
     
         this.isAttacking = true;
@@ -174,8 +175,10 @@ class Player {
     
         this.robotSprite.on('animationupdate', (anim, frame) => {
             if (anim.key === attackAnimationKey && frame.index === 4) {
-                if (this.attacker) {
-                    this.attacker.takeDamage(this.attack, this); // Apply damage
+                if (this.projectile && this.projectile !== '') {
+                    this.launchProjectile(enemy);
+                } else if (this.attacker) {
+                    this.attacker.takeDamage(this.damage, this);
                 }
             }
         });
@@ -187,6 +190,42 @@ class Player {
             }
         });
     }
+
+    launchProjectile(enemy) {
+        let projectile = this.scene.add.sprite(this.robotSprite.x + 10, this.robotSprite.y - 80, this.projectile);
+        projectile.setOrigin(0.5, 0.5);
+        projectile.setScale(0.5);
+    
+        let targetX = enemy.sprite.x;
+        let targetY = enemy.sprite.y;
+        let angle = Phaser.Math.Angle.Between(this.robotSprite.x, this.robotSprite.y, targetX, targetY);
+    
+        projectile.setRotation(angle + Math.PI / 2); // 90 deg.
+    
+        // Calculate a more realistic impact point instead of the center of the enemy
+        const enemyWidth = enemy.sprite.width;
+        const enemyHeight = enemy.sprite.height;
+        const impactOffsetX = enemyWidth / 2 * Math.cos(angle); // ratio of the adjacent side to the hypotenuse of a right-angled triangle. gives x offset
+        const impactOffsetY = enemyHeight / 2 * Math.sin(angle); // ratio of the opposite side to the hypotenuse of a right-angled triangle gives y offset
+        targetX -= impactOffsetX;
+        targetY -= impactOffsetY;
+    
+        this.scene.tweens.add({
+            targets: projectile,
+            x: targetX,
+            y: targetY,
+            duration: 500,
+            ease: 'Linear',
+            onComplete: () => {
+                if (enemy) {
+                    enemy.takeDamage(this.damage, this); // apply damage when projectile hits
+                }
+                projectile.destroy(); // after hitting the target
+            }
+        });
+    }
+    
+    
     
     update(time, delta) {
         // Check if the player is currently moving or attacking
@@ -229,7 +268,6 @@ class Player {
         }
 
         if (this.continueAttacking && !this.isDead && this.scene.enemy) {
-            console.log('continuing attack');
             this.playAttackAnimation(this.scene.enemy);
         }
         
@@ -245,6 +283,11 @@ class Player {
         if (this.attackEvent) {
             this.attackEvent.remove(false);
             this.attackEvent = null;
+        }
+        const currentAnim = this.robotSprite.anims.currentAnim;
+        if (currentAnim && currentAnim.key.startsWith('attack')) {
+            const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
+            this.robotSprite.play(randomIdleAnimation);
         }
     }
 
