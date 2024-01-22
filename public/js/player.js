@@ -265,7 +265,6 @@ class Player {
                 this.continueAttacking = true;
             }
         }
-
         if (this.continueAttacking && !this.isDead && this.scene.enemy) {
             this.playAttackAnimation(this.scene.enemy);
         }

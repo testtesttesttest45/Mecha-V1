@@ -222,6 +222,7 @@ class GameScene extends Phaser.Scene {
 
                 this.player.moveStraight(enemyX, enemyY, () => {
                     this.player.playAttackAnimation(this.enemy);
+                    this.player.continueAttacking = true;
                 });
 
             }
