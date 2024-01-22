@@ -67,7 +67,7 @@ const characterMap = {
         speed: 220,
         damage: 1,
         health: 500,
-        attackSpeed: 1,
+        attackSpeed: 0.5,
         attackCount: 2,
         projectile: ''
     },

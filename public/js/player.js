@@ -30,6 +30,7 @@ class Player {
         this.continueAttacking = false;
         this.attackAnimationComplete = true;
         this.projectile = character.projectile;
+        this.attackCount = character.attackCount;
     }
 
     create() {
@@ -168,16 +169,28 @@ class Player {
         this.attackAnimationComplete = false;
         this.attacker = enemy;
         this.robotSprite.play(attackAnimationKey);
-        
+    
         this.robotSprite.off('animationupdate');
         this.robotSprite.off('animationcomplete');
     
+        let damageFrames = [];
+        if (this.attackCount > 1 && !this.projectile) { // multi strikes usually applies to melee attacks
+            for (let i = 1; i <= this.attackCount; i++) {
+                damageFrames.push(Math.ceil((5 / this.attackCount) * i)); // 5 / (2) * 1 = 2.5. round upwards to 3
+            }
+        } else if (!this.projectile) {
+            // Default to last frame for single attack
+            damageFrames.push(5);
+        }
+    
         this.robotSprite.on('animationupdate', (anim, frame) => {
-            if (anim.key === attackAnimationKey && frame.index === 4) {
-                if (this.projectile && this.projectile !== '') {
+            if (anim.key === attackAnimationKey) {
+                if (this.projectile && this.projectile !== '' && frame.index === 4) {
                     this.launchProjectile(enemy);
-                } else if (this.attacker) {
-                    this.attacker.takeDamage(this.damage, this);
+                } else if (!this.projectile && damageFrames.includes(frame.index)) {
+                    if (this.attacker) {
+                        this.attacker.takeDamage(this.damage, this);
+                    }
                 }
             }
         });
@@ -185,11 +198,13 @@ class Player {
         this.robotSprite.once('animationcomplete', anim => {
             if (anim.key === attackAnimationKey) {
                 this.attackAnimationComplete = true;
-                this.robotSprite.play(attackAnimationKey);
+                if (!this.projectile) {
+                    this.robotSprite.play(attackAnimationKey);
+                }
             }
         });
     }
-
+    
     launchProjectile(enemy) {
         let projectile = this.scene.add.sprite(this.robotSprite.x + 10, this.robotSprite.y - 80, this.projectile);
         projectile.setOrigin(0.5, 0.5);
