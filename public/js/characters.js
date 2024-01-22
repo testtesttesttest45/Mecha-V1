@@ -59,6 +59,18 @@ const characterMap = {
         attackCount: 1,
         projectile: 'blueBullet'
     },
+    6: {
+        spritesheetKey: 'character6',
+        name: 'samurai_mech',
+        class: 'player',
+        range: 120,
+        speed: 220,
+        damage: 1,
+        health: 500,
+        attackSpeed: 1,
+        attackCount: 2,
+        projectile: ''
+    },
 };
 
 export default characterMap;

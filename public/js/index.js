@@ -192,7 +192,7 @@ class GameScene extends Phaser.Scene {
 
 
     createPlayer() {
-        this.player = new Player(this, 1500, 800, 1);
+        this.player = new Player(this, 1500, 800, 6);
         this.player.create();
     }
 
@@ -363,8 +363,8 @@ class LoadingScene extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'character1', 'assets/sprites/character_1.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character2', 'assets/sprites/character_2.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character3', 'assets/sprites/character_3.png', 4000, 3520);
-        loadDynamicSpriteSheet.call(this, 'character4', 'assets/sprites/character_4.png', 4000, 5280);
         loadDynamicSpriteSheet.call(this, 'character5', 'assets/sprites/character_5.png', 4000, 2640);
+        loadDynamicSpriteSheet.call(this, 'character6', 'assets/sprites/character_6.png', 4000, 4400);
 
         this.load.image('blueBullet', 'assets/projectiles/blue_bullet.png');
     }

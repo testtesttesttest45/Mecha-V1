@@ -315,10 +315,11 @@ class Enemy {
         let projectile = this.scene.add.sprite(this.sprite.x, this.sprite.y, this.projectile);
         projectile.setOrigin(0.5, 0.5);
         projectile.setScale(0.5);
-        projectile.setRotation(angleToPlayer + Math.PI / 2); // Rotate the projectile
+        projectile.setRotation(angleToPlayer + Math.PI / 2);
     
         const projectileSpeed = 500;
         const maxDistance = this.attackRange;
+        projectile.hit = false; // ensure damage is applied only once
     
         // Calculate the end point of the projectile's path within the rectangle path
         const endPointX = this.sprite.x + Math.cos(angleToPlayer) * maxDistance;
@@ -336,20 +337,21 @@ class Enemy {
             ease: 'Linear',
             onUpdate: () => {
                 // Check if projectile is close to the player for hit detection
-                if (Phaser.Math.Distance.Between(projectile.x, projectile.y, player.getPosition().x, player.getPosition().y) < 20) { 
+                if (!projectile.hit && Phaser.Math.Distance.Between(projectile.x, projectile.y, player.getPosition().x, player.getPosition().y) < 10) { 
                     player.takeDamage(this.damage, this);
-                    // Stop the tween before destroying the projectile
+                    projectile.hit = true;
                     projectile.destroy();
                 }
             },
             onComplete: () => {
-                // Only destroy the projectile if it still exists
-                if (projectile.active) {
+                if (!projectile.hit) {
+                    this.createDodgeText(player);
                     projectile.destroy();
                 }
             }
         });
     }
+    
     
     
     
@@ -436,6 +438,23 @@ class Enemy {
             }
         });
     }
+
+    createDodgeText(player) {
+        const dodgeText = this.scene.add.text(player.getPosition().x, player.getPosition().y - 100, 'Dodged!', { font: '24px Orbitron', fill: '#fff' });
+        dodgeText.setOrigin(0.5, 0.5);
+    
+        this.scene.tweens.add({
+            targets: dodgeText,
+            y: dodgeText.y - 30,
+            alpha: 0,
+            duration: 800,
+            ease: 'Power2',
+            onComplete: () => {
+                dodgeText.destroy();
+            }
+        });
+    }
+    
 
     die() {
         if (this.isDead) return;
