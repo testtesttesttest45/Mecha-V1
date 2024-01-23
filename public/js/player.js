@@ -162,6 +162,7 @@ class Player {
         const attackAnimationKey = `attack${direction}`;
     
         if (this.isAttacking && !this.attackAnimationComplete) {
+            console.log("BINGO")
             return;
         }
     
@@ -194,6 +195,7 @@ class Player {
                 }
             }
         });
+        console.log(this.isAttacking)
     
         this.robotSprite.once('animationcomplete', anim => {
             if (anim.key === attackAnimationKey) {
@@ -214,7 +216,7 @@ class Player {
         let targetY = enemy.sprite.y;
         let angle = Phaser.Math.Angle.Between(this.robotSprite.x, this.robotSprite.y, targetX, targetY);
     
-        projectile.setRotation(angle + Math.PI / 2); // 90 deg.
+        projectile.setRotation(angle); // 90 deg.
     
         // Calculate a more realistic impact point instead of the center of the enemy
         const enemyWidth = enemy.sprite.width;

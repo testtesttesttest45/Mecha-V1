@@ -5,7 +5,7 @@ const characterMap = {
         class: 'player',
         range: 100,
         speed: 220,
-        damage: 12,
+        damage: 11111,
         health: 1111,
         attackSpeed: 1,
         attackCount: 1,
@@ -41,7 +41,7 @@ const characterMap = {
         class: 'player',
         range: 120,
         speed: 200,
-        damage: 100,
+        damage: 1,
         health: 500,
         attackSpeed: 1,
         attackCount: 1,
@@ -55,7 +55,7 @@ const characterMap = {
         speed: 120,
         damage: 1,
         health: 500,
-        attackSpeed: 0.5,
+        attackSpeed: 4,
         attackCount: 1,
         projectile: 'blueBullet'
     },
@@ -67,9 +67,33 @@ const characterMap = {
         speed: 220,
         damage: 1,
         health: 500,
-        attackSpeed: 0.5,
+        attackSpeed: 1,
         attackCount: 2,
         projectile: ''
+    },
+    7: {
+        spritesheetKey: 'character7',
+        name: 'bahamut_dragon',
+        class: 'player',
+        range: 200,
+        speed: 220,
+        damage: 1,
+        health: 500,
+        attackSpeed: 1,
+        attackCount: 1,
+        projectile: 'blueBullet'
+    },
+    8: {
+        spritesheetKey: 'character8',
+        name: 'protowinged_mech',
+        class: 'player',
+        range: 300,
+        speed: 220,
+        damage: 1,
+        health: 500,
+        attackSpeed: 4,
+        attackCount: 1,
+        projectile: 'blueBullet'
     },
 };
 

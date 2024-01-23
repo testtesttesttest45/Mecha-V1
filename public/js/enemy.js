@@ -118,6 +118,7 @@ class Enemy {
 
         this.health -= damage;
         this.health = Math.max(this.health, 0);
+        this.hasPlayerBeenDetected = true;
         console.log(`Enemy took ${damage} damage. ${this.health} health remaining`);
 
         // Create and display damage text
@@ -128,6 +129,13 @@ class Enemy {
         }
 
         this.updateHealthBar();
+
+        if (this.hasPlayerBeenDetected) {
+            this.timeInAlert = 0;
+            this.timeOutOfDetection = 0;
+            this.isAlert = true; // Ensure the enemy is in an alert state
+            this.updateDetectionBar(1); // Full detection bar
+        }
     }
 
     moveToPlayer(playerX, playerY) {
@@ -315,7 +323,7 @@ class Enemy {
         let projectile = this.scene.add.sprite(this.sprite.x, this.sprite.y, this.projectile);
         projectile.setOrigin(0.5, 0.5);
         projectile.setScale(0.5);
-        projectile.setRotation(angleToPlayer + Math.PI / 2);
+        projectile.setRotation(angleToPlayer);
     
         const projectileSpeed = 500;
         const maxDistance = this.attackRange;
