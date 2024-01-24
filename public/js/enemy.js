@@ -1,5 +1,4 @@
 import characterMap from './characters.js';
-import { setDefaultCursor } from './utilities.js';
 
 class Enemy {
     constructor(scene, x, y, characterCode = 2) {
@@ -32,94 +31,107 @@ class Enemy {
         this.attackEvent = null;
         this.damage = character.damage;
         this.attackRangeRect = null;
+        this.attackRangeArc = null;
         this.projectile = character.projectile;
     }
 
     create() {
         const character = characterMap[this.characterCode];
-
+    
         this.sprite = this.scene.add.sprite(this.x, this.y, character.idle);
         this.sprite.setOrigin(0.5, 0.5);
-
+        this.sprite.setScale(0.5);
+    
+        // Check and create idle animations
         for (let i = 0; i < 4; i++) {
-            this.scene.anims.create({
-                key: `character${this.characterCode}Idle${i + 1}`, // character2Idle1
-                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: i * 5, end: i * 5 + 4 }),
-                frameRate: 6,
-                repeat: -1,
-            });
+            let idleKey = `character${this.characterCode}Idle${i + 1}`;
+            if (!this.scene.anims.exists(idleKey)) {
+                this.scene.anims.create({
+                    key: idleKey,
+                    frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: i * 5, end: i * 5 + 4 }),
+                    frameRate: 6,
+                    repeat: -1,
+                });
+            }
         }
-
-        this.scene.anims.create({
-            key: `character${this.characterCode}Death`, // character2Idle1
-            frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 100, end: 104 }),
-            frameRate: 6,
-            repeat: 0
-        });
-
-        const directions = ['southeast', 'southwest', 'south', 'east', 'west', 'northeast', 'northwest', 'north'];
-        directions.forEach((dir, index) => {
+    
+        // Check and create death animation
+        let deathKey = `character${this.characterCode}Death`;
+        if (!this.scene.anims.exists(deathKey)) {
             this.scene.anims.create({
-                key: `character${this.characterCode}Moving${dir}`,
-                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 20 + (index * 5), end: 20 + (index * 5) + 4 }),
+                key: deathKey,
+                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 100, end: 104 }),
                 frameRate: 6,
-                repeat: -1
-            });
-        });
-
-        directions.forEach((dir, index) => {
-            this.scene.anims.create({
-                key: `character${this.characterCode}Attack${dir}`,
-                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 60 + (index * 5), end: 60 + (index * 5) + 4 }),
-                frameRate: 6 * this.attackSpeed,
                 repeat: 0
             });
+        }
+    
+        const directions = ['southeast', 'southwest', 'south', 'east', 'west', 'northeast', 'northwest', 'north'];
+        
+        // Check and create moving animations
+        directions.forEach((dir, index) => {
+            let movingKey = `character${this.characterCode}Moving${dir}`;
+            if (!this.scene.anims.exists(movingKey)) {
+                this.scene.anims.create({
+                    key: movingKey,
+                    frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 20 + (index * 5), end: 20 + (index * 5) + 4 }),
+                    frameRate: 6,
+                    repeat: -1
+                });
+            }
         });
-
+    
+        // Check and create attack animations
+        directions.forEach((dir, index) => {
+            let attackKey = `character${this.characterCode}Attack${dir}`;
+            if (!this.scene.anims.exists(attackKey)) {
+                this.scene.anims.create({
+                    key: attackKey,
+                    frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 60 + (index * 5), end: 60 + (index * 5) + 4 }),
+                    frameRate: 6 * this.attackSpeed,
+                    repeat: 0
+                });
+            }
+        });
+    
         this.sprite.play(`character${this.characterCode}Idle1`);
-        // this.scheduleNextAnimation();
-        this.sprite.setScale(1);
         this.scene.physics.world.enable(this.sprite);
-
-        // const bodyWidth = 350;
-        // const bodyHeight = 300;
+    
         const bodyWidth = this.sprite.width * 0.6;
         const bodyHeight = this.sprite.height * 0.6;
         const offsetX = (this.sprite.width - bodyWidth) / 2;
         const offsetY = (this.sprite.height - bodyHeight) / 2;
-
+    
         this.sprite.body.setSize(bodyWidth, bodyHeight);
         this.sprite.body.setOffset(offsetX, offsetY);
-
-        // Define a custom hit area that matches the body size and position
+    
         const hitArea = new Phaser.Geom.Rectangle(offsetX, offsetY, bodyWidth, bodyHeight);
-
-        // Set the sprite to be interactive with the custom hit area
         this.sprite.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
-
+    
         this.createHealthBar();
-
-        this.detectionField = this.scene.add.circle(this.x, this.y, 200);
-        this.detectionField.setStrokeStyle(4, 0xff0000);
-
+    
+        // this.detectionField = this.scene.add.circle(this.x, this.y, 200);
+        // this.detectionField.setStrokeStyle(4, 0xff0000);
+    
         this.detectionBar = this.scene.add.graphics();
         this.updateDetectionBar(1);
-
-        let dot = this.scene.add.graphics();
-        dot.fillStyle(0xffffff, 1); // White color
-        dot.fillCircle(this.sprite.x, this.sprite.y, 5);
+    
+        // let dot = this.scene.add.graphics();
+        // dot.fillStyle(0xffffff, 1);
+        // dot.fillCircle(this.sprite.x, this.sprite.y, 5);
     }
+    
 
     takeDamage(damage, player) {
         console.log('Enemy taking damage');
         if (this.isDead) return;
-
         this.attacker = player; // Store reference to the attacking player
-
+        
         this.health -= damage;
         this.health = Math.max(this.health, 0);
         this.hasPlayerBeenDetected = true;
-        console.log(`Enemy took ${damage} damage. ${this.health} health remaining`);
+
+        // console.log(`Enemy took ${damage} damage. ${this.health} health remaining`);
 
         // Create and display damage text
         this.createDamageText(damage);
@@ -304,6 +316,9 @@ class Enemy {
                     const playerPos = player.getPosition();
                     if (this.isPlayerInArc(playerPos, this.sprite, this.attackRange, angleToPlayer - Math.PI / 6, angleToPlayer + Math.PI / 6)) {
                         player.takeDamage(this.damage, this);
+                    } else {
+                        this.createDodgeText(player);
+                    
                     }
                 }
             }
@@ -466,7 +481,9 @@ class Enemy {
 
     die() {
         if (this.isDead) return;
-
+        if (this.scene.player.targetedEnemy === this) {
+            this.scene.player.targetedEnemy = null;
+        }
         this.isDead = true;
         console.log('Enemy died');
 
@@ -480,7 +497,6 @@ class Enemy {
         this.sprite.stop();
         this.sprite.play(`character${this.characterCode}Death`);
         this.sprite.removeInteractive();
-        setDefaultCursor(this.scene);
 
         if (this.attacker) {
             this.attacker.stopAttackingEnemy();
@@ -488,8 +504,10 @@ class Enemy {
 
         this.healthBar.destroy();
 
-        this.detectionBar.clear();
-        this.detectionField.setVisible(false);
+        this.detectionBar.destroy();
+
+        this.attackRangeArc.destroy();
+        // this.detectionField.setVisible(false);
     }
 
     createHealthBar() {
@@ -519,7 +537,7 @@ class Enemy {
         const barX = this.sprite.x - 30; // same x as the health bar
         const barY = (this.sprite.y - this.sprite.body.height / 2) + 8;
 
-        this.detectionField.alpha = percentage;
+        // this.detectionField.alpha = percentage;
         this.detectionBar.clear();
         this.detectionBar.setPosition(barX, barY);
 
@@ -552,7 +570,7 @@ class Enemy {
 
     update(time, delta) {
         if (this.isDead) return;
-        this.detectionField.setPosition(this.sprite.x, this.sprite.y);
+        // this.detectionField.setPosition(this.sprite.x, this.sprite.y);
         this.updateHealthBar();
 
         const isMoving = this.moveTween && this.moveTween.isPlaying();

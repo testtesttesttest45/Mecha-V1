@@ -1,7 +1,7 @@
 import characterMap from './characters.js';
 
 class Player {
-    constructor(scene, initialX, initialY, characterCode = 1) {
+    constructor(scene, initialX, initialY, characterCode = 1, enemies) {
         this.scene = scene;
         this.robotSprite = null;
         this.position = { x: initialX, y: initialY };
@@ -31,6 +31,8 @@ class Player {
         this.attackAnimationComplete = true;
         this.projectile = character.projectile;
         this.attackCount = character.attackCount;
+        this.enemies = enemies;
+        this.targetedEnemy = null;
     }
 
     create() {
@@ -157,23 +159,21 @@ class Player {
         this.lastActionTime = this.scene.time.now; // Reset last action time on movement
     }
 
-    playAttackAnimation(enemy) {
-        const direction = this.determineDirectionToEnemy();
+    playAttackAnimation(targetEnemy) {
+        const direction = this.determineDirectionToEnemy(targetEnemy);
         const attackAnimationKey = `attack${direction}`;
-    
+
         if (this.isAttacking && !this.attackAnimationComplete) {
-            console.log("BINGO")
             return;
         }
-    
+
         this.isAttacking = true;
         this.attackAnimationComplete = false;
-        this.attacker = enemy;
+        this.attacker = targetEnemy;
         this.robotSprite.play(attackAnimationKey);
-    
         this.robotSprite.off('animationupdate');
         this.robotSprite.off('animationcomplete');
-    
+
         let damageFrames = [];
         if (this.attackCount > 1 && !this.projectile) { // multi strikes usually applies to melee attacks
             for (let i = 1; i <= this.attackCount; i++) {
@@ -183,20 +183,22 @@ class Player {
             // Default to last frame for single attack
             damageFrames.push(5);
         }
-    
+
         this.robotSprite.on('animationupdate', (anim, frame) => {
             if (anim.key === attackAnimationKey) {
                 if (this.projectile && this.projectile !== '' && frame.index === 4) {
                     this.launchProjectile(enemy);
                 } else if (!this.projectile && damageFrames.includes(frame.index)) {
-                    if (this.attacker) {
-                        this.attacker.takeDamage(this.damage, this);
+                    // if (this.attacker) {
+                    //     this.attacker.takeDamage(this.damage, this);
+                    // }
+                    if (this.targetedEnemy) {
+                        this.targetedEnemy.takeDamage(this.damage, this);
                     }
                 }
             }
         });
-        console.log(this.isAttacking)
-    
+
         this.robotSprite.once('animationcomplete', anim => {
             if (anim.key === attackAnimationKey) {
                 this.attackAnimationComplete = true;
@@ -206,18 +208,18 @@ class Player {
             }
         });
     }
-    
+
     launchProjectile(enemy) {
         let projectile = this.scene.add.sprite(this.robotSprite.x + 10, this.robotSprite.y - 80, this.projectile);
         projectile.setOrigin(0.5, 0.5);
         projectile.setScale(0.5);
-    
+
         let targetX = enemy.sprite.x;
         let targetY = enemy.sprite.y;
         let angle = Phaser.Math.Angle.Between(this.robotSprite.x, this.robotSprite.y, targetX, targetY);
-    
+
         projectile.setRotation(angle); // 90 deg.
-    
+
         // Calculate a more realistic impact point instead of the center of the enemy
         const enemyWidth = enemy.sprite.width;
         const enemyHeight = enemy.sprite.height;
@@ -225,7 +227,7 @@ class Player {
         const impactOffsetY = enemyHeight / 2 * Math.sin(angle); // ratio of the opposite side to the hypotenuse of a right-angled triangle gives y offset
         targetX -= impactOffsetX;
         targetY -= impactOffsetY;
-    
+
         this.scene.tweens.add({
             targets: projectile,
             x: targetX,
@@ -240,15 +242,13 @@ class Player {
             }
         });
     }
-    
-    
-    
+
+
+
     update(time, delta) {
-        // Check if the player is currently moving or attacking
         const isMoving = this.currentTween && this.currentTween.isPlaying();
         const isAttacking = this.robotSprite.anims.isPlaying && this.robotSprite.anims.currentAnim.key.startsWith('attack');
-
-        // If the player is neither moving nor attacking
+    
         if (!isMoving && !isAttacking && !this.isDead) {
             if (time - this.lastActionTime > 5000) { // 5 seconds of inactivity
                 if (time - this.lastAnimationChange > 5000) {
@@ -260,35 +260,37 @@ class Player {
         } else {
             this.lastActionTime = time; // Reset the last action time if the player is moving or attacking
         }
-
+    
         if (this.currentTween && this.currentTween.isPlaying()) {
             this.robotSprite.setPosition(this.position.x, this.position.y);
         }
-
         const currentAnim = this.robotSprite.anims.currentAnim;
         if (!currentAnim || !currentAnim.key.startsWith('attack')) {
             this.isAttacking = false;
         }
-
-        if (this.isMovingTowardsEnemy && !this.isDead && this.scene.enemy) {
-            let enemyPosition = this.scene.enemy.getPosition();
+    
+        // Check if the player is moving towards the targeted enemy
+        if (this.isMovingTowardsEnemy && !this.isDead && this.targetedEnemy) {
+            let enemyPosition = this.targetedEnemy.getPosition();
             let distanceToEnemy = Phaser.Math.Distance.Between(this.position.x, this.position.y, enemyPosition.x, enemyPosition.y);
-
+            
             if (distanceToEnemy <= this.range) {
                 if (this.currentTween) {
                     this.currentTween.stop();
                 }
                 this.isMovingTowardsEnemy = false;
                 this.continueAttacking = true;
+                this.playAttackAnimation(this.targetedEnemy); // Attack the targeted enemy
             }
         }
-        if (this.continueAttacking && !this.isDead && this.scene.enemy) {
-            this.playAttackAnimation(this.scene.enemy);
+    
+        if (this.continueAttacking && !this.isDead && this.targetedEnemy) {
+            this.playAttackAnimation(this.targetedEnemy); // Continue attacking the targeted enemy
         }
-        
-
+    
         this.updateHealthBar();
     }
+    
 
     stopAttackingEnemy() {
         this.isMovingTowardsEnemy = false;
@@ -339,9 +341,26 @@ class Player {
         if (angle >= -67.5 && angle < -22.5) return 'northeast';
     }
 
-    determineDirectionToEnemy() {
-        const enemyX = this.scene.enemy.sprite.x;
-        const enemyY = this.scene.enemy.sprite.y;
+    // determineDirectionToEnemy() {
+    //     const enemyX = this.scene.enemy.sprite.x;
+    //     const enemyY = this.scene.enemy.sprite.y;
+    //     const dx = enemyX - this.robotSprite.x;
+    //     const dy = enemyY - this.robotSprite.y;
+    //     const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+    //     if (angle >= -22.5 && angle < 22.5) return 'east';
+    //     if (angle >= 22.5 && angle < 67.5) return 'southeast';
+    //     if (angle >= 67.5 && angle < 112.5) return 'south';
+    //     if (angle >= 112.5 && angle < 157.5) return 'southwest';
+    //     if (angle >= 157.5 || angle < -157.5) return 'west';
+    //     if (angle >= -157.5 && angle < -112.5) return 'northwest';
+    //     if (angle >= -112.5 && angle < -67.5) return 'north';
+    //     if (angle >= -67.5 && angle < -22.5) return 'northeast';
+    // }
+
+    determineDirectionToEnemy(enemy) {
+        const enemyX = enemy.sprite.x;
+        const enemyY = enemy.sprite.y;
         const dx = enemyX - this.robotSprite.x;
         const dy = enemyY - this.robotSprite.y;
         const angle = Math.atan2(dy, dx) * 180 / Math.PI;
@@ -395,14 +414,14 @@ class Player {
 
     takeDamage(damage, enemy) {
         if (this.isDead) return;
-        console.log('Player taking damage');
+        // console.log('Player taking damage');
 
 
         this.attacker = enemy; // Store reference to the attacking enemy
 
         this.health -= damage;
         this.health = Math.max(this.health, 0);
-        console.log(`Player took ${damage} damage. ${this.health} health remaining`);
+        // console.log(`Player took ${damage} damage. ${this.health} health remaining`);
 
         // Create and display damage text
         this.createDamageText(damage);

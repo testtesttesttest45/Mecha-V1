@@ -1,5 +1,6 @@
 import Player from './player.js';
 import Enemy from './enemy.js';
+import Camp from './camp.js';
 import BattleUI from './battle_ui.js';
 import { rgbToHex, resize, loadDynamicSpriteSheet, setAttackCursor, setDefaultCursor } from './utilities.js';
 
@@ -7,7 +8,7 @@ class GameScene extends Phaser.Scene {
     constructor() {
         super({ key: 'GameScene' });
         this.player = null;
-        this.enemy = null;
+        this.enemies = [];
         this.land = null;
         this.ocean = null;
         this.initialZoom = 0.8;
@@ -20,7 +21,7 @@ class GameScene extends Phaser.Scene {
         this.gameScreenHeight = this.sys.game.config.height;
         this.createStaticBackground();
         this.createLand();
-
+        this.createCamps();
         this.createEnemy();
         this.createPlayer();
         this.setupCamera();
@@ -38,7 +39,7 @@ class GameScene extends Phaser.Scene {
     createLand() {
         // Place land image in the center of the ocean
         this.land = this.add.image(
-            8000 /4, 4000 /4, 'land').setOrigin(0.5, 0.5);
+            8000 / 4, 4000 / 4, 'land').setOrigin(0.5, 0.5);
     }
 
     setupCamera() {
@@ -61,7 +62,7 @@ class GameScene extends Phaser.Scene {
             if (this.isZoomEnabled) {
                 const newZoom = deltaY > 0 ? Math.max(this.cameras.main.zoom - 0.25, 0.5) : Math.min(this.cameras.main.zoom + 0.25, 2.5);
                 this.cameras.main.zoomTo(newZoom, 300);
-                
+
             }
         });
 
@@ -108,36 +109,36 @@ class GameScene extends Phaser.Scene {
         });
 
         this.input.keyboard.on('keydown-SPACE', () => {
-        this.isCameraFollowingPlayer = !this.isCameraFollowingPlayer;
-        if (this.isCameraFollowingPlayer) {
-            // Start following the player
-            this.cameras.main.startFollow(this.player.getPosition(), true, 0.01, 0.01);
-        } else {
-            // Stop following the player
-            this.cameras.main.stopFollow();
-        }
-    });
+            this.isCameraFollowingPlayer = !this.isCameraFollowingPlayer;
+            if (this.isCameraFollowingPlayer) {
+                // Start following the player
+                this.cameras.main.startFollow(this.player.getPosition(), true, 0.01, 0.01);
+            } else {
+                // Stop following the player
+                this.cameras.main.stopFollow();
+            }
+        });
 
-    this.isCameraDraggable = true;
-    this.isZoomEnabled = true; // Ensure zoom is enabled by default
+        this.isCameraDraggable = true;
+        this.isZoomEnabled = true; // Ensure zoom is enabled by default
 
-    this.input.keyboard.on('keydown-L', () => {
-        if (this.isCameraLocked) {
-            // Unlock the camera
-            this.isCameraLocked = false;
-            this.isCameraDraggable = true;
-            this.isZoomEnabled = true;
-        } else {
-            // Lock the camera
-            this.isCameraLocked = true;
-            this.isCameraDraggable = false;
-            this.isZoomEnabled = false;
-            this.cameras.main.setZoom(this.initialZoom);
-            this.cameras.main.scrollX = this.land.x - this.gameScreenWidth / 2;
-            this.cameras.main.scrollY = this.land.y - this.gameScreenHeight / 2;
-            this.cameras.main.stopFollow();
-        }
-    });
+        this.input.keyboard.on('keydown-L', () => {
+            if (this.isCameraLocked) {
+                // Unlock the camera
+                this.isCameraLocked = false;
+                this.isCameraDraggable = true;
+                this.isZoomEnabled = true;
+            } else {
+                // Lock the camera
+                this.isCameraLocked = true;
+                this.isCameraDraggable = false;
+                this.isZoomEnabled = false;
+                this.cameras.main.setZoom(this.initialZoom);
+                this.cameras.main.scrollX = this.land.x - this.gameScreenWidth / 2;
+                this.cameras.main.scrollY = this.land.y - this.gameScreenHeight / 2;
+                this.cameras.main.stopFollow();
+            }
+        });
 
     }
 
@@ -192,42 +193,59 @@ class GameScene extends Phaser.Scene {
 
 
     createPlayer() {
-        this.player = new Player(this, 1500, 800, 8);
+        this.player = new Player(this, 1500, 800, 6, this.enemies);
         this.player.create();
     }
 
     createEnemy() {
+        // Array of camp objects
+        const camps = [this.camp1, this.camp2, this.camp3];
 
-        this.enemy = new Enemy(this, 1500, 1200, 5);
-        this.enemy.create();
+        camps.forEach(camp => {
+            for (let i = 0; i < 2; i++) {
+                const randomPosition = camp.getRandomPositionInRadius();
+                let enemy = new Enemy(this, randomPosition.x, randomPosition.y, 2);
+                enemy.create();
+                this.enemies.push(enemy);
 
-        this.enemy.sprite.on('pointerover', () => {
-            if (!this.enemy.isDead) {
-                setAttackCursor(this);
-            }
-        });
-
-        this.enemy.sprite.on('pointerout', () => {
-            setDefaultCursor(this);
-        });
-
-        this.enemyClicked = false; // Add a flag to track enemy clicks
-
-        this.enemy.sprite.on('pointerdown', () => {
-            console.log("Enemy clicked");
-            this.enemyClicked = true;
-            if (!this.player.isAttacking) {
-                const enemyX = this.enemy.sprite.x;
-                const enemyY = this.enemy.sprite.y;
-
-                this.player.moveStraight(enemyX, enemyY, () => {
-                    this.player.playAttackAnimation(this.enemy);
-                    this.player.continueAttacking = true;
+                // Add pointer events for each enemy
+                enemy.sprite.on('pointerover', () => {
+                    if (!enemy.isDead) {
+                        setAttackCursor(this);
+                    }
                 });
 
+                enemy.sprite.on('pointerout', () => {
+                    setDefaultCursor(this);
+                });
+
+
+                enemy.sprite.on('pointerdown', () => {
+                    console.log("Enemy clicked");
+                    this.enemyClicked = true;
+                    this.player.targetedEnemy = enemy;
+                    this.player.stopAttackingEnemy();
+                    this.player.moveStraight(enemy.sprite.x, enemy.sprite.y, () => {
+                        this.player.playAttackAnimation(enemy);
+                        this.player.continueAttacking = true;
+                    });
+                });
+                
+                
             }
         });
+    }
 
+
+    createCamps() {
+        this.camp1 = new Camp(this, 1240, 1250);
+        this.camp1.create();
+
+        this.camp2 = new Camp(this, 1900, 700);
+        this.camp2.create();
+
+        this.camp3 = new Camp(this, 2620, 1220);
+        this.camp3.create();
     }
 
     setupInputHandlers() {
@@ -287,23 +305,23 @@ class GameScene extends Phaser.Scene {
 
     update(time, delta) {
         if (this.player) {
-            this.player.update(time, delta);
+            this.player.update(time, delta, this.enemies);
         }
 
-        if (this.enemy) {
-            let x = this.player.getPosition().x;
-            let y = this.player.getPosition().y;
-            this.enemy.updateEnemy(x, y, this.player, delta);
-            this.enemy.update(time, delta);
-            // console.log(this.enemy.getPosition().x, this.player.getPosition().x);
-        }
+        this.enemies.forEach(enemy => {
+            if (enemy) {
+                let playerPosition = this.player.getPosition();
+                enemy.updateEnemy(playerPosition.x, playerPosition.y, this.player, delta);
+                enemy.update(time, delta);
+            }
+        });
 
         if (this.isCameraFollowingPlayer) {
             // Update the camera to follow the player's current position
             this.cameras.main.startFollow(this.player.getPosition(), true, 0.01, 0.01);
         }
 
-        
+
     }
 }
 
@@ -360,16 +378,17 @@ class LoadingScene extends Phaser.Scene {
 
         this.load.image('mouse_cursor', 'assets/images/mouse_cursor.png');
         this.load.image('mouse_cursor_attack', 'assets/images/mouse_cursor_attack.png');
+        this.load.image('enemy_camp', 'assets/images/enemy_camp1.png')
 
         loadDynamicSpriteSheet.call(this, 'character1', 'assets/sprites/character_1.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character2', 'assets/sprites/character_2.png', 4000, 4400);
-        loadDynamicSpriteSheet.call(this, 'character3', 'assets/sprites/character_3.png', 4000, 3520);
+        // loadDynamicSpriteSheet.call(this, 'character3', 'assets/sprites/character_3.png', 4000, 3520);
         // loadDynamicSpriteSheet.call(this, 'character4', 'assets/sprites/character_4.png', 4000, 4400);
-        loadDynamicSpriteSheet.call(this, 'character5', 'assets/sprites/character_5.png', 4000, 2640);
-        // loadDynamicSpriteSheet.call(this, 'character6', 'assets/sprites/character_6.png', 4000, 4400);
+        // loadDynamicSpriteSheet.call(this, 'character5', 'assets/sprites/character_5.png', 4000, 2640);
+        loadDynamicSpriteSheet.call(this, 'character6', 'assets/sprites/character_6.png', 4000, 4400);
         // loadDynamicSpriteSheet.call(this, 'character7', 'assets/sprites/character_7.png', 4000, 4400);
-        loadDynamicSpriteSheet.call(this, 'character8', 'assets/sprites/character_8.png', 4000, 4400);
-        
+        // loadDynamicSpriteSheet.call(this, 'character8', 'assets/sprites/character_8.png', 4000, 4400);
+
         this.load.image('blueBullet', 'assets/projectiles/blue_bullet.png');
     }
 
@@ -394,7 +413,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             physics: {
                 default: 'arcade',
                 arcade: {
-                    debug: true // true to see physics bodies for debugging
+                    debug: false // true to see physics bodies for debugging
                 }
             },
         };
