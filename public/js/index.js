@@ -1,6 +1,7 @@
 import Player from './player.js';
 import Enemy from './enemy.js';
 import Camp from './camp.js';
+import Base from './base.js';
 import BattleUI from './battle_ui.js';
 import { rgbToHex, resize, loadDynamicSpriteSheet, setAttackCursor, setDefaultCursor } from './utilities.js';
 
@@ -22,11 +23,12 @@ class GameScene extends Phaser.Scene {
         this.gameScreenHeight = this.sys.game.config.height;
         this.createStaticBackground();
         this.createLand();
-        this.createCamps();
-        this.createEnemy();
         this.createPlayer();
+        this.createCamps();
+        
+        this.createEnemy();
         this.setupCamera();
-
+        this.createBase();
         this.messageText = this.add.text(0, 0, '', { font: '24px Orbitron', fill: '#ff0000', align: 'center' });
         this.messageText.setVisible(false);
     }
@@ -196,7 +198,7 @@ class GameScene extends Phaser.Scene {
 
 
     createPlayer() {
-        this.player = new Player(this, 1500, 800, 5, this.enemies);
+        this.player = new Player(this, 1500, 800, 8, this.enemies);
         this.player.create();
     }
 
@@ -255,6 +257,11 @@ class GameScene extends Phaser.Scene {
 
         this.camp3 = new Camp(this, 2620, 1220);
         this.camp3.create();
+    }
+
+    createBase() {
+        this.base = new Base(this, this.player, [this.camp1, this.camp2, this.camp3]);
+        this.base.create();
     }
 
     setupInputHandlers() {
@@ -387,16 +394,17 @@ class LoadingScene extends Phaser.Scene {
 
         this.load.image('mouse_cursor', 'assets/images/mouse_cursor.png');
         this.load.image('mouse_cursor_attack', 'assets/images/mouse_cursor_attack.png');
-        this.load.image('enemy_camp', 'assets/images/enemy_camp1.png')
+        this.load.image('enemy_camp', 'assets/images/enemy_camp1.png');
+        this.load.image('enemy_base', 'assets/images/enemy_base1.png');
 
         // loadDynamicSpriteSheet.call(this, 'character1', 'assets/sprites/character_1.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character2', 'assets/sprites/character_2.png', 4000, 4400);
         // loadDynamicSpriteSheet.call(this, 'character3', 'assets/sprites/character_3.png', 4000, 3520);
-        loadDynamicSpriteSheet.call(this, 'character4', 'assets/sprites/character_4.png', 4000, 4400);
-        loadDynamicSpriteSheet.call(this, 'character5', 'assets/sprites/character_5.png', 4000, 2640);
+        // loadDynamicSpriteSheet.call(this, 'character4', 'assets/sprites/character_4.png', 4000, 4400);
+        // loadDynamicSpriteSheet.call(this, 'character5', 'assets/sprites/character_5.png', 4000, 2640);
         // loadDynamicSpriteSheet.call(this, 'character6', 'assets/sprites/character_6.png', 4000, 4400);
         // loadDynamicSpriteSheet.call(this, 'character7', 'assets/sprites/character_7.png', 4000, 4400);
-        // loadDynamicSpriteSheet.call(this, 'character8', 'assets/sprites/character_8.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character8', 'assets/sprites/character_8.png', 4000, 4400);
 
         this.load.image('blueBullet', 'assets/projectiles/blue_bullet.png');
     }
