@@ -35,6 +35,8 @@ class Enemy {
         this.projectile = character.projectile;
         this.originalCamp = originalCamp; // ref original camp to return to
         this.returningToCamp = false;
+        this.reachedCamp = false;
+        this.lastHealTime = 0;
     }
 
     create() {
@@ -126,7 +128,7 @@ class Enemy {
 
     takeDamage(damage, player) {
         console.log('Enemy taking damage');
-        if (this.isDead) return;
+        if (this.isDead || this.returningToCamp) return;
         this.attacker = player; // Store reference to the attacking player
 
         this.health -= damage;
@@ -509,12 +511,16 @@ class Enemy {
 
         this.detectionBar.destroy();
 
-        if (this.attackRangeArc) this.attackRangeArc.destroy();
+
+        [this.attackRangeArc, this.attackRangeRect].forEach(banana => {
+            if (banana) banana.destroy();
+        });
         // this.detectionField.setVisible(false);
     }
 
     createHealthBar() {
         this.healthBar = this.scene.add.graphics();
+        this.healthBar.setDepth(1);
         this.updateHealthBar(); // initial display
     }
 
@@ -577,23 +583,23 @@ class Enemy {
         this.isMoving = true;
         this.isAttacking = false;
         this.hasPlayerBeenDetected = false;
-    
+
         let increasedSpeed = this.speed * 1.5; // Increase speed by 50%
         let randomPosition = this.originalCamp.getRandomPositionInRadius();
-        
+
         let directionToCamp = this.determineDirectionToPoint(randomPosition.x, randomPosition.y);
         const movingAnimationKey = `character${this.characterCode}Moving${directionToCamp}`;
-        
+
         // Play the moving animation towards the camp
         this.sprite.play(movingAnimationKey);
-    
+
         let distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, randomPosition.x, randomPosition.y);
         let duration = distance / increasedSpeed * 1000;
-    
+
         if (this.moveTween) {
             this.moveTween.stop();
         }
-    
+
         this.moveTween = this.scene.tweens.add({
             targets: this.sprite,
             x: randomPosition.x,
@@ -609,14 +615,36 @@ class Enemy {
             },
             onComplete: () => {
                 this.isMoving = false;
-                // this.returningToCamp = false;
+                this.returningToCamp = false;
+                this.reachedCamp = true
                 this.sprite.play(`character${this.characterCode}Idle1`);
             }
         });
     }
-    
-    
-    
+
+    heal(amount) {
+        this.health = Math.min(this.health + amount, this.totalHealth);
+        this.updateHealthBar();
+        this.createHealingText(amount); // Call a method to create healing text
+    }
+
+    createHealingText(amount) {
+        const healingText = this.scene.add.text(this.sprite.x, this.sprite.y - 100, `+${amount}`, { font: '36px Orbitron', fill: '#00ff00' });
+        healingText.setOrigin(0.5, 0.5);
+
+        // Animation for healing text (move up and fade out)
+        this.scene.tweens.add({
+            targets: healingText,
+            y: healingText.y - 30, // Move up
+            alpha: 0, // Fade out
+            duration: 800,
+            ease: 'Power2',
+            onComplete: () => {
+                healingText.destroy(); // Remove the text object
+            }
+        });
+    }
+
 
     update(time, delta) {
         if (this.isDead) return;
@@ -636,6 +664,29 @@ class Enemy {
         } else {
             this.lastActionTime = time; // Reset the last action time if the enemy is moving or attacking
         }
+
+        const distanceFromCamp = Phaser.Math.Distance.Between(
+            this.sprite.x, this.sprite.y,
+            this.originalCamp.x, this.originalCamp.y
+        );
+        
+        if (distanceFromCamp > this.originalCamp.radius) {
+            this.reachedCamp = false;
+        } else if (!this.isMoving && !this.isAttacking) {
+            this.reachedCamp = true;
+        } else {
+            this.reachedCamp = false;
+        }
+        
+        if (this.reachedCamp && this.health < this.totalHealth) {
+            if (time - this.lastHealTime > 1000) { // Heal every 1 second
+                this.heal(20); // +20 health per second
+                this.lastHealTime = time;
+            }
+        }
+        
+
+        
 
     }
 

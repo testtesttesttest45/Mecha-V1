@@ -80,15 +80,16 @@ class Player {
         });
 
         this.createHealthBar();
-        this.detectionField = this.scene.add.circle(this.x, this.y, 200);
+        this.detectionField = this.scene.add.circle(this.x, this.y, this.range);
         this.detectionField.setStrokeStyle(4, 0xff0000);
 
     }
 
     moveStraight(newX, newY, onCompleteCallback = null) {
         if (this.isDead) return;
-        console.log('isAttacking', this.isAttacking)
         if (this.currentTween && this.currentTween.isPlaying() && !this.scene.cancelClick) {
+            console.log(this.isAttacking)
+            
             return;
         }
         if (this.currentTween) {
@@ -278,7 +279,7 @@ class Player {
         }
 
         // Check if the player is moving towards the targeted enemy
-        if (!this.isDead && this.targetedEnemy && this.targetedEnemy.returningToCamp) {
+        if (!this.isDead && this.targetedEnemy && (this.targetedEnemy.returningToCamp || this.targetedEnemy.reachedCamp)) {
             //console.log('Targeted enemy is returning to camp');
             let enemyPosition = this.targetedEnemy.getPosition();
             let distanceToEnemy = Phaser.Math.Distance.Between(this.position.x, this.position.y, enemyPosition.x, enemyPosition.y);
@@ -294,7 +295,7 @@ class Player {
                 this.moveStraight(enemyPosition.x, enemyPosition.y);
             }
 
-        } else if (this.isMovingTowardsEnemy && !this.isDead && this.targetedEnemy && !this.targetedEnemy.returningToCamp) {
+        } else if (this.isMovingTowardsEnemy && !this.isDead && this.targetedEnemy && !this.targetedEnemy.returningToCamp && !this.targetedEnemy.reachedCamp) {
             let enemyPosition = this.targetedEnemy.getPosition();
             let distanceToEnemy = Phaser.Math.Distance.Between(this.position.x, this.position.y, enemyPosition.x, enemyPosition.y);
             if (distanceToEnemy <= this.range) {
