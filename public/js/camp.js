@@ -1,5 +1,3 @@
-import characterMap from './characters.js';
-
 class Camp {
     constructor(scene, x, y, radius = 150) {
         this.scene = scene;

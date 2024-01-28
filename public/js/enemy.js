@@ -1,7 +1,7 @@
 import characterMap from './characters.js';
 
 class Enemy {
-    constructor(scene, x, y, characterCode = 2) {
+    constructor(scene, x, y, characterCode = 2, originalCamp) {
         this.scene = scene;
         this.x = x;
         this.y = y;
@@ -33,15 +33,17 @@ class Enemy {
         this.attackRangeRect = null;
         this.attackRangeArc = null;
         this.projectile = character.projectile;
+        this.originalCamp = originalCamp; // ref original camp to return to
+        this.returningToCamp = false;
     }
 
     create() {
         const character = characterMap[this.characterCode];
-    
+
         this.sprite = this.scene.add.sprite(this.x, this.y, character.idle);
         this.sprite.setOrigin(0.5, 0.5);
         this.sprite.setScale(0.5);
-    
+
         // Check and create idle animations
         for (let i = 0; i < 4; i++) {
             let idleKey = `character${this.characterCode}Idle${i + 1}`;
@@ -54,7 +56,7 @@ class Enemy {
                 });
             }
         }
-    
+
         // Check and create death animation
         let deathKey = `character${this.characterCode}Death`;
         if (!this.scene.anims.exists(deathKey)) {
@@ -65,9 +67,9 @@ class Enemy {
                 repeat: 0
             });
         }
-    
+
         const directions = ['southeast', 'southwest', 'south', 'east', 'west', 'northeast', 'northwest', 'north'];
-        
+
         // Check and create moving animations
         directions.forEach((dir, index) => {
             let movingKey = `character${this.characterCode}Moving${dir}`;
@@ -80,7 +82,7 @@ class Enemy {
                 });
             }
         });
-    
+
         // Check and create attack animations
         directions.forEach((dir, index) => {
             let attackKey = `character${this.characterCode}Attack${dir}`;
@@ -93,40 +95,40 @@ class Enemy {
                 });
             }
         });
-    
+
         this.sprite.play(`character${this.characterCode}Idle1`);
         this.scene.physics.world.enable(this.sprite);
-    
+
         const bodyWidth = this.sprite.width * 0.6;
         const bodyHeight = this.sprite.height * 0.6;
         const offsetX = (this.sprite.width - bodyWidth) / 2;
         const offsetY = (this.sprite.height - bodyHeight) / 2;
-    
+
         this.sprite.body.setSize(bodyWidth, bodyHeight);
         this.sprite.body.setOffset(offsetX, offsetY);
-    
+
         const hitArea = new Phaser.Geom.Rectangle(offsetX, offsetY, bodyWidth, bodyHeight);
         this.sprite.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
-    
+
         this.createHealthBar();
-    
+
         // this.detectionField = this.scene.add.circle(this.x, this.y, 200);
         // this.detectionField.setStrokeStyle(4, 0xff0000);
-    
+
         this.detectionBar = this.scene.add.graphics();
         this.updateDetectionBar(1);
-    
+
         // let dot = this.scene.add.graphics();
         // dot.fillStyle(0xffffff, 1);
         // dot.fillCircle(this.sprite.x, this.sprite.y, 5);
     }
-    
+
 
     takeDamage(damage, player) {
         console.log('Enemy taking damage');
         if (this.isDead) return;
         this.attacker = player; // Store reference to the attacking player
-        
+
         this.health -= damage;
         this.health = Math.max(this.health, 0);
         this.hasPlayerBeenDetected = true;
@@ -166,7 +168,7 @@ class Enemy {
             let duration = distance / this.speed * 1000;
 
             // Determine the new direction
-            const newDirection = this.determineDirectionToPlayer(playerPosition.x, playerPosition.y);
+            const newDirection = this.determineDirectionToPoint(playerPosition.x, playerPosition.y);
             const movingAnimationKey = `character${this.characterCode}Moving${newDirection}`;
 
             // Play the moving animation only if it's not already playing
@@ -187,7 +189,7 @@ class Enemy {
                 onUpdate: () => {
                     // Update direction based on player's current position
                     const updatedPlayerPosition = this.attacker.getPosition();
-                    const updatedDirection = this.determineDirectionToPlayer(updatedPlayerPosition.x, updatedPlayerPosition.y);
+                    const updatedDirection = this.determineDirectionToPoint(updatedPlayerPosition.x, updatedPlayerPosition.y);
                     const updatedAnimationKey = `character${this.characterCode}Moving${updatedDirection}`;
 
                     // Play the updated moving animation only if it's different
@@ -218,7 +220,7 @@ class Enemy {
         const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, playerX, playerY);
 
         // Determine the direction to the player
-        const direction = this.determineDirectionToPlayer(playerX, playerY);
+        const direction = this.determineDirectionToPoint(playerX, playerY);
         const attackAnimationKey = `character${this.characterCode}Attack${direction}`;
 
         // Player is within detection radius or the enemy is attacking
@@ -236,7 +238,7 @@ class Enemy {
                 if (this.moveTween) {
                     this.moveTween.stop();
                 }
-                const direction = this.determineDirectionToPlayer(playerX, playerY);
+                const direction = this.determineDirectionToPoint(playerX, playerY);
                 const attackAnimationKey = `character${this.characterCode}Attack${direction}`;
                 this.sprite.play(attackAnimationKey);
                 this.attackPlayer(player);
@@ -275,9 +277,10 @@ class Enemy {
                         if (this.moveTween) {
                             this.moveTween.stop();
                         }
-                        if (!this.sprite.anims.currentAnim || !this.sprite.anims.currentAnim.key.includes('Idle')) {
-                            this.sprite.play(`character${this.characterCode}Idle1`);
-                        }
+                        // if (!this.sprite.anims.currentAnim || !this.sprite.anims.currentAnim.key.includes('Idle')) {
+                        //     this.sprite.play(`character${this.characterCode}Idle1`);
+                        // }
+                        this.returnToCamp();
                         this.hasPlayerBeenDetected = false;
                     }
                 }
@@ -290,23 +293,23 @@ class Enemy {
             this.stopAttackingPlayer();
             return;
         }
-    
+
         this.isAttacking = true;
         this.attacker = player;
-    
-        const direction = this.determineDirectionToPlayer(player.getPosition().x, player.getPosition().y);
+
+        const direction = this.determineDirectionToPoint(player.getPosition().x, player.getPosition().y);
         const attackAnimationKey = `character${this.characterCode}Attack${direction}`;
         this.sprite.play(attackAnimationKey);
-    
+
         const angleToPlayer = Phaser.Math.Angle.Between(this.sprite.x, this.sprite.y, player.getPosition().x, player.getPosition().y);
         const hasProjectile = this.projectile !== '';
-    
+
         if (hasProjectile) {
             this.createAttackRangeRectangle(angleToPlayer);
         } else {
             this.createAttackRangeArc(angleToPlayer);
         }
-    
+
         this.sprite.off('animationupdate');
         this.sprite.on('animationupdate', (anim, frame) => {
             if (anim.key === attackAnimationKey) {
@@ -318,12 +321,12 @@ class Enemy {
                         player.takeDamage(this.damage, this);
                     } else {
                         this.createDodgeText(player);
-                    
+
                     }
                 }
             }
         });
-    
+
         this.sprite.once('animationcomplete', anim => {
             if (anim.key === attackAnimationKey) {
                 this.isAttacking = false;
@@ -332,26 +335,26 @@ class Enemy {
             }
         });
     }
-    
-    
+
+
     launchProjectile(player, angleToPlayer) {
         let projectile = this.scene.add.sprite(this.sprite.x, this.sprite.y, this.projectile);
         projectile.setOrigin(0.5, 0.5);
         projectile.setScale(0.5);
         projectile.setRotation(angleToPlayer);
-    
+
         const projectileSpeed = 500;
         const maxDistance = this.attackRange;
         projectile.hit = false; // ensure damage is applied only once
-    
+
         // Calculate the end point of the projectile's path within the rectangle path
         const endPointX = this.sprite.x + Math.cos(angleToPlayer) * maxDistance;
         const endPointY = this.sprite.y + Math.sin(angleToPlayer) * maxDistance;
-    
+
         // Calculate the duration for the projectile to travel to the end point
         const distanceToEndPoint = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, endPointX, endPointY);
         const duration = (distanceToEndPoint / projectileSpeed) * 1000;
-    
+
         this.scene.tweens.add({
             targets: projectile,
             x: endPointX,
@@ -360,7 +363,7 @@ class Enemy {
             ease: 'Linear',
             onUpdate: () => {
                 // Check if projectile is close to the player for hit detection
-                if (!projectile.hit && Phaser.Math.Distance.Between(projectile.x, projectile.y, player.getPosition().x, player.getPosition().y) < 10) { 
+                if (!projectile.hit && Phaser.Math.Distance.Between(projectile.x, projectile.y, player.getPosition().x, player.getPosition().y) < 10) {
                     player.takeDamage(this.damage, this);
                     projectile.hit = true;
                     projectile.destroy();
@@ -374,11 +377,11 @@ class Enemy {
             }
         });
     }
-    
-    
-    
-    
-    
+
+
+
+
+
 
     createAttackRangeArc(angleToPlayer) {
         // Define the start and end angles for the arcs
@@ -430,7 +433,7 @@ class Enemy {
         };
     }
 
-    determineDirectionToPlayer(playerX, playerY) {
+    determineDirectionToPoint(playerX, playerY) {
         const dx = playerX - this.sprite.x
         const dy = playerY - this.sprite.y
         const angle = Math.atan2(dy, dx) * 180 / Math.PI;
@@ -465,7 +468,7 @@ class Enemy {
     createDodgeText(player) {
         const dodgeText = this.scene.add.text(player.getPosition().x, player.getPosition().y - 100, 'Dodged!', { font: '24px Orbitron', fill: '#fff' });
         dodgeText.setOrigin(0.5, 0.5);
-    
+
         this.scene.tweens.add({
             targets: dodgeText,
             y: dodgeText.y - 30,
@@ -477,7 +480,7 @@ class Enemy {
             }
         });
     }
-    
+
 
     die() {
         if (this.isDead) return;
@@ -506,7 +509,7 @@ class Enemy {
 
         this.detectionBar.destroy();
 
-        this.attackRangeArc.destroy();
+        if (this.attackRangeArc) this.attackRangeArc.destroy();
         // this.detectionField.setVisible(false);
     }
 
@@ -568,6 +571,53 @@ class Enemy {
         }
     }
 
+    returnToCamp() {
+        if (!this.originalCamp) return;
+        this.returningToCamp = true;
+        this.isMoving = true;
+        this.isAttacking = false;
+        this.hasPlayerBeenDetected = false;
+    
+        let increasedSpeed = this.speed * 1.5; // Increase speed by 50%
+        let randomPosition = this.originalCamp.getRandomPositionInRadius();
+        
+        let directionToCamp = this.determineDirectionToPoint(randomPosition.x, randomPosition.y);
+        const movingAnimationKey = `character${this.characterCode}Moving${directionToCamp}`;
+        
+        // Play the moving animation towards the camp
+        this.sprite.play(movingAnimationKey);
+    
+        let distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, randomPosition.x, randomPosition.y);
+        let duration = distance / increasedSpeed * 1000;
+    
+        if (this.moveTween) {
+            this.moveTween.stop();
+        }
+    
+        this.moveTween = this.scene.tweens.add({
+            targets: this.sprite,
+            x: randomPosition.x,
+            y: randomPosition.y,
+            duration: duration,
+            ease: 'Linear',
+            onUpdate: () => {
+                let updatedDirection = this.determineDirectionToPoint(randomPosition.x, randomPosition.y);
+                let updatedAnimationKey = `character${this.characterCode}Moving${updatedDirection}`;
+                if (this.sprite.anims.currentAnim.key !== updatedAnimationKey) {
+                    this.sprite.play(updatedAnimationKey);
+                }
+            },
+            onComplete: () => {
+                this.isMoving = false;
+                // this.returningToCamp = false;
+                this.sprite.play(`character${this.characterCode}Idle1`);
+            }
+        });
+    }
+    
+    
+    
+
     update(time, delta) {
         if (this.isDead) return;
         // this.detectionField.setPosition(this.sprite.x, this.sprite.y);
@@ -586,6 +636,7 @@ class Enemy {
         } else {
             this.lastActionTime = time; // Reset the last action time if the enemy is moving or attacking
         }
+
     }
 
 }

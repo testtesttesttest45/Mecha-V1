@@ -24,7 +24,6 @@ class GameScene extends Phaser.Scene {
         this.messageText.setVisible(false);
     }
 
-
     handlePlayerClick(pointer) {
         if (this.enemyClicked) {
             this.enemyClicked = false;
@@ -48,12 +47,6 @@ class GameScene extends Phaser.Scene {
         }
     }
 
-
-    createPlayer() {
-        this.player = new Player(this, 1500, 800, 6, this.enemies);
-        this.player.create();
-    }
-
     createEnemy() {
         // Array of camp objects
         const camps = [this.camp1, this.camp2, this.camp3];
@@ -61,7 +54,7 @@ class GameScene extends Phaser.Scene {
         camps.forEach(camp => {
             for (let i = 0; i < 2; i++) {
                 const randomPosition = camp.getRandomPositionInRadius();
-                let enemy = new Enemy(this, randomPosition.x, randomPosition.y, 2);
+                let enemy = new Enemy(this, randomPosition.x, randomPosition.y, 2, camp);
                 enemy.create();
                 this.enemies.push(enemy);
 
@@ -76,19 +69,25 @@ class GameScene extends Phaser.Scene {
                     setDefaultCursor(this);
                 });
 
+
                 enemy.sprite.on('pointerdown', () => {
                     console.log("Enemy clicked");
                     this.enemyClicked = true;
                     this.player.targetedEnemy = enemy;
-                    if (!this.player.isAttacking) {
-                        console.log("banana")
-                        this.player.moveStraight(enemy.sprite.x, enemy.sprite.y, () => {
-                            this.player.playAttackAnimation(enemy);
-                            this.player.continueAttacking = true;
-                        });
+                    // Check if the targeted enemy is the same as the clicked enemy
+                    if (this.player.targetedEnemy === enemy && this.player.isAttacking) {
+                        return; // Do not reset attack animation if already attacking the same enemy
                     }
+                    
+                    this.player.stopAttackingEnemy();
+                    this.player.moveStraight(enemy.sprite.x, enemy.sprite.y, () => {
+                        this.player.playAttackAnimation(enemy);
+                        this.player.continueAttacking = true;
+                    });
                 });
-                
+
+
+
             }
         });
     }
@@ -181,6 +180,7 @@ class GameScene extends Phaser.Scene {
 
     }
 }
+
 class Player {
     constructor(scene, initialX, initialY, characterCode = 1, enemies) {
         this.scene = scene;
@@ -216,53 +216,6 @@ class Player {
         this.targetedEnemy = null;
     }
 
-    create() {
-        this.robotSprite = this.scene.add.sprite(this.position.x, this.position.y);
-        this.robotSprite.setOrigin(0.5, 0.7);
-        for (let i = 0; i < 4; i++) {
-            this.scene.anims.create({
-                key: `idle${i + 1}`,
-                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: i * 5, end: i * 5 + 4 }),
-                frameRate: 6,
-                repeat: -1,
-            }); // the above code looops through the idle animation and creates a new animation for each of the 4 directions
-        }
-        const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
-        this.robotSprite.play(randomIdleAnimation);
-        this.lastAnimationChange = this.scene.time.now;
-
-
-        const directions = ['southeast', 'southwest', 'south', 'east', 'west', 'northeast', 'northwest', 'north'];
-        directions.forEach((dir, index) => {
-            this.scene.anims.create({
-                key: `move${dir}`,
-                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 20 + (index * 5), end: 20 + (index * 5) + 4 }),
-                frameRate: 6,
-                repeat: -1
-            });
-        });
-
-        // Create attacking animations
-        directions.forEach((dir, index) => {
-            this.scene.anims.create({
-                key: `attack${dir}`,
-                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 60 + (index * 5), end: 60 + (index * 5) + 4 }),
-                frameRate: 6 * this.attackSpeed,
-                repeat: 0
-            });
-        });
-
-        // Create death animation
-        this.scene.anims.create({
-            key: 'death',
-            frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 100, end: 105 }), // 105 does not exist. i use it to hide the final frame
-            frameRate: 6,
-            repeat: 0
-        });
-
-        this.createHealthBar();
-
-    }
 
     moveStraight(newX, newY, onCompleteCallback = null) {
         if (this.isDead) return;
@@ -341,20 +294,12 @@ class Player {
     }
 
     playAttackAnimation(targetEnemy) {
-        if (!targetEnemy || targetEnemy.isDead) {
-            // Reset attack state if the target is invalid or dead
-            this.isAttacking = false;
-            this.continueAttacking = false;
-            return;
-        }
         const direction = this.determineDirectionToEnemy(targetEnemy);
         const attackAnimationKey = `attack${direction}`;
 
-        if (this.isAttacking && !this.attackAnimationComplete) {
-            console.log("Already attacking");
+        if (this.isAttacking && !this.attackAnimationComplete && this.targetedEnemy === targetEnemy) {
             return;
         }
-
         this.isAttacking = true;
         this.attackAnimationComplete = false;
         this.attacker = targetEnemy;
@@ -377,8 +322,11 @@ class Player {
                 if (this.projectile && this.projectile !== '' && frame.index === 4) {
                     this.launchProjectile(enemy);
                 } else if (!this.projectile && damageFrames.includes(frame.index)) {
-                    if (this.attacker) {
-                        this.attacker.takeDamage(this.damage, this);
+                    // if (this.attacker) {
+                    //     this.attacker.takeDamage(this.damage, this);
+                    // }
+                    if (this.targetedEnemy) {
+                        this.targetedEnemy.takeDamage(this.damage, this);
                     }
                 }
             }
@@ -394,46 +342,11 @@ class Player {
         });
     }
 
-    launchProjectile(enemy) {
-        let projectile = this.scene.add.sprite(this.robotSprite.x + 10, this.robotSprite.y - 80, this.projectile);
-        projectile.setOrigin(0.5, 0.5);
-        projectile.setScale(0.5);
-
-        let targetX = enemy.sprite.x;
-        let targetY = enemy.sprite.y;
-        let angle = Phaser.Math.Angle.Between(this.robotSprite.x, this.robotSprite.y, targetX, targetY);
-
-        projectile.setRotation(angle); // 90 deg.
-
-        // Calculate a more realistic impact point instead of the center of the enemy
-        const enemyWidth = enemy.sprite.width;
-        const enemyHeight = enemy.sprite.height;
-        const impactOffsetX = enemyWidth / 2 * Math.cos(angle); // ratio of the adjacent side to the hypotenuse of a right-angled triangle. gives x offset
-        const impactOffsetY = enemyHeight / 2 * Math.sin(angle); // ratio of the opposite side to the hypotenuse of a right-angled triangle gives y offset
-        targetX -= impactOffsetX;
-        targetY -= impactOffsetY;
-
-        this.scene.tweens.add({
-            targets: projectile,
-            x: targetX,
-            y: targetY,
-            duration: 500,
-            ease: 'Linear',
-            onComplete: () => {
-                if (enemy) {
-                    enemy.takeDamage(this.damage, this); // apply damage when projectile hits
-                }
-                projectile.destroy(); // after hitting the target
-            }
-        });
-    }
-
-
 
     update(time, delta) {
         const isMoving = this.currentTween && this.currentTween.isPlaying();
         const isAttacking = this.robotSprite.anims.isPlaying && this.robotSprite.anims.currentAnim.key.startsWith('attack');
-    
+
         if (!isMoving && !isAttacking && !this.isDead) {
             if (time - this.lastActionTime > 5000) { // 5 seconds of inactivity
                 if (time - this.lastAnimationChange > 5000) {
@@ -445,7 +358,7 @@ class Player {
         } else {
             this.lastActionTime = time; // Reset the last action time if the player is moving or attacking
         }
-    
+
         if (this.currentTween && this.currentTween.isPlaying()) {
             this.robotSprite.setPosition(this.position.x, this.position.y);
         }
@@ -453,12 +366,11 @@ class Player {
         if (!currentAnim || !currentAnim.key.startsWith('attack')) {
             this.isAttacking = false;
         }
-    
+
         // Check if the player is moving towards the targeted enemy
         if (this.isMovingTowardsEnemy && !this.isDead && this.targetedEnemy) {
             let enemyPosition = this.targetedEnemy.getPosition();
             let distanceToEnemy = Phaser.Math.Distance.Between(this.position.x, this.position.y, enemyPosition.x, enemyPosition.y);
-            
             if (distanceToEnemy <= this.range) {
                 if (this.currentTween) {
                     this.currentTween.stop();
@@ -468,14 +380,15 @@ class Player {
                 this.playAttackAnimation(this.targetedEnemy); // Attack the targeted enemy
             }
         }
-    
+
+
         if (this.continueAttacking && !this.isDead && this.targetedEnemy) {
             this.playAttackAnimation(this.targetedEnemy); // Continue attacking the targeted enemy
         }
-    
+
         this.updateHealthBar();
     }
-    
+
 
     stopAttackingEnemy() {
         this.isMovingTowardsEnemy = false;
@@ -493,170 +406,413 @@ class Player {
         }
     }
 
-    calculateAverageDirection(directions) {
-        // Calculate the most frequent direction in the array
-        const directionCounts = directions.reduce((acc, dir) => {
-            acc[dir] = (acc[dir] || 0) + 1;
-            return acc;
-        }, {});
+}
 
-        let mostFrequentDirection = null;
-        let maxCount = 0;
-        for (let dir in directionCounts) {
-            if (directionCounts[dir] > maxCount) {
-                mostFrequentDirection = dir;
-                maxCount = directionCounts[dir];
+class Enemy {
+    constructor(scene, x, y, characterCode = 2, originalCamp) {
+        this.scene = scene;
+        this.x = x;
+        this.y = y;
+        this.characterCode = characterCode;
+        this.sprite = null;
+        this.currentAnimationIndex = 0;
+        const character = characterMap[this.characterCode];
+        this.health = character.health;
+        this.isDead = false;
+        this.totalHealth = character.health; // Store the total health
+        this.healthBar = null;
+        this.speed = character.speed;
+        this.attackSpeed = character.attackSpeed;
+        this.attackRange = character.range;
+        this.isMoving = false;
+        this.moveTween = null;
+        this.spritesheetKey = character.spritesheetKey;
+        this.detectionRadius = 200;
+        this.timeOutOfDetection = 0;
+        this.detectionBar = null;
+        this.isAlert = false; // enemy is on alert. during alert, enemy will never stop chasing player
+        this.alertTime = 2000;
+        this.timeInAlert = 0;
+        this.hasPlayerBeenDetected = false;
+        this.lastActionTime = 0;
+        this.isAttacking = false;
+        this.attackEvent = null;
+        this.damage = character.damage;
+        this.attackRangeRect = null;
+        this.attackRangeArc = null;
+        this.projectile = character.projectile;
+        this.originalCamp = originalCamp; // ref original camp to return to
+        this.returningToCamp = false;
+    }
+
+
+    moveToPlayer(playerX, playerY) {
+        if (this.isDead || this.isMoving || this.isAttacking) return;
+
+        this.isMoving = true;
+        this.isAttacking = false;
+        const updateMovement = () => {
+            if (!this.attacker || !this.attacker.getPosition || this.isDead) {
+                console.warn("Attacking player is undefined or getPosition method is not available");
+                return;
+            }
+
+            const playerPosition = this.attacker.getPosition();
+            let distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, playerPosition.x, playerPosition.y);
+            let duration = distance / this.speed * 1000;
+
+            // Determine the new direction
+            const newDirection = this.determineDirectionToPoint(playerPosition.x, playerPosition.y);
+            const movingAnimationKey = `character${this.characterCode}Moving${newDirection}`;
+
+            // Play the moving animation only if it's not already playing
+            if (this.sprite.anims.currentAnim.key !== movingAnimationKey) {
+                this.sprite.play(movingAnimationKey);
+            }
+
+            if (this.moveTween) {
+                this.moveTween.stop();
+            }
+
+            this.moveTween = this.scene.tweens.add({
+                targets: this.sprite,
+                x: playerPosition.x,
+                y: playerPosition.y,
+                duration: duration,
+                ease: 'Linear',
+                onUpdate: () => {
+                    // Update direction based on player's current position
+                    const updatedPlayerPosition = this.attacker.getPosition();
+                    const updatedDirection = this.determineDirectionToPoint(updatedPlayerPosition.x, updatedPlayerPosition.y);
+                    const updatedAnimationKey = `character${this.characterCode}Moving${updatedDirection}`;
+
+                    // Play the updated moving animation only if it's different
+                    if (this.sprite.anims.currentAnim.key !== updatedAnimationKey) {
+                        this.sprite.play(updatedAnimationKey);
+                    }
+
+                    if (Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, updatedPlayerPosition.x, updatedPlayerPosition.y) > 100) {
+                        playerX = updatedPlayerPosition.x;
+                        playerY = updatedPlayerPosition.y;
+                        updateMovement(); // Recalculate the path and direction
+                    }
+                },
+                onComplete: () => {
+                    this.isMoving = false;
+                }
+            });
+        };
+
+        updateMovement(); // Start the movement
+    }
+
+    updateEnemy(playerX, playerY, player, delta) {
+        // console.log('fckng cb', this.isAttacking)
+        this.attacker = player;
+        if (this.isDead || this.attacker.isDead) return;
+
+        const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, playerX, playerY);
+
+        // Determine the direction to the player
+        const direction = this.determineDirectionToPoint(playerX, playerY);
+        const attackAnimationKey = `character${this.characterCode}Attack${direction}`;
+
+        // Player is within detection radius or the enemy is attacking
+        if (distance < this.detectionRadius || (distance <= this.attackRange && this.hasPlayerBeenDetected)) {
+            // Set player as detected if within detection radius for the first time
+            if (!this.hasPlayerBeenDetected && distance < this.detectionRadius) {
+                this.hasPlayerBeenDetected = true;
+            }
+
+            this.isAlert = true;
+            this.timeOutOfDetection = 0; // Reset out-of-detection timer
+            this.updateDetectionBar(1); // full bar
+            if (distance <= this.attackRange && !this.isAttacking) {
+                this.isMoving = false;
+                if (this.moveTween) {
+                    this.moveTween.stop();
+                }
+                const direction = this.determineDirectionToPoint(playerX, playerY);
+                const attackAnimationKey = `character${this.characterCode}Attack${direction}`;
+                this.sprite.play(attackAnimationKey);
+                this.attackPlayer(player);
+            } else if (distance > this.attackRange && !this.isMoving) {
+                this.moveToPlayer(playerX, playerY);
+            }
+            if (this.isAttacking) {
+                this.timeInAlert = 0; // Reset alert timer when attacking
+            } else {
+                this.timeInAlert += Math.round(delta); // Increment alert timer when not attacking
             }
         }
-        return mostFrequentDirection;
+        else {
+            // Player is outside the detection radius and attack range
+            if (this.hasPlayerBeenDetected) {
+                // Enemy will try to move closer to the player if out of attack range
+                if (distance > this.attackRange && !this.isMoving) {
+                    this.moveToPlayer(playerX, playerY);
+                }
+
+                // Handling alert time and going idle
+                if (this.isAlert && !this.isAttacking) {
+                    if (distance > this.attackRange && this.timeInAlert >= this.alertTime) {
+                        this.isAlert = false;
+                        this.timeOutOfDetection += Math.round(delta);
+                    } else {
+                        this.timeInAlert += Math.round(delta);
+                        this.updateDetectionBar(1);
+                    }
+                } else if (distance > this.attackRange) {
+                    this.timeOutOfDetection += Math.round(delta);
+                    const detectionPercentage = 1 - (this.timeOutOfDetection / 4000);
+                    this.updateDetectionBar(Math.max(detectionPercentage, 0));
+                    if (this.timeOutOfDetection >= 4000) {
+                        this.isMoving = false;
+                        if (this.moveTween) {
+                            this.moveTween.stop();
+                        }
+                        // if (!this.sprite.anims.currentAnim || !this.sprite.anims.currentAnim.key.includes('Idle')) {
+                        //     this.sprite.play(`character${this.characterCode}Idle1`);
+                        // }
+                        this.returnToCamp();
+                        this.hasPlayerBeenDetected = false;
+                    }
+                }
+            }
+        }
     }
 
-    determineDirection(newX, newY) {
-        const dx = newX - this.position.x;
-        const dy = newY - this.position.y;
-        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-
-        if (angle >= -22.5 && angle < 22.5) return 'east';
-        if (angle >= 22.5 && angle < 67.5) return 'southeast';
-        if (angle >= 67.5 && angle < 112.5) return 'south';
-        if (angle >= 112.5 && angle < 157.5) return 'southwest';
-        if (angle >= 157.5 || angle < -157.5) return 'west';
-        if (angle >= -157.5 && angle < -112.5) return 'northwest';
-        if (angle >= -112.5 && angle < -67.5) return 'north';
-        if (angle >= -67.5 && angle < -22.5) return 'northeast';
+    returnToCamp() {
+        if (!this.originalCamp) return;
+        this.returningToCamp = true;
+        this.isMoving = true;
+        this.isAttacking = false;
+        this.hasPlayerBeenDetected = false;
+    
+        let increasedSpeed = this.speed * 1.5; // Increase speed by 50%
+        let randomPosition = this.originalCamp.getRandomPositionInRadius();
+        
+        let directionToCamp = this.determineDirectionToPoint(randomPosition.x, randomPosition.y);
+        const movingAnimationKey = `character${this.characterCode}Moving${directionToCamp}`;
+        
+        // Play the moving animation towards the camp
+        this.sprite.play(movingAnimationKey);
+    
+        let distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, randomPosition.x, randomPosition.y);
+        let duration = distance / increasedSpeed * 1000;
+    
+        if (this.moveTween) {
+            this.moveTween.stop();
+        }
+    
+        this.moveTween = this.scene.tweens.add({
+            targets: this.sprite,
+            x: randomPosition.x,
+            y: randomPosition.y,
+            duration: duration,
+            ease: 'Linear',
+            onUpdate: () => {
+                let updatedDirection = this.determineDirectionToPoint(randomPosition.x, randomPosition.y);
+                let updatedAnimationKey = `character${this.characterCode}Moving${updatedDirection}`;
+                if (this.sprite.anims.currentAnim.key !== updatedAnimationKey) {
+                    this.sprite.play(updatedAnimationKey);
+                }
+            },
+            onComplete: () => {
+                this.isMoving = false;
+                this.returningToCamp = false;
+                this.sprite.play(`character${this.characterCode}Idle1`);
+            }
+        });
     }
+    
+    
+    
 
-    // determineDirectionToEnemy() {
-    //     const enemyX = this.scene.enemy.sprite.x;
-    //     const enemyY = this.scene.enemy.sprite.y;
-    //     const dx = enemyX - this.robotSprite.x;
-    //     const dy = enemyY - this.robotSprite.y;
-    //     const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-
-    //     if (angle >= -22.5 && angle < 22.5) return 'east';
-    //     if (angle >= 22.5 && angle < 67.5) return 'southeast';
-    //     if (angle >= 67.5 && angle < 112.5) return 'south';
-    //     if (angle >= 112.5 && angle < 157.5) return 'southwest';
-    //     if (angle >= 157.5 || angle < -157.5) return 'west';
-    //     if (angle >= -157.5 && angle < -112.5) return 'northwest';
-    //     if (angle >= -112.5 && angle < -67.5) return 'north';
-    //     if (angle >= -67.5 && angle < -22.5) return 'northeast';
-    // }
-
-    determineDirectionToEnemy(enemy) {
-        const enemyX = enemy.sprite.x;
-        const enemyY = enemy.sprite.y;
-        const dx = enemyX - this.robotSprite.x;
-        const dy = enemyY - this.robotSprite.y;
-        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
-
-        if (angle >= -22.5 && angle < 22.5) return 'east';
-        if (angle >= 22.5 && angle < 67.5) return 'southeast';
-        if (angle >= 67.5 && angle < 112.5) return 'south';
-        if (angle >= 112.5 && angle < 157.5) return 'southwest';
-        if (angle >= 157.5 || angle < -157.5) return 'west';
-        if (angle >= -157.5 && angle < -112.5) return 'northwest';
-        if (angle >= -112.5 && angle < -67.5) return 'north';
-        if (angle >= -67.5 && angle < -22.5) return 'northeast';
-    }
-
-    updatePosition() {
+    update(time, delta) {
         if (this.isDead) return;
-        this.position.x = this.robotSprite.x;
-        this.position.y = this.robotSprite.y;
-    }
-
-    getPosition() {
-        return this.robotSprite ? { x: this.robotSprite.x, y: this.robotSprite.y } : this.position;
-    }
-
-    createHealthBar() {
-        this.healthBar = this.scene.add.graphics();  // Create the graphics object, but don't draw anything yet
-
-        // Draw the initial health bar
+        // this.detectionField.setPosition(this.sprite.x, this.sprite.y);
         this.updateHealthBar();
-    }
 
-    updateHealthBar() {
-        // Calculate the position of the health bar above the player
-        const barX = this.robotSprite.x - 70;
-        const barY = this.robotSprite.y - this.robotSprite.displayHeight + 120;
+        const isMoving = this.moveTween && this.moveTween.isPlaying();
+        const isAttacking = this.sprite.anims.isPlaying && this.sprite.anims.currentAnim.key.includes('Attack');
 
-        this.healthBar.clear();
-        this.healthBar.setPosition(barX, barY);
-
-        // Background of health bar (transparent part)
-        this.healthBar.fillStyle(0x000000, 0.5);
-        this.healthBar.fillRect(0, 0, 150, 10);
-
-        // Health portion
-        const healthPercentage = this.health / this.totalHealth;
-        const healthBarWidth = healthPercentage * 150;
-        // fill style dark green
-        this.healthBar.fillStyle(0x00ff00, 1);
-        this.healthBar.fillRect(0, 0, healthBarWidth, 10);
-    }
-
-    takeDamage(damage, enemy) {
-        if (this.isDead) return;
-        // console.log('Player taking damage');
-
-
-        this.attacker = enemy; // Store reference to the attacking enemy
-
-        this.health -= damage;
-        this.health = Math.max(this.health, 0);
-        // console.log(`Player took ${damage} damage. ${this.health} health remaining`);
-
-        // Create and display damage text
-        this.createDamageText(damage);
-
-        if (this.health <= 0 && !this.isDead) {
-            this.die();
+        if (!isMoving && !isAttacking) {
+            // Check if enough time has passed to change the animation
+            if (time - this.lastActionTime > 5000) { // 5 seconds of inactivity
+                this.currentAnimationIndex = (this.currentAnimationIndex + 1) % 4;
+                this.sprite.play(`character${this.characterCode}Idle${this.currentAnimationIndex + 1}`);
+                this.lastActionTime = time;
+            }
+        } else {
+            this.lastActionTime = time; // Reset the last action time if the enemy is moving or attacking
         }
 
-        this.updateHealthBar();
     }
 
-    createDamageText(damage) {
-        const damageText = this.scene.add.text(this.robotSprite.x, this.robotSprite.y - 100, `-${damage}`, { font: '36px Orbitron', fill: '#000' });
-        damageText.setOrigin(0.5, 0.5);
+}
 
-        // Animation for damage text (move up and fade out)
-        this.scene.tweens.add({
-            targets: damageText,
-            y: damageText.y - 30, // Move up
-            alpha: 0, // Fade out
-            duration: 800,
-            ease: 'Power2',
-            onComplete: () => {
-                damageText.destroy(); // Remove the text object
+
+class GameScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'GameScene' });
+        this.player = null;
+        this.enemies = [];
+        this.land = null;
+        this.ocean = null;
+        this.initialZoom = 0.8;
+        this.isDragging = false;
+        this.dragStartPoint = null;
+    }
+
+    create() {
+        this.gameScreenWidth = this.sys.game.config.width;
+        this.gameScreenHeight = this.sys.game.config.height;
+        this.createStaticBackground();
+        this.createLand();
+        this.createCamps();
+        this.createEnemy();
+        this.createPlayer();
+        this.setupCamera();
+
+        this.messageText = this.add.text(0, 0, '', { font: '24px Orbitron', fill: '#ff0000', align: 'center' });
+        this.messageText.setVisible(false);
+    }
+
+
+    handlePlayerClick(pointer) {
+        if (this.enemyClicked) {
+            this.enemyClicked = false;
+            return; // Click was on the enemy, skip the general click logic
+        }
+
+        // Convert screen coordinates to world coordinates
+        const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+        const originalWidth = this.land.texture.source[0].width;
+        const originalHeight = this.land.texture.source[0].height;
+
+        // Check if the clicked point is within the bounds of the land
+        if (worldPoint.x >= this.land.x - originalWidth / 2 &&
+            worldPoint.x <= this.land.x + originalWidth / 2 &&
+            worldPoint.y >= this.land.y - originalHeight / 2 &&
+            worldPoint.y <= this.land.y + originalHeight / 2) {
+            // If within bounds, move the player
+            this.player.moveStraight(worldPoint.x, worldPoint.y);
+        } else {
+            this.showOutOfBoundsMessage(worldPoint);
+        }
+    }
+
+    createEnemy() {
+        // Array of camp objects
+        const camps = [this.camp1, this.camp2, this.camp3];
+
+        camps.forEach(camp => {
+            for (let i = 0; i < 2; i++) {
+                const randomPosition = camp.getRandomPositionInRadius();
+                let enemy = new Enemy(this, randomPosition.x, randomPosition.y, 2, camp);
+                enemy.create();
+                this.enemies.push(enemy);
+
+                // Add pointer events for each enemy
+                enemy.sprite.on('pointerover', () => {
+                    if (!enemy.isDead) {
+                        setAttackCursor(this);
+                    }
+                });
+
+                enemy.sprite.on('pointerout', () => {
+                    setDefaultCursor(this);
+                });
+
+
+                enemy.sprite.on('pointerdown', () => {
+                    console.log("Enemy clicked");
+                    this.enemyClicked = true;
+                    this.player.targetedEnemy = enemy;
+                });
+
+
+
             }
         });
     }
 
-    die() {
-        if (this.isDead) return;
+    setupInputHandlers() {
+        const originalWidth = this.land.texture.source[0].width;
+        const originalHeight = this.land.texture.source[0].height;
 
-        this.isDead = true;
-        console.log('Player died');
+        this.input.on('pointerdown', function (pointer) {
+            if (pointer.leftButtonDown()) {
+                if (this.enemyClicked) {
+                    this.enemyClicked = false; // Reset the flag
+                    return; // Click was on the enemy, so skip the general click logic/no callback
+                }
 
-        // Stop any ongoing movement
-        if (this.moveTween) {
-            this.moveTween.stop();
-        }
-        this.isMoving = false;
+                // Convert screen coordinates to world coordinates
+                const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
 
-        // Stop any ongoing animation and play the death animation
-        this.robotSprite.stop();
-        this.robotSprite.play(`death`);
+                // Check if the clicked point is within the bounds of the island
+                if (worldPoint.x >= this.land.x - originalWidth / 2 &&
+                    worldPoint.x <= this.land.x + originalWidth / 2 &&
+                    worldPoint.y >= this.land.y - originalHeight / 2 &&
+                    worldPoint.y <= this.land.y + originalHeight / 2) {
+                    // If within bounds, move the player
+                    this.player.moveStraight(worldPoint.x, worldPoint.y);
+                } else {
+                    this.messageText.setText("Can't go there!");
+                    this.messageText.setOrigin(0.5, 0.5);
+                    this.messageText.setVisible(true);
 
-        if (this.attacker) {
-            console.log('Stopping attacker');
-            this.attacker.stopAttackingPlayer();
-        }
+                    // this.messageText.setPosition(worldPoint.x, worldPoint.y);
+                    // ensure the text is seen fully within this.sys.game.config.width
+                    if (worldPoint.x < this.sys.game.config.width / 2) {
+                        this.messageText.setPosition(worldPoint.x + 100, worldPoint.y);
+                    } else {
+                        this.messageText.setPosition(worldPoint.x - 50, worldPoint.y);
+                    }
+                    this.tweens.add({
+                        targets: this.messageText,
+                        alpha: { start: 0, to: 1 },
+                        duration: 1000,
+                        ease: 'Linear',
+                        yoyo: true,
+                        repeat: 0,
+                        onComplete: () => {
+                            this.messageText.setVisible(false);
+                            this.messageText.setAlpha(1); // Reset alpha value for the next use
+                        }
+                    });
+                }
+            }
+        }, this);
 
-        this.healthBar.destroy();
+        this.input.enabled = true;
+
+        this.sceneName = "battle-scene";
     }
 
+
+    update(time, delta) {
+        if (this.player) {
+            this.player.update(time, delta, this.enemies);
+        }
+
+        this.enemies.forEach(enemy => {
+            if (enemy) {
+                let playerPosition = this.player.getPosition();
+                enemy.updateEnemy(playerPosition.x, playerPosition.y, this.player, delta);
+                enemy.update(time, delta);
+            }
+        });
+
+        if (this.isCameraFollowingPlayer) {
+            // Update the camera to follow the player's current position
+            this.cameras.main.startFollow(this.player.getPosition(), true, 0.01, 0.01);
+        }
+
+
+    }
 }
+
+

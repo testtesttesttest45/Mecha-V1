@@ -14,6 +14,7 @@ class GameScene extends Phaser.Scene {
         this.initialZoom = 0.8;
         this.isDragging = false;
         this.dragStartPoint = null;
+        this.cancelClick = false;
     }
 
     create() {
@@ -159,6 +160,8 @@ class GameScene extends Phaser.Scene {
             worldPoint.y >= this.land.y - originalHeight / 2 &&
             worldPoint.y <= this.land.y + originalHeight / 2) {
             // If within bounds, move the player
+            this.player.targetedEnemy = null;
+            this.cancelClick = true;
             this.player.moveStraight(worldPoint.x, worldPoint.y);
         } else {
             this.showOutOfBoundsMessage(worldPoint);
@@ -193,7 +196,7 @@ class GameScene extends Phaser.Scene {
 
 
     createPlayer() {
-        this.player = new Player(this, 1500, 800, 6, this.enemies);
+        this.player = new Player(this, 1500, 800, 5, this.enemies);
         this.player.create();
     }
 
@@ -204,7 +207,7 @@ class GameScene extends Phaser.Scene {
         camps.forEach(camp => {
             for (let i = 0; i < 2; i++) {
                 const randomPosition = camp.getRandomPositionInRadius();
-                let enemy = new Enemy(this, randomPosition.x, randomPosition.y, 2);
+                let enemy = new Enemy(this, randomPosition.x, randomPosition.y, 1, camp);
                 enemy.create();
                 this.enemies.push(enemy);
 
@@ -224,14 +227,20 @@ class GameScene extends Phaser.Scene {
                     console.log("Enemy clicked");
                     this.enemyClicked = true;
                     this.player.targetedEnemy = enemy;
-                    this.player.stopAttackingEnemy();
+                    this.player.isMovingTowardsEnemy = true;
+                    // Check if the targeted enemy is the same as the clicked enemy
+                    if (this.player.targetedEnemy === enemy && this.player.isAttacking) {
+                        return; // Do not reset attack animation if already attacking the same enemy
+                    }
+                    this.cancelClick = true;
                     this.player.moveStraight(enemy.sprite.x, enemy.sprite.y, () => {
                         this.player.playAttackAnimation(enemy);
                         this.player.continueAttacking = true;
                     });
                 });
-                
-                
+
+
+
             }
         });
     }
@@ -384,7 +393,7 @@ class LoadingScene extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'character2', 'assets/sprites/character_2.png', 4000, 4400);
         // loadDynamicSpriteSheet.call(this, 'character3', 'assets/sprites/character_3.png', 4000, 3520);
         // loadDynamicSpriteSheet.call(this, 'character4', 'assets/sprites/character_4.png', 4000, 4400);
-        // loadDynamicSpriteSheet.call(this, 'character5', 'assets/sprites/character_5.png', 4000, 2640);
+        loadDynamicSpriteSheet.call(this, 'character5', 'assets/sprites/character_5.png', 4000, 2640);
         loadDynamicSpriteSheet.call(this, 'character6', 'assets/sprites/character_6.png', 4000, 4400);
         // loadDynamicSpriteSheet.call(this, 'character7', 'assets/sprites/character_7.png', 4000, 4400);
         // loadDynamicSpriteSheet.call(this, 'character8', 'assets/sprites/character_8.png', 4000, 4400);
