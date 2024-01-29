@@ -262,6 +262,34 @@ class GameScene extends Phaser.Scene {
     createBase() {
         this.base = new Base(this, this.player, [this.camp1, this.camp2, this.camp3]);
         this.base.create();
+
+        // add hover effect
+        this.base.sprite.on('pointerover', () => {
+            if (!this.base.isDestroyed) {
+                setAttackCursor(this);
+            }
+        });
+
+        this.base.sprite.on('pointerout', () => {
+            setDefaultCursor(this);
+        });
+
+
+        this.base.sprite.on('pointerdown', () => {
+            console.log("Base clicked");
+            this.enemyClicked = true;
+            this.player.targetedEnemy = this.base;
+            this.player.isMovingTowardsEnemy = true;
+            // Check if the targeted enemy is the same as the clicked enemy
+            if (this.player.targetedEnemy === this.base && this.player.isAttacking) {
+                return; // Do not reset attack animation if already attacking the same enemy
+            }
+            this.cancelClick = true;
+            this.player.moveStraight(this.base.sprite.x, this.base.sprite.y, () => {
+                this.player.playAttackAnimation(this.base);
+                this.player.continueAttacking = true;
+            });
+        });
     }
 
     setupInputHandlers() {
@@ -337,6 +365,9 @@ class GameScene extends Phaser.Scene {
             this.cameras.main.startFollow(this.player.getPosition(), true, 0.01, 0.01);
         }
 
+        if (this.base) {
+            this.base.update(time, delta);
+        }
 
     }
 }
