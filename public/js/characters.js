@@ -16,7 +16,7 @@ const characterMap = {
         name: 'orc',
         class: 'enemy',
         health: 220,
-        damage: 1,
+        damage: 100,
         range: 100,
         speed: 100,
         attackSpeed: 0.8,

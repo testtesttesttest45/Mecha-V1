@@ -252,72 +252,6 @@ class Player {
         });
     }
 
-
-
-    update(time, delta) {
-        this.detectionField.setPosition(this.robotSprite.x, this.robotSprite.y);
-        const isMoving = this.currentTween && this.currentTween.isPlaying();
-        const isAttacking = this.robotSprite.anims.isPlaying && this.robotSprite.anims.currentAnim.key.startsWith('attack');
-
-        if (!isMoving && !isAttacking && !this.isDead) {
-            if (time - this.lastActionTime > 5000) { // 5 seconds of inactivity
-                if (time - this.lastAnimationChange > 5000) {
-                    this.idleAnimationIndex = (this.idleAnimationIndex + 1) % 4;
-                    this.robotSprite.play(`idle${this.idleAnimationIndex + 1}`);
-                    this.lastAnimationChange = time;
-                }
-            }
-        } else {
-            this.lastActionTime = time; // Reset the last action time if the player is moving or attacking
-        }
-
-        if (this.currentTween && this.currentTween.isPlaying()) {
-            this.robotSprite.setPosition(this.position.x, this.position.y);
-        }
-        const currentAnim = this.robotSprite.anims.currentAnim;
-        if (!currentAnim || !currentAnim.key.startsWith('attack')) {
-            this.isAttacking = false;
-        }
-
-        // Check if the player is moving towards the targeted enemy
-        if (!this.isDead && this.targetedEnemy && (this.targetedEnemy.returningToCamp || this.targetedEnemy.reachedCamp)) {
-            //console.log('Targeted enemy is returning to camp');
-            let enemyPosition = this.targetedEnemy.getPosition();
-            let distanceToEnemy = Phaser.Math.Distance.Between(this.position.x, this.position.y, enemyPosition.x, enemyPosition.y);
-            if (distanceToEnemy <= this.range) {
-                if (this.currentTween) {
-                    this.currentTween.stop();
-                }
-                this.isMovingTowardsEnemy = false;
-                this.continueAttacking = true;
-                this.playAttackAnimation(this.targetedEnemy); // Attack the targeted enemy
-            } else {
-                this.scene.cancelClick = false;
-                this.moveStraight(enemyPosition.x, enemyPosition.y);
-            }
-
-        } else if (this.isMovingTowardsEnemy && !this.isDead && this.targetedEnemy && !this.targetedEnemy.returningToCamp && !this.targetedEnemy.reachedCamp) {
-            let enemyPosition = this.targetedEnemy.getPosition();
-            let distanceToEnemy = Phaser.Math.Distance.Between(this.position.x, this.position.y, enemyPosition.x, enemyPosition.y);
-            if (distanceToEnemy <= this.range) {
-                if (this.currentTween) {
-                    this.currentTween.stop();
-                }
-                this.isMovingTowardsEnemy = false;
-                this.continueAttacking = true;
-                this.playAttackAnimation(this.targetedEnemy); // Attack the targeted enemy
-            }
-        }
-
-
-        if (this.continueAttacking && !this.isDead && this.targetedEnemy) {
-            this.playAttackAnimation(this.targetedEnemy); // Continue attacking the targeted enemy
-        }
-
-        this.updateHealthBar();
-    }
-
-
     stopAttackingEnemy() {
         this.isMovingTowardsEnemy = false;
         this.continueAttacking = false;
@@ -462,7 +396,7 @@ class Player {
     createDamageText(damage) {
         const damageText = this.scene.add.text(this.robotSprite.x, this.robotSprite.y - 100, `-${damage}`, { font: '36px Orbitron', fill: '#000' });
         damageText.setOrigin(0.5, 0.5);
-
+        damageText.setDepth(1);
         // Animation for damage text (move up and fade out)
         this.scene.tweens.add({
             targets: damageText,
@@ -493,11 +427,73 @@ class Player {
         this.robotSprite.play(`death`);
 
         if (this.attacker) {
-            console.log('Stopping attacker');
             this.attacker.stopAttackingPlayer();
         }
 
         this.healthBar.destroy();
+    }
+
+    update(time, delta) {
+        this.detectionField.setPosition(this.robotSprite.x, this.robotSprite.y);
+        const isMoving = this.currentTween && this.currentTween.isPlaying();
+        const isAttacking = this.robotSprite.anims.isPlaying && this.robotSprite.anims.currentAnim.key.startsWith('attack');
+
+        if (!isMoving && !isAttacking && !this.isDead) {
+            if (time - this.lastActionTime > 5000) { // 5 seconds of inactivity
+                if (time - this.lastAnimationChange > 5000) {
+                    this.idleAnimationIndex = (this.idleAnimationIndex + 1) % 4;
+                    this.robotSprite.play(`idle${this.idleAnimationIndex + 1}`);
+                    this.lastAnimationChange = time;
+                }
+            }
+        } else {
+            this.lastActionTime = time; // Reset the last action time if the player is moving or attacking
+        }
+
+        if (this.currentTween && this.currentTween.isPlaying()) {
+            this.robotSprite.setPosition(this.position.x, this.position.y);
+        }
+        const currentAnim = this.robotSprite.anims.currentAnim;
+        if (!currentAnim || !currentAnim.key.startsWith('attack')) {
+            this.isAttacking = false;
+        }
+
+        // Check if the player is moving towards the targeted enemy
+        if (!this.isDead && this.targetedEnemy && (this.targetedEnemy.returningToCamp || this.targetedEnemy.reachedCamp)) {
+            //console.log('Targeted enemy is returning to camp');
+            let enemyPosition = this.targetedEnemy.getPosition();
+            let distanceToEnemy = Phaser.Math.Distance.Between(this.position.x, this.position.y, enemyPosition.x, enemyPosition.y);
+            if (distanceToEnemy <= this.range) {
+                if (this.currentTween) {
+                    this.currentTween.stop();
+                }
+                this.isMovingTowardsEnemy = false;
+                this.continueAttacking = true;
+                this.playAttackAnimation(this.targetedEnemy); // Attack the targeted enemy
+            } else {
+                this.scene.cancelClick = false;
+                this.moveStraight(enemyPosition.x, enemyPosition.y);
+            }
+
+        } else if (this.isMovingTowardsEnemy && !this.isDead && this.targetedEnemy && !this.targetedEnemy.returningToCamp && !this.targetedEnemy.reachedCamp) {
+            let enemyPosition = this.targetedEnemy.getPosition();
+            let distanceToEnemy = Phaser.Math.Distance.Between(this.position.x, this.position.y, enemyPosition.x, enemyPosition.y);
+            if (distanceToEnemy <= this.range) {
+                if (this.currentTween) {
+                    this.currentTween.stop();
+                }
+                this.isMovingTowardsEnemy = false;
+                this.continueAttacking = true;
+                this.playAttackAnimation(this.targetedEnemy); // Attack the targeted enemy
+            }
+        }
+
+
+        if (this.continueAttacking && !this.isDead && this.targetedEnemy) {
+            this.playAttackAnimation(this.targetedEnemy); // Continue attacking the targeted enemy
+        }
+
+        this.updateHealthBar();
     }
 
 }

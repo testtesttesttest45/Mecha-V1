@@ -1,7 +1,7 @@
 import characterMap from './characters.js';
 
 class Enemy {
-    constructor(scene, x, y, characterCode = 2, originalCamp) {
+    constructor(scene, x, y, characterCode = 2, originalCamp, player) {
         this.scene = scene;
         this.x = x;
         this.y = y;
@@ -37,6 +37,11 @@ class Enemy {
         this.returningToCamp = false;
         this.reachedCamp = false;
         this.lastHealTime = 0;
+        this.isEnraged = false;
+        this.enrageDuration = 10000;
+        this.enrageStartTime = 0;
+        this.player = player;
+        this.idleAnimations = [`character${this.characterCode}Idle1`, `character${this.characterCode}Idle2`, `character${this.characterCode}Idle3`, `character${this.characterCode}Idle4`];
     }
 
     create() {
@@ -98,7 +103,8 @@ class Enemy {
             }
         });
 
-        this.sprite.play(`character${this.characterCode}Idle1`);
+        const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
+        this.sprite.play(randomIdleAnimation);
         this.scene.physics.world.enable(this.sprite);
 
         const bodyWidth = this.sprite.width * 0.6;
@@ -155,7 +161,9 @@ class Enemy {
     }
 
     moveToPlayer(playerX, playerY) {
-        if (this.isDead || this.isMoving || this.isAttacking) return;
+        if (this.isDead || this.isMoving || this.isAttacking) {
+            return;
+        }
 
         this.isMoving = true;
         this.isAttacking = false;
@@ -189,6 +197,13 @@ class Enemy {
                 duration: duration,
                 ease: 'Linear',
                 onUpdate: () => {
+                    if (this.player.isDead) {
+                        this.moveTween.stop();
+                        this.isMoving = false;
+                        this.isAttacking = false;
+                        this.sprite.play(`character${this.characterCode}Idle1`);
+                        return;
+                    }
                     // Update direction based on player's current position
                     const updatedPlayerPosition = this.attacker.getPosition();
                     const updatedDirection = this.determineDirectionToPoint(updatedPlayerPosition.x, updatedPlayerPosition.y);
@@ -215,7 +230,6 @@ class Enemy {
     }
 
     updateEnemy(playerX, playerY, player, delta) {
-        // console.log('fckng cb', this.isAttacking)
         this.attacker = player;
         if (this.isDead || this.attacker.isDead) return;
 
@@ -331,6 +345,10 @@ class Enemy {
 
         this.sprite.once('animationcomplete', anim => {
             if (anim.key === attackAnimationKey) {
+                if (player.isDead) {
+                    this.stopAttackingPlayer();
+                    return;
+                }
                 this.isAttacking = false;
                 if (this.attackRangeArc) this.attackRangeArc.destroy();
                 if (this.attackRangeRect) this.attackRangeRect.destroy();
@@ -572,8 +590,8 @@ class Enemy {
         this.attacker = null;
 
         if (!this.sprite.anims.currentAnim || !this.sprite.anims.currentAnim.key.includes('Idle')) {
-            console.log("Going idle");
-            this.sprite.play(`character${this.characterCode}Idle1`);
+            const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
+            this.sprite.play(randomIdleAnimation);
         }
     }
 
@@ -645,48 +663,80 @@ class Enemy {
         });
     }
 
+    setEnraged() {
+        if (!this.isEnraged) {
+            this.isEnraged = true;
+            this.damage = this.damage * 2;
+            this.speed = this.speed * 2;
+            this.enrageStartTime = this.scene.time.now;
+        } else { // reset enrage timer
+            this.enrageStartTime = this.scene.time.now;
+        }
+    }
+
+    disenrage() {
+        this.isEnraged = false;
+        this.damage = this.damage / 2;
+        this.speed = this.speed / 2;
+    }
+
 
     update(time, delta) {
         if (this.isDead) return;
         // this.detectionField.setPosition(this.sprite.x, this.sprite.y);
         this.updateHealthBar();
-
-        const isMoving = this.moveTween && this.moveTween.isPlaying();
-        const isAttacking = this.sprite.anims.isPlaying && this.sprite.anims.currentAnim.key.includes('Attack');
-
-        if (!isMoving && !isAttacking) {
-            // Check if enough time has passed to change the animation
-            if (time - this.lastActionTime > 5000) { // 5 seconds of inactivity
-                this.currentAnimationIndex = (this.currentAnimationIndex + 1) % 4;
-                this.sprite.play(`character${this.characterCode}Idle${this.currentAnimationIndex + 1}`);
-                this.lastActionTime = time;
+        if (this.isEnraged) {
+            // Check if the enrage time has elapsed
+            if (time - this.enrageStartTime > this.enrageDuration) {
+                this.disenrage();
+            } else {
+                // Continue chasing the player while enraged
+                if (!this.isMoving && !this.isAttacking && this.attacker && !this.attacker.isDead) {
+                    const playerPosition = this.attacker.getPosition();
+                    this.moveToPlayer(playerPosition.x, playerPosition.y);
+                }
             }
         } else {
-            this.lastActionTime = time; // Reset the last action time if the enemy is moving or attacking
+            const isMoving = this.moveTween && this.moveTween.isPlaying();
+            const isAttacking = this.sprite.anims.isPlaying && this.sprite.anims.currentAnim.key.includes('Attack');
+
+            if (!isMoving && !isAttacking) {
+                // Check if enough time has passed to change the animation
+                if (time - this.lastActionTime > 5000) { // 5 seconds of inactivity
+                    const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
+                    this.sprite.play(randomIdleAnimation);
+                    this.lastActionTime = time;
+                }
+            } else {
+                this.lastActionTime = time; // Reset the last action time if the enemy is moving or attacking
+            }
+
+            const distanceFromCamp = Phaser.Math.Distance.Between(
+                this.sprite.x, this.sprite.y,
+                this.originalCamp.x, this.originalCamp.y
+            );
+
+            if (distanceFromCamp > this.originalCamp.radius) {
+                this.reachedCamp = false;
+            } else if (!this.isMoving && !this.isAttacking) {
+                this.reachedCamp = true;
+            } else {
+                this.reachedCamp = false;
+            }
         }
 
-        const distanceFromCamp = Phaser.Math.Distance.Between(
-            this.sprite.x, this.sprite.y,
-            this.originalCamp.x, this.originalCamp.y
-        );
-        
-        if (distanceFromCamp > this.originalCamp.radius) {
-            this.reachedCamp = false;
-        } else if (!this.isMoving && !this.isAttacking) {
-            this.reachedCamp = true;
-        } else {
-            this.reachedCamp = false;
-        }
-        
         if (this.reachedCamp && this.health < this.totalHealth) {
             if (time - this.lastHealTime > 1000) { // Heal every 1 second
                 this.heal(20); // +20 health per second
                 this.lastHealTime = time;
             }
         }
-        
 
-        
+        if (this.isEnraged && time - this.enrageStartTime > this.enrageDuration) {
+            this.disenrage();
+        }
+
+
 
     }
 

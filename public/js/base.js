@@ -1,5 +1,5 @@
 class Base {
-    constructor(scene, player, camps) {
+    constructor(scene, player, camps, enemies) {
         this.scene = scene;
         this.player = player;
         this.camps = camps;
@@ -13,6 +13,7 @@ class Base {
         this.isDestroyed = false;
         this.rebuildTime = 3000; // 5sec after destroyed
         this.destroyedTime = 0;
+        this.enemies = enemies;
     }
 
     create() {
@@ -77,9 +78,8 @@ class Base {
     }
 
     takeDamage(damage, player) {
-        console.log('Base taking damage');
         this.attacker = player; // Store reference to the attacking player
-
+        this.enrageEnemies();
         this.health -= damage;
         this.health = Math.max(this.health, 0);
         this.hasPlayerBeenDetected = true;
@@ -115,16 +115,14 @@ class Base {
         }
         this.isDestroyed = true;
         console.log('Base destroyed');
-    
+        this.sprite.disableInteractive();
         this.scene.tweens.add({
             targets: this.sprite,
             alpha: 0,
             duration: 1500,
             ease: 'Power1',
             onComplete: () => {
-                // Instead of destroying, just make it invisible and non-interactive
                 this.sprite.setVisible(false);
-                this.sprite.setInteractive(false);
             }
         });
     
@@ -134,6 +132,14 @@ class Base {
     
         this.healthBar.destroy();
         this.destroyedTime = this.scene.time.now;
+    }
+
+    enrageEnemies() {
+        this.enemies.forEach(enemy => {
+            if (!enemy.isDead) {
+                enemy.setEnraged();
+            }
+        });
     }
     
     update(time, delta) {

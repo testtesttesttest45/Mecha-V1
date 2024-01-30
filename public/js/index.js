@@ -209,7 +209,7 @@ class GameScene extends Phaser.Scene {
         camps.forEach(camp => {
             for (let i = 0; i < 2; i++) {
                 const randomPosition = camp.getRandomPositionInRadius();
-                let enemy = new Enemy(this, randomPosition.x, randomPosition.y, 2, camp);
+                let enemy = new Enemy(this, randomPosition.x, randomPosition.y, 2, camp, this.player);
                 enemy.create();
                 this.enemies.push(enemy);
 
@@ -260,7 +260,7 @@ class GameScene extends Phaser.Scene {
     }
 
     createBase() {
-        this.base = new Base(this, this.player, [this.camp1, this.camp2, this.camp3]);
+        this.base = new Base(this, this.player, [this.camp1, this.camp2, this.camp3], this.enemies);
         this.base.create();
 
         // add hover effect
@@ -280,11 +280,8 @@ class GameScene extends Phaser.Scene {
             this.enemyClicked = true;
             this.player.targetedEnemy = this.base;
             this.player.isMovingTowardsEnemy = true;
-            // Check if the targeted enemy is the same as the clicked enemy
-            if (this.player.targetedEnemy === this.base && this.player.isAttacking) {
-                return; // Do not reset attack animation if already attacking the same enemy
-            }
             this.cancelClick = true;
+            console.log('here')
             this.player.moveStraight(this.base.sprite.x, this.base.sprite.y, () => {
                 this.player.playAttackAnimation(this.base);
                 this.player.continueAttacking = true;
@@ -368,7 +365,6 @@ class GameScene extends Phaser.Scene {
         if (this.base) {
             this.base.update(time, delta);
         }
-
     }
 }
 

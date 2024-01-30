@@ -1,413 +1,3 @@
-class GameScene extends Phaser.Scene {
-    constructor() {
-        super({ key: 'GameScene' });
-        this.player = null;
-        this.enemies = [];
-        this.land = null;
-        this.ocean = null;
-        this.initialZoom = 0.8;
-        this.isDragging = false;
-        this.dragStartPoint = null;
-    }
-
-    create() {
-        this.gameScreenWidth = this.sys.game.config.width;
-        this.gameScreenHeight = this.sys.game.config.height;
-        this.createStaticBackground();
-        this.createLand();
-        this.createCamps();
-        this.createEnemy();
-        this.createPlayer();
-        this.setupCamera();
-
-        this.messageText = this.add.text(0, 0, '', { font: '24px Orbitron', fill: '#ff0000', align: 'center' });
-        this.messageText.setVisible(false);
-    }
-
-    handlePlayerClick(pointer) {
-        if (this.enemyClicked) {
-            this.enemyClicked = false;
-            return; // Click was on the enemy, skip the general click logic
-        }
-
-        // Convert screen coordinates to world coordinates
-        const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-        const originalWidth = this.land.texture.source[0].width;
-        const originalHeight = this.land.texture.source[0].height;
-
-        // Check if the clicked point is within the bounds of the land
-        if (worldPoint.x >= this.land.x - originalWidth / 2 &&
-            worldPoint.x <= this.land.x + originalWidth / 2 &&
-            worldPoint.y >= this.land.y - originalHeight / 2 &&
-            worldPoint.y <= this.land.y + originalHeight / 2) {
-            // If within bounds, move the player
-            this.player.moveStraight(worldPoint.x, worldPoint.y);
-        } else {
-            this.showOutOfBoundsMessage(worldPoint);
-        }
-    }
-
-    createEnemy() {
-        // Array of camp objects
-        const camps = [this.camp1, this.camp2, this.camp3];
-
-        camps.forEach(camp => {
-            for (let i = 0; i < 2; i++) {
-                const randomPosition = camp.getRandomPositionInRadius();
-                let enemy = new Enemy(this, randomPosition.x, randomPosition.y, 2, camp);
-                enemy.create();
-                this.enemies.push(enemy);
-
-                // Add pointer events for each enemy
-                enemy.sprite.on('pointerover', () => {
-                    if (!enemy.isDead) {
-                        setAttackCursor(this);
-                    }
-                });
-
-                enemy.sprite.on('pointerout', () => {
-                    setDefaultCursor(this);
-                });
-
-
-                enemy.sprite.on('pointerdown', () => {
-                    console.log("Enemy clicked");
-                    this.enemyClicked = true;
-                    this.player.targetedEnemy = enemy;
-                    // Check if the targeted enemy is the same as the clicked enemy
-                    if (this.player.targetedEnemy === enemy && this.player.isAttacking) {
-                        return; // Do not reset attack animation if already attacking the same enemy
-                    }
-                    
-                    this.player.stopAttackingEnemy();
-                    this.player.moveStraight(enemy.sprite.x, enemy.sprite.y, () => {
-                        this.player.playAttackAnimation(enemy);
-                        this.player.continueAttacking = true;
-                    });
-                });
-
-
-
-            }
-        });
-    }
-
-
-    createCamps() {
-        this.camp1 = new Camp(this, 1240, 1250);
-        this.camp1.create();
-
-        this.camp2 = new Camp(this, 1900, 700);
-        this.camp2.create();
-
-        this.camp3 = new Camp(this, 2620, 1220);
-        this.camp3.create();
-    }
-
-    setupInputHandlers() {
-        const originalWidth = this.land.texture.source[0].width;
-        const originalHeight = this.land.texture.source[0].height;
-
-        this.input.on('pointerdown', function (pointer) {
-            if (pointer.leftButtonDown()) {
-                if (this.enemyClicked) {
-                    this.enemyClicked = false; // Reset the flag
-                    return; // Click was on the enemy, so skip the general click logic/no callback
-                }
-
-                // Convert screen coordinates to world coordinates
-                const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-
-                // Check if the clicked point is within the bounds of the island
-                if (worldPoint.x >= this.land.x - originalWidth / 2 &&
-                    worldPoint.x <= this.land.x + originalWidth / 2 &&
-                    worldPoint.y >= this.land.y - originalHeight / 2 &&
-                    worldPoint.y <= this.land.y + originalHeight / 2) {
-                    // If within bounds, move the player
-                    this.player.moveStraight(worldPoint.x, worldPoint.y);
-                } else {
-                    this.messageText.setText("Can't go there!");
-                    this.messageText.setOrigin(0.5, 0.5);
-                    this.messageText.setVisible(true);
-
-                    // this.messageText.setPosition(worldPoint.x, worldPoint.y);
-                    // ensure the text is seen fully within this.sys.game.config.width
-                    if (worldPoint.x < this.sys.game.config.width / 2) {
-                        this.messageText.setPosition(worldPoint.x + 100, worldPoint.y);
-                    } else {
-                        this.messageText.setPosition(worldPoint.x - 50, worldPoint.y);
-                    }
-                    this.tweens.add({
-                        targets: this.messageText,
-                        alpha: { start: 0, to: 1 },
-                        duration: 1000,
-                        ease: 'Linear',
-                        yoyo: true,
-                        repeat: 0,
-                        onComplete: () => {
-                            this.messageText.setVisible(false);
-                            this.messageText.setAlpha(1); // Reset alpha value for the next use
-                        }
-                    });
-                }
-            }
-        }, this);
-
-        this.input.enabled = true;
-
-        this.sceneName = "battle-scene";
-    }
-
-
-    update(time, delta) {
-        if (this.player) {
-            this.player.update(time, delta, this.enemies);
-        }
-
-        this.enemies.forEach(enemy => {
-            if (enemy) {
-                let playerPosition = this.player.getPosition();
-                enemy.updateEnemy(playerPosition.x, playerPosition.y, this.player, delta);
-                enemy.update(time, delta);
-            }
-        });
-
-        if (this.isCameraFollowingPlayer) {
-            // Update the camera to follow the player's current position
-            this.cameras.main.startFollow(this.player.getPosition(), true, 0.01, 0.01);
-        }
-
-
-    }
-}
-
-class Player {
-    constructor(scene, initialX, initialY, characterCode = 1, enemies) {
-        this.scene = scene;
-        this.robotSprite = null;
-        this.position = { x: initialX, y: initialY };
-        this.currentTween = null;
-        this.idleAnimationIndex = 0;
-        this.lastAnimationChange = this.scene.time.now;
-        this.lastActionTime = this.scene.time.now;
-        this.lastDirection = null;
-        this.directions = [];
-        this.directionAveragingSteps = 10;
-        this.characterCode = characterCode;
-        const character = characterMap[this.characterCode];
-        this.range = character.range;
-        this.speed = character.speed;
-        this.damage = character.damage;
-        this.attackSpeed = character.attackSpeed;
-        this.spritesheetKey = character.spritesheetKey;
-        this.isAttacking = false;
-        this.attackEvent = null;
-        this.health = character.health;
-        this.totalHealth = character.health; // Store the total health
-        this.healthBar = null;
-        this.isDead = false;
-        this.idleAnimations = ['idle1', 'idle2', 'idle3', 'idle4'];
-        this.isMovingTowardsEnemy = false;
-        this.continueAttacking = false;
-        this.attackAnimationComplete = true;
-        this.projectile = character.projectile;
-        this.attackCount = character.attackCount;
-        this.enemies = enemies;
-        this.targetedEnemy = null;
-    }
-
-
-    moveStraight(newX, newY, onCompleteCallback = null) {
-        if (this.isDead) return;
-        this.stopAttackingEnemy();
-
-        const currentAnim = this.robotSprite.anims.currentAnim;
-        const hasReachedTarget = Math.round(this.robotSprite.x) === Math.round(newX) && Math.round(this.robotSprite.y) === Math.round(newY);
-
-        // Check if already at the target and playing an idle animation
-        if (hasReachedTarget && currentAnim && currentAnim.key.startsWith('idle')) {
-            return; // Do nothing if already at the target and idle
-        }
-
-        if (this.currentTween) {
-            this.currentTween.stop();
-        }
-        if (currentAnim && currentAnim.key.startsWith('idle') || currentAnim.key.startsWith('attack')) {
-            if (this.lastDirection !== null) {
-                this.robotSprite.play(`move${this.lastDirection}`);
-            }
-        }
-
-        let targetDistance = Phaser.Math.Distance.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
-
-        if (this.scene.enemyClicked && targetDistance <= this.range) {
-            this.isMovingTowardsEnemy = true;
-            // this.playAttackAnimation(this.scene.enemy);
-            return; // Don't continue moving
-        } else if (this.scene.enemyClicked && targetDistance > this.range) {
-            this.isMovingTowardsEnemy = true;
-            // Adjust the target position to stop at the attack range
-            let angleToTarget = Phaser.Math.Angle.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
-            newX = this.robotSprite.x + Math.cos(angleToTarget) * (targetDistance - this.range);
-            newY = this.robotSprite.y + Math.sin(angleToTarget) * (targetDistance - this.range);
-        }
-
-        const direction = this.determineDirection(newX, newY);
-
-        // Check if the player is already moving in the same direction. this prevents player from restarting animation if its already on same direction
-        if (this.lastDirection !== direction) {
-            this.robotSprite.play(`move${direction}`);
-            this.lastDirection = direction;
-        }
-
-        let distance = Phaser.Math.Distance.Between(this.robotSprite.x, this.robotSprite.y, newX, newY);
-        let duration = distance / this.speed * 1000;  // Duration based on speed
-        this.currentTween = this.scene.tweens.add({
-            targets: this.robotSprite,
-            x: newX,
-            y: newY,
-            duration: duration,
-            ease: 'Linear',
-            onUpdate: () => {
-                this.updatePosition();
-            },
-            onComplete: () => {
-                if (this.isDead) return;
-
-                if (this.scene.enemyClicked) {
-                    this.scene.enemyClicked = false;
-                } else {
-                    // Check if the sprite has reached the target
-                    if (Math.round(this.robotSprite.x) === Math.round(newX) && Math.round(this.robotSprite.y) === Math.round(newY)) {
-                        // Play a random idle animation
-                        const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
-                        this.robotSprite.play(randomIdleAnimation);
-                    }
-                }
-                if (onCompleteCallback) {
-                    onCompleteCallback();
-                }
-            }
-        });
-
-        this.lastActionTime = this.scene.time.now; // Reset last action time on movement
-    }
-
-    playAttackAnimation(targetEnemy) {
-        const direction = this.determineDirectionToEnemy(targetEnemy);
-        const attackAnimationKey = `attack${direction}`;
-
-        if (this.isAttacking && !this.attackAnimationComplete && this.targetedEnemy === targetEnemy) {
-            return;
-        }
-        this.isAttacking = true;
-        this.attackAnimationComplete = false;
-        this.attacker = targetEnemy;
-        this.robotSprite.play(attackAnimationKey);
-        this.robotSprite.off('animationupdate');
-        this.robotSprite.off('animationcomplete');
-
-        let damageFrames = [];
-        if (this.attackCount > 1 && !this.projectile) { // multi strikes usually applies to melee attacks
-            for (let i = 1; i <= this.attackCount; i++) {
-                damageFrames.push(Math.ceil((5 / this.attackCount) * i)); // 5 / (2) * 1 = 2.5. round upwards to 3
-            }
-        } else if (!this.projectile) {
-            // Default to last frame for single attack
-            damageFrames.push(5);
-        }
-
-        this.robotSprite.on('animationupdate', (anim, frame) => {
-            if (anim.key === attackAnimationKey) {
-                if (this.projectile && this.projectile !== '' && frame.index === 4) {
-                    this.launchProjectile(enemy);
-                } else if (!this.projectile && damageFrames.includes(frame.index)) {
-                    // if (this.attacker) {
-                    //     this.attacker.takeDamage(this.damage, this);
-                    // }
-                    if (this.targetedEnemy) {
-                        this.targetedEnemy.takeDamage(this.damage, this);
-                    }
-                }
-            }
-        });
-
-        this.robotSprite.once('animationcomplete', anim => {
-            if (anim.key === attackAnimationKey) {
-                this.attackAnimationComplete = true;
-                if (!this.projectile) {
-                    this.robotSprite.play(attackAnimationKey);
-                }
-            }
-        });
-    }
-
-
-    update(time, delta) {
-        const isMoving = this.currentTween && this.currentTween.isPlaying();
-        const isAttacking = this.robotSprite.anims.isPlaying && this.robotSprite.anims.currentAnim.key.startsWith('attack');
-
-        if (!isMoving && !isAttacking && !this.isDead) {
-            if (time - this.lastActionTime > 5000) { // 5 seconds of inactivity
-                if (time - this.lastAnimationChange > 5000) {
-                    this.idleAnimationIndex = (this.idleAnimationIndex + 1) % 4;
-                    this.robotSprite.play(`idle${this.idleAnimationIndex + 1}`);
-                    this.lastAnimationChange = time;
-                }
-            }
-        } else {
-            this.lastActionTime = time; // Reset the last action time if the player is moving or attacking
-        }
-
-        if (this.currentTween && this.currentTween.isPlaying()) {
-            this.robotSprite.setPosition(this.position.x, this.position.y);
-        }
-        const currentAnim = this.robotSprite.anims.currentAnim;
-        if (!currentAnim || !currentAnim.key.startsWith('attack')) {
-            this.isAttacking = false;
-        }
-
-        // Check if the player is moving towards the targeted enemy
-        if (this.isMovingTowardsEnemy && !this.isDead && this.targetedEnemy) {
-            let enemyPosition = this.targetedEnemy.getPosition();
-            let distanceToEnemy = Phaser.Math.Distance.Between(this.position.x, this.position.y, enemyPosition.x, enemyPosition.y);
-            if (distanceToEnemy <= this.range) {
-                if (this.currentTween) {
-                    this.currentTween.stop();
-                }
-                this.isMovingTowardsEnemy = false;
-                this.continueAttacking = true;
-                this.playAttackAnimation(this.targetedEnemy); // Attack the targeted enemy
-            }
-        }
-
-
-        if (this.continueAttacking && !this.isDead && this.targetedEnemy) {
-            this.playAttackAnimation(this.targetedEnemy); // Continue attacking the targeted enemy
-        }
-
-        this.updateHealthBar();
-    }
-
-
-    stopAttackingEnemy() {
-        this.isMovingTowardsEnemy = false;
-        this.continueAttacking = false;
-        this.isAttacking = false;
-        this.attacker = null;
-        if (this.attackEvent) {
-            this.attackEvent.remove(false);
-            this.attackEvent = null;
-        }
-        const currentAnim = this.robotSprite.anims.currentAnim;
-        if (currentAnim && currentAnim.key.startsWith('attack')) {
-            const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
-            this.robotSprite.play(randomIdleAnimation);
-        }
-    }
-
-}
-
 class Enemy {
     constructor(scene, x, y, characterCode = 2, originalCamp) {
         this.scene = scene;
@@ -443,8 +33,96 @@ class Enemy {
         this.projectile = character.projectile;
         this.originalCamp = originalCamp; // ref original camp to return to
         this.returningToCamp = false;
+        this.reachedCamp = false;
+        this.lastHealTime = 0;
+        this.isEnraged = false;
     }
 
+    create() {
+        const character = characterMap[this.characterCode];
+
+        this.sprite = this.scene.add.sprite(this.x, this.y, character.idle);
+        this.sprite.setOrigin(0.5, 0.5);
+        this.sprite.setScale(0.5);
+
+        // Check and create idle animations
+        for (let i = 0; i < 4; i++) {
+            let idleKey = `character${this.characterCode}Idle${i + 1}`;
+            if (!this.scene.anims.exists(idleKey)) {
+                this.scene.anims.create({
+                    key: idleKey,
+                    frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: i * 5, end: i * 5 + 4 }),
+                    frameRate: 6,
+                    repeat: -1,
+                });
+            }
+        }
+
+        // Check and create death animation
+        let deathKey = `character${this.characterCode}Death`;
+        if (!this.scene.anims.exists(deathKey)) {
+            this.scene.anims.create({
+                key: deathKey,
+                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 100, end: 104 }),
+                frameRate: 6,
+                repeat: 0
+            });
+        }
+
+        const directions = ['southeast', 'southwest', 'south', 'east', 'west', 'northeast', 'northwest', 'north'];
+
+        // Check and create moving animations
+        directions.forEach((dir, index) => {
+            let movingKey = `character${this.characterCode}Moving${dir}`;
+            if (!this.scene.anims.exists(movingKey)) {
+                this.scene.anims.create({
+                    key: movingKey,
+                    frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 20 + (index * 5), end: 20 + (index * 5) + 4 }),
+                    frameRate: 6,
+                    repeat: -1
+                });
+            }
+        });
+
+        // Check and create attack animations
+        directions.forEach((dir, index) => {
+            let attackKey = `character${this.characterCode}Attack${dir}`;
+            if (!this.scene.anims.exists(attackKey)) {
+                this.scene.anims.create({
+                    key: attackKey,
+                    frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 60 + (index * 5), end: 60 + (index * 5) + 4 }),
+                    frameRate: 6 * this.attackSpeed,
+                    repeat: 0
+                });
+            }
+        });
+
+        this.sprite.play(`character${this.characterCode}Idle1`);
+        this.scene.physics.world.enable(this.sprite);
+
+        const bodyWidth = this.sprite.width * 0.6;
+        const bodyHeight = this.sprite.height * 0.6;
+        const offsetX = (this.sprite.width - bodyWidth) / 2;
+        const offsetY = (this.sprite.height - bodyHeight) / 2;
+
+        this.sprite.body.setSize(bodyWidth, bodyHeight);
+        this.sprite.body.setOffset(offsetX, offsetY);
+
+        const hitArea = new Phaser.Geom.Rectangle(offsetX, offsetY, bodyWidth, bodyHeight);
+        this.sprite.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
+
+        this.createHealthBar();
+
+        // this.detectionField = this.scene.add.circle(this.x, this.y, 200);
+        // this.detectionField.setStrokeStyle(4, 0xff0000);
+
+        this.detectionBar = this.scene.add.graphics();
+        this.updateDetectionBar(1);
+
+        // let dot = this.scene.add.graphics();
+        // dot.fillStyle(0xffffff, 1);
+        // dot.fillCircle(this.sprite.x, this.sprite.y, 5);
+    }
 
     moveToPlayer(playerX, playerY) {
         if (this.isDead || this.isMoving || this.isAttacking) return;
@@ -582,52 +260,98 @@ class Enemy {
         }
     }
 
-    returnToCamp() {
-        if (!this.originalCamp) return;
-        this.returningToCamp = true;
-        this.isMoving = true;
-        this.isAttacking = false;
-        this.hasPlayerBeenDetected = false;
-    
-        let increasedSpeed = this.speed * 1.5; // Increase speed by 50%
-        let randomPosition = this.originalCamp.getRandomPositionInRadius();
-        
-        let directionToCamp = this.determineDirectionToPoint(randomPosition.x, randomPosition.y);
-        const movingAnimationKey = `character${this.characterCode}Moving${directionToCamp}`;
-        
-        // Play the moving animation towards the camp
-        this.sprite.play(movingAnimationKey);
-    
-        let distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, randomPosition.x, randomPosition.y);
-        let duration = distance / increasedSpeed * 1000;
-    
-        if (this.moveTween) {
-            this.moveTween.stop();
+    attackPlayer(player) {
+        if (player.isDead) {
+            this.stopAttackingPlayer();
+            return;
         }
-    
-        this.moveTween = this.scene.tweens.add({
-            targets: this.sprite,
-            x: randomPosition.x,
-            y: randomPosition.y,
-            duration: duration,
-            ease: 'Linear',
-            onUpdate: () => {
-                let updatedDirection = this.determineDirectionToPoint(randomPosition.x, randomPosition.y);
-                let updatedAnimationKey = `character${this.characterCode}Moving${updatedDirection}`;
-                if (this.sprite.anims.currentAnim.key !== updatedAnimationKey) {
-                    this.sprite.play(updatedAnimationKey);
+
+        this.isAttacking = true;
+        this.attacker = player;
+
+        const direction = this.determineDirectionToPoint(player.getPosition().x, player.getPosition().y);
+        const attackAnimationKey = `character${this.characterCode}Attack${direction}`;
+        this.sprite.play(attackAnimationKey);
+
+        const angleToPlayer = Phaser.Math.Angle.Between(this.sprite.x, this.sprite.y, player.getPosition().x, player.getPosition().y);
+        const hasProjectile = this.projectile !== '';
+
+        if (hasProjectile) {
+            this.createAttackRangeRectangle(angleToPlayer);
+        } else {
+            this.createAttackRangeArc(angleToPlayer);
+        }
+
+        this.sprite.off('animationupdate');
+        this.sprite.on('animationupdate', (anim, frame) => {
+            if (anim.key === attackAnimationKey) {
+                if (frame.index === 4 && hasProjectile) {
+                    this.launchProjectile(player, angleToPlayer);
+                } else if (frame.index === 5 && !hasProjectile) {
+                    const playerPos = player.getPosition();
+                    if (this.isPlayerInArc(playerPos, this.sprite, this.attackRange, angleToPlayer - Math.PI / 6, angleToPlayer + Math.PI / 6)) {
+                        player.takeDamage(this.damage, this);
+                    } else {
+                        this.createDodgeText(player);
+
+                    }
                 }
-            },
-            onComplete: () => {
-                this.isMoving = false;
-                this.returningToCamp = false;
-                this.sprite.play(`character${this.characterCode}Idle1`);
+            }
+        });
+
+        this.sprite.once('animationcomplete', anim => {
+            if (anim.key === attackAnimationKey) {
+                this.isAttacking = false;
+                if (this.attackRangeArc) this.attackRangeArc.destroy();
+                if (this.attackRangeRect) this.attackRangeRect.destroy();
             }
         });
     }
-    
-    
-    
+
+
+    getPosition() {
+        return {
+            x: this.sprite.x,
+            y: this.sprite.y
+        };
+    }
+
+    determineDirectionToPoint(playerX, playerY) {
+        const dx = playerX - this.sprite.x
+        const dy = playerY - this.sprite.y
+        const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+
+        if (angle >= -22.5 && angle < 22.5) return 'east';
+        if (angle >= 22.5 && angle < 67.5) return 'southeast';
+        if (angle >= 67.5 && angle < 112.5) return 'south';
+        if (angle >= 112.5 && angle < 157.5) return 'southwest';
+        if (angle >= 157.5 || angle < -157.5) return 'west';
+        if (angle >= -157.5 && angle < -112.5) return 'northwest';
+        if (angle >= -112.5 && angle < -67.5) return 'north';
+        if (angle >= -67.5 && angle < -22.5) return 'northeast';
+    }
+
+    updateDetectionBar(percentage) {
+        if (!this.hasPlayerBeenDetected) return;
+        const barX = this.sprite.x - 30; // same x as the health bar
+        const barY = (this.sprite.y - this.sprite.body.height / 2) + 8;
+
+        // this.detectionField.alpha = percentage;
+        this.detectionBar.clear();
+        this.detectionBar.setPosition(barX, barY);
+
+        // White background
+        this.detectionBar.fillStyle(0xffffff, 1);
+        this.detectionBar.fillRect(0, 0, 60 * percentage, 5);
+
+        // transparent background
+        this.detectionBar.fillStyle(0xffffff, 0.4);
+        this.detectionBar.fillRect(60 * percentage, 0, 60 * (1 - percentage), 5);
+
+        if (percentage == 0) {
+            this.detectionBar.clear();
+        }
+    }
 
     update(time, delta) {
         if (this.isDead) return;
@@ -648,171 +372,189 @@ class Enemy {
             this.lastActionTime = time; // Reset the last action time if the enemy is moving or attacking
         }
 
+        const distanceFromCamp = Phaser.Math.Distance.Between(
+            this.sprite.x, this.sprite.y,
+            this.originalCamp.x, this.originalCamp.y
+        );
+        
+        if (distanceFromCamp > this.originalCamp.radius) {
+            this.reachedCamp = false;
+        } else if (!this.isMoving && !this.isAttacking) {
+            this.reachedCamp = true;
+        } else {
+            this.reachedCamp = false;
+        }
+        
+        if (this.reachedCamp && this.health < this.totalHealth) {
+            if (time - this.lastHealTime > 1000) { // Heal every 1 second
+                this.heal(20); // +20 health per second
+                this.lastHealTime = time;
+            }
+        }
+        
+        console.log(this.isEnraged);
+
     }
 
 }
 
-
-class GameScene extends Phaser.Scene {
-    constructor() {
-        super({ key: 'GameScene' });
-        this.player = null;
-        this.enemies = [];
-        this.land = null;
-        this.ocean = null;
-        this.initialZoom = 0.8;
-        this.isDragging = false;
-        this.dragStartPoint = null;
+class Base {
+    constructor(scene, player, camps) {
+        this.scene = scene;
+        this.player = player;
+        this.camps = camps;
+        this.sprite = null;
+        this.safeDistanceFromPlayer = 500; // not too close to player
+        this.minX = 1200; this.maxX = 2800;
+        this.minY = 700; this.maxY = 1300;
+        this.health = 1000;
+        this.totalHealth = 1000;
+        this.healthBar = null;
+        this.isDestroyed = false;
+        this.rebuildTime = 3000; // 5sec after destroyed
+        this.destroyedTime = 0;
     }
 
     create() {
-        this.gameScreenWidth = this.sys.game.config.width;
-        this.gameScreenHeight = this.sys.game.config.height;
-        this.createStaticBackground();
-        this.createLand();
-        this.createCamps();
-        this.createEnemy();
-        this.createPlayer();
-        this.setupCamera();
+        const baseLocation = this.findSuitableBaseLocation();
+        this.sprite = this.scene.add.image(baseLocation.x, baseLocation.y, 'enemy_base');
+        this.sprite.setOrigin(0.5, 0.5);
+        this.sprite.setScale(2);
+        this.sprite.setInteractive();
+        this.isDestroyed = false;
+        this.health = this.totalHealth;
+    
+        if (this.healthBar) {
+            this.healthBar.clear();
+        }
+        this.createHealthBar();
+    }
+    
 
-        this.messageText = this.add.text(0, 0, '', { font: '24px Orbitron', fill: '#ff0000', align: 'center' });
-        this.messageText.setVisible(false);
+    findSuitableBaseLocation() {
+        let baseX, baseY, tooCloseToPlayer, tooCloseToCamp;
+        do { // keep execute until the base is not too close to player or camp
+            baseX = Phaser.Math.Between(this.minX, this.maxX);
+            baseY = Phaser.Math.Between(this.minY, this.maxY);
+            tooCloseToPlayer = Phaser.Math.Distance.Between(this.player.position.x, this.player.position.y, baseX, baseY) < this.safeDistanceFromPlayer;
+
+            tooCloseToCamp = this.camps.some(camp => {
+                const distanceToCamp = Phaser.Math.Distance.Between(camp.x, camp.y, baseX, baseY);
+                return distanceToCamp <= camp.radius;
+            });
+        } while (tooCloseToPlayer || tooCloseToCamp); // as long as the base is too close to player or camp, keep execute
+
+        return { x: baseX, y: baseY }; // where the base is located
     }
 
-
-    handlePlayerClick(pointer) {
-        if (this.enemyClicked) {
-            this.enemyClicked = false;
-            return; // Click was on the enemy, skip the general click logic
-        }
-
-        // Convert screen coordinates to world coordinates
-        const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-        const originalWidth = this.land.texture.source[0].width;
-        const originalHeight = this.land.texture.source[0].height;
-
-        // Check if the clicked point is within the bounds of the land
-        if (worldPoint.x >= this.land.x - originalWidth / 2 &&
-            worldPoint.x <= this.land.x + originalWidth / 2 &&
-            worldPoint.y >= this.land.y - originalHeight / 2 &&
-            worldPoint.y <= this.land.y + originalHeight / 2) {
-            // If within bounds, move the player
-            this.player.moveStraight(worldPoint.x, worldPoint.y);
-        } else {
-            this.showOutOfBoundsMessage(worldPoint);
-        }
+    getPosition() {
+        return {
+            x: this.sprite.x,
+            y: this.sprite.y
+        };
     }
 
-    createEnemy() {
-        // Array of camp objects
-        const camps = [this.camp1, this.camp2, this.camp3];
+    createHealthBar() {
+        this.healthBar = this.scene.add.graphics();
+        this.healthBar.setDepth(1);
+        this.updateHealthBar(); // initial display
+    }
 
-        camps.forEach(camp => {
-            for (let i = 0; i < 2; i++) {
-                const randomPosition = camp.getRandomPositionInRadius();
-                let enemy = new Enemy(this, randomPosition.x, randomPosition.y, 2, camp);
-                enemy.create();
-                this.enemies.push(enemy);
+    updateHealthBar() {
+        const barX = this.sprite.x - this.sprite.width / 2;
+        const barY = this.sprite.y - 150;
+        this.healthBar.clear();
+        this.healthBar.setPosition(barX, barY);
+        // Background of health bar (transparent part)
+        this.healthBar.fillStyle(0x000000, 0.5);
+        this.healthBar.fillRect(0, 0, this.sprite.width, 10);
 
-                // Add pointer events for each enemy
-                enemy.sprite.on('pointerover', () => {
-                    if (!enemy.isDead) {
-                        setAttackCursor(this);
-                    }
-                });
+        // Health portion (dynamic width based on current health)
+        const healthPercentage = this.health / this.totalHealth;
+        const healthBarWidth = healthPercentage * this.sprite.width; // Calculate the width based on health percentage
+        this.healthBar.fillStyle(0xff0000, 1);
+        this.healthBar.fillRect(0, 0, healthBarWidth, 10);
+    }
 
-                enemy.sprite.on('pointerout', () => {
-                    setDefaultCursor(this);
-                });
+    takeDamage(damage, player) {
+        this.attacker = player; // Store reference to the attacking player
 
-
-                enemy.sprite.on('pointerdown', () => {
-                    console.log("Enemy clicked");
-                    this.enemyClicked = true;
-                    this.player.targetedEnemy = enemy;
-                });
+        this.health -= damage;
+        this.health = Math.max(this.health, 0);
+        this.hasPlayerBeenDetected = true;
 
 
+        this.createDamageText(damage);
 
+        if (this.health <= 0 && !this.isDestroyed) {
+            this.destroyed();
+        }
+        this.updateHealthBar(); 
+    }
+
+    createDamageText(damage) {
+        const damageText = this.scene.add.text(this.sprite.x, this.sprite.y - 100, `-${damage}`, { font: '36px Orbitron', fill: '#ff0000' });
+        damageText.setOrigin(0.5, 0.5);
+
+        this.scene.tweens.add({
+            targets: damageText,
+            y: damageText.y - 30,
+            alpha: 0,
+            duration: 800,
+            ease: 'Power2',
+            onComplete: () => {
+                damageText.destroy();
             }
         });
     }
 
-    setupInputHandlers() {
-        const originalWidth = this.land.texture.source[0].width;
-        const originalHeight = this.land.texture.source[0].height;
-
-        this.input.on('pointerdown', function (pointer) {
-            if (pointer.leftButtonDown()) {
-                if (this.enemyClicked) {
-                    this.enemyClicked = false; // Reset the flag
-                    return; // Click was on the enemy, so skip the general click logic/no callback
-                }
-
-                // Convert screen coordinates to world coordinates
-                const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-
-                // Check if the clicked point is within the bounds of the island
-                if (worldPoint.x >= this.land.x - originalWidth / 2 &&
-                    worldPoint.x <= this.land.x + originalWidth / 2 &&
-                    worldPoint.y >= this.land.y - originalHeight / 2 &&
-                    worldPoint.y <= this.land.y + originalHeight / 2) {
-                    // If within bounds, move the player
-                    this.player.moveStraight(worldPoint.x, worldPoint.y);
-                } else {
-                    this.messageText.setText("Can't go there!");
-                    this.messageText.setOrigin(0.5, 0.5);
-                    this.messageText.setVisible(true);
-
-                    // this.messageText.setPosition(worldPoint.x, worldPoint.y);
-                    // ensure the text is seen fully within this.sys.game.config.width
-                    if (worldPoint.x < this.sys.game.config.width / 2) {
-                        this.messageText.setPosition(worldPoint.x + 100, worldPoint.y);
-                    } else {
-                        this.messageText.setPosition(worldPoint.x - 50, worldPoint.y);
-                    }
-                    this.tweens.add({
-                        targets: this.messageText,
-                        alpha: { start: 0, to: 1 },
-                        duration: 1000,
-                        ease: 'Linear',
-                        yoyo: true,
-                        repeat: 0,
-                        onComplete: () => {
-                            this.messageText.setVisible(false);
-                            this.messageText.setAlpha(1); // Reset alpha value for the next use
-                        }
-                    });
-                }
+    destroyed() {
+        if (this.scene.player.targetedEnemy === this) {
+            this.scene.player.targetedEnemy = null;
+        }
+        this.isDestroyed = true;
+        console.log('Base destroyed');
+        this.sprite.disableInteractive();
+        this.scene.tweens.add({
+            targets: this.sprite,
+            alpha: 0,
+            duration: 1500,
+            ease: 'Power1',
+            onComplete: () => {
+                this.sprite.setVisible(false);
             }
-        }, this);
-
-        this.input.enabled = true;
-
-        this.sceneName = "battle-scene";
+        });
+    
+        if (this.attacker) {
+            this.attacker.stopAttackingEnemy();
+        }
+    
+        this.healthBar.destroy();
+        this.destroyedTime = this.scene.time.now;
     }
-
-
+    
     update(time, delta) {
-        if (this.player) {
-            this.player.update(time, delta, this.enemies);
-        }
-
-        this.enemies.forEach(enemy => {
-            if (enemy) {
-                let playerPosition = this.player.getPosition();
-                enemy.updateEnemy(playerPosition.x, playerPosition.y, this.player, delta);
-                enemy.update(time, delta);
+        if (this.isDestroyed) {
+            if (time - this.destroyedTime > this.rebuildTime) {
+                // recreate base
+                const newBaseLocation = this.findSuitableBaseLocation();
+                this.sprite.setPosition(newBaseLocation.x, newBaseLocation.y);
+    
+                this.sprite.setVisible(true);
+                this.sprite.setAlpha(1);
+                this.sprite.setInteractive(true);
+    
+                this.health = this.totalHealth;
+                this.isDestroyed = false;
+    
+                if (this.healthBar) {
+                    this.healthBar.clear();
+                }
+                this.createHealthBar();
             }
-        });
-
-        if (this.isCameraFollowingPlayer) {
-            // Update the camera to follow the player's current position
-            this.cameras.main.startFollow(this.player.getPosition(), true, 0.01, 0.01);
         }
-
-
     }
+    
+
+    
 }
-
-
