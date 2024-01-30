@@ -281,7 +281,6 @@ class GameScene extends Phaser.Scene {
             this.player.targetedEnemy = this.base;
             this.player.isMovingTowardsEnemy = true;
             this.cancelClick = true;
-            console.log('here')
             this.player.moveStraight(this.base.sprite.x, this.base.sprite.y, () => {
                 this.player.playAttackAnimation(this.base);
                 this.player.continueAttacking = true;

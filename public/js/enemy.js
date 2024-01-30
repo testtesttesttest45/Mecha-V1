@@ -38,7 +38,7 @@ class Enemy {
         this.reachedCamp = false;
         this.lastHealTime = 0;
         this.isEnraged = false;
-        this.enrageDuration = 10000;
+        this.enrageDuration = 3000;
         this.enrageStartTime = 0;
         this.player = player;
         this.idleAnimations = [`character${this.characterCode}Idle1`, `character${this.characterCode}Idle2`, `character${this.characterCode}Idle3`, `character${this.characterCode}Idle4`];
@@ -232,72 +232,95 @@ class Enemy {
     updateEnemy(playerX, playerY, player, delta) {
         this.attacker = player;
         if (this.isDead || this.attacker.isDead) return;
-
         const distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, playerX, playerY);
 
         // Determine the direction to the player
         const direction = this.determineDirectionToPoint(playerX, playerY);
         const attackAnimationKey = `character${this.characterCode}Attack${direction}`;
-
-        // Player is within detection radius or the enemy is attacking
-        if (distance < this.detectionRadius || (distance <= this.attackRange && this.hasPlayerBeenDetected)) {
-            // Set player as detected if within detection radius for the first time
-            if (!this.hasPlayerBeenDetected && distance < this.detectionRadius) {
-                this.hasPlayerBeenDetected = true;
-            }
-
+        if (this.isEnraged) {
+            this.hasPlayerBeenDetected = true;
+            // Keep the enemy alert and the detection bar full
             this.isAlert = true;
-            this.timeOutOfDetection = 0; // Reset out-of-detection timer
-            this.updateDetectionBar(1); // full bar
+            this.updateDetectionBar(1);  // Full detection bar
+
+            // If the player is within attack range, attack; otherwise, move towards the player
             if (distance <= this.attackRange && !this.isAttacking) {
                 this.isMoving = false;
-                if (this.moveTween) {
-                    this.moveTween.stop();
-                }
-                const direction = this.determineDirectionToPoint(playerX, playerY);
-                const attackAnimationKey = `character${this.characterCode}Attack${direction}`;
-                this.sprite.play(attackAnimationKey);
+                if (this.moveTween) this.moveTween.stop();
+                this.sprite.play(`character${this.characterCode}Attack${this.determineDirectionToPoint(playerX, playerY)}`);
                 this.attackPlayer(player);
             } else if (distance > this.attackRange && !this.isMoving) {
                 this.moveToPlayer(playerX, playerY);
             }
-            if (this.isAttacking) {
-                this.timeInAlert = 0; // Reset alert timer when attacking
-            } else {
-                this.timeInAlert += Math.round(delta); // Increment alert timer when not attacking
+
+            // During the enraged state, the alert timer does not decrease
+            this.timeInAlert = this.alertTime;
+
+            // Check if the enrage duration has elapsed
+            if (this.scene.time.now - this.enrageStartTime > this.enrageDuration) {
+                this.disenrage();
             }
-        }
-        else {
-            // Player is outside the detection radius and attack range
-            if (this.hasPlayerBeenDetected) {
-                // Enemy will try to move closer to the player if out of attack range
-                if (distance > this.attackRange && !this.isMoving) {
-                    this.moveToPlayer(playerX, playerY);
+        } else {
+            // Player is within detection radius or the enemy is attacking
+            if (distance < this.detectionRadius || (distance <= this.attackRange && this.hasPlayerBeenDetected)) {
+                // Set player as detected if within detection radius for the first time
+                if (!this.hasPlayerBeenDetected && distance < this.detectionRadius) {
+                    this.hasPlayerBeenDetected = true;
                 }
 
-                // Handling alert time and going idle
-                if (this.isAlert && !this.isAttacking) {
-                    if (distance > this.attackRange && this.timeInAlert >= this.alertTime) {
-                        this.isAlert = false;
-                        this.timeOutOfDetection += Math.round(delta);
-                    } else {
-                        this.timeInAlert += Math.round(delta);
-                        this.updateDetectionBar(1);
+                this.isAlert = true;
+                this.timeOutOfDetection = 0; // Reset out-of-detection timer
+                this.updateDetectionBar(1); // full bar
+                if (distance <= this.attackRange && !this.isAttacking) {
+                    this.isMoving = false;
+                    if (this.moveTween) {
+                        this.moveTween.stop();
                     }
-                } else if (distance > this.attackRange) {
-                    this.timeOutOfDetection += Math.round(delta);
-                    const detectionPercentage = 1 - (this.timeOutOfDetection / 4000);
-                    this.updateDetectionBar(Math.max(detectionPercentage, 0));
-                    if (this.timeOutOfDetection >= 4000) {
-                        this.isMoving = false;
-                        if (this.moveTween) {
-                            this.moveTween.stop();
+                    const direction = this.determineDirectionToPoint(playerX, playerY);
+                    const attackAnimationKey = `character${this.characterCode}Attack${direction}`;
+                    this.sprite.play(attackAnimationKey);
+                    this.attackPlayer(player);
+                } else if (distance > this.attackRange && !this.isMoving) {
+                    this.moveToPlayer(playerX, playerY);
+                }
+                if (this.isAttacking) {
+                    this.timeInAlert = 0; // Reset alert timer when attacking
+                } else {
+                    this.timeInAlert += Math.round(delta); // Increment alert timer when not attacking
+                }
+            }
+            else {
+                // Player is outside the detection radius and attack range
+                if (this.hasPlayerBeenDetected) {
+                    // Enemy will try to move closer to the player if out of attack range
+                    if (distance > this.attackRange && !this.isMoving) {
+                        this.moveToPlayer(playerX, playerY);
+                    }
+
+                    // Handling alert time and going idle
+                    if (this.isAlert && !this.isAttacking) {
+                        if (distance > this.attackRange && this.timeInAlert >= this.alertTime) {
+                            this.isAlert = false;
+                            this.timeOutOfDetection += Math.round(delta);
+                        } else {
+                            this.timeInAlert += Math.round(delta);
+                            this.updateDetectionBar(1);
                         }
-                        // if (!this.sprite.anims.currentAnim || !this.sprite.anims.currentAnim.key.includes('Idle')) {
-                        //     this.sprite.play(`character${this.characterCode}Idle1`);
-                        // }
-                        this.returnToCamp();
-                        this.hasPlayerBeenDetected = false;
+                    } else if (distance > this.attackRange) {
+                        this.timeOutOfDetection += Math.round(delta);
+                        const detectionPercentage = 1 - (this.timeOutOfDetection / 4000);
+                        this.updateDetectionBar(Math.max(detectionPercentage, 0));
+                        if (this.timeOutOfDetection >= 4000) {
+                            this.isMoving = false;
+                            if (this.moveTween) {
+                                this.moveTween.stop();
+                            }
+                            // if (!this.sprite.anims.currentAnim || !this.sprite.anims.currentAnim.key.includes('Idle')) {
+                            //     this.sprite.play(`character${this.characterCode}Idle1`);
+                            // }
+                            this.returnToCamp();
+                            this.hasPlayerBeenDetected = false;
+                        }
                     }
                 }
             }
@@ -356,7 +379,6 @@ class Enemy {
         });
     }
 
-
     launchProjectile(player, angleToPlayer) {
         let projectile = this.scene.add.sprite(this.sprite.x, this.sprite.y, this.projectile);
         projectile.setOrigin(0.5, 0.5);
@@ -397,11 +419,6 @@ class Enemy {
             }
         });
     }
-
-
-
-
-
 
     createAttackRangeArc(angleToPlayer) {
         // Define the start and end angles for the arcs
@@ -597,7 +614,6 @@ class Enemy {
 
     returnToCamp() {
         if (!this.originalCamp) return;
-        this.returningToCamp = true;
         this.isMoving = true;
         this.isAttacking = false;
         this.hasPlayerBeenDetected = false;
@@ -625,6 +641,16 @@ class Enemy {
             duration: duration,
             ease: 'Linear',
             onUpdate: () => {
+                if (this.isEnraged) {
+                    this.returningToCamp = false;
+                    this.isMoving = false;
+                    if (this.moveTween) {
+                        this.moveTween.stop();
+                    }
+                }
+                else {
+                    this.returningToCamp = true;
+                }
                 let updatedDirection = this.determineDirectionToPoint(randomPosition.x, randomPosition.y);
                 let updatedAnimationKey = `character${this.characterCode}Moving${updatedDirection}`;
                 if (this.sprite.anims.currentAnim.key !== updatedAnimationKey) {
@@ -678,52 +704,49 @@ class Enemy {
         this.isEnraged = false;
         this.damage = this.damage / 2;
         this.speed = this.speed / 2;
+    
+        // Reset alert state and timers after leaving the enraged state
+        this.isAlert = true;
+        this.timeInAlert = 0;
+        this.timeOutOfDetection = 0;
+    
+        this.updateDetectionBar(1);
     }
+    
 
 
     update(time, delta) {
         if (this.isDead) return;
         // this.detectionField.setPosition(this.sprite.x, this.sprite.y);
         this.updateHealthBar();
-        if (this.isEnraged) {
-            // Check if the enrage time has elapsed
-            if (time - this.enrageStartTime > this.enrageDuration) {
-                this.disenrage();
-            } else {
-                // Continue chasing the player while enraged
-                if (!this.isMoving && !this.isAttacking && this.attacker && !this.attacker.isDead) {
-                    const playerPosition = this.attacker.getPosition();
-                    this.moveToPlayer(playerPosition.x, playerPosition.y);
-                }
+
+        const isMoving = this.moveTween && this.moveTween.isPlaying();
+        const isAttacking = this.sprite.anims.isPlaying && this.sprite.anims.currentAnim.key.includes('Attack');
+
+        if (!isMoving && !isAttacking) {
+            // Check if enough time has passed to change the animation
+            if (time - this.lastActionTime > 5000) { // 5 seconds of inactivity
+                const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
+                this.sprite.play(randomIdleAnimation);
+                this.lastActionTime = time;
             }
         } else {
-            const isMoving = this.moveTween && this.moveTween.isPlaying();
-            const isAttacking = this.sprite.anims.isPlaying && this.sprite.anims.currentAnim.key.includes('Attack');
-
-            if (!isMoving && !isAttacking) {
-                // Check if enough time has passed to change the animation
-                if (time - this.lastActionTime > 5000) { // 5 seconds of inactivity
-                    const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
-                    this.sprite.play(randomIdleAnimation);
-                    this.lastActionTime = time;
-                }
-            } else {
-                this.lastActionTime = time; // Reset the last action time if the enemy is moving or attacking
-            }
-
-            const distanceFromCamp = Phaser.Math.Distance.Between(
-                this.sprite.x, this.sprite.y,
-                this.originalCamp.x, this.originalCamp.y
-            );
-
-            if (distanceFromCamp > this.originalCamp.radius) {
-                this.reachedCamp = false;
-            } else if (!this.isMoving && !this.isAttacking) {
-                this.reachedCamp = true;
-            } else {
-                this.reachedCamp = false;
-            }
+            this.lastActionTime = time; // Reset the last action time if the enemy is moving or attacking
         }
+
+        const distanceFromCamp = Phaser.Math.Distance.Between(
+            this.sprite.x, this.sprite.y,
+            this.originalCamp.x, this.originalCamp.y
+        );
+
+        if (distanceFromCamp > this.originalCamp.radius) {
+            this.reachedCamp = false;
+        } else if (!this.isMoving && !this.isAttacking) {
+            this.reachedCamp = true;
+        } else {
+            this.reachedCamp = false;
+        }
+
 
         if (this.reachedCamp && this.health < this.totalHealth) {
             if (time - this.lastHealTime > 1000) { // Heal every 1 second
@@ -735,8 +758,6 @@ class Enemy {
         if (this.isEnraged && time - this.enrageStartTime > this.enrageDuration) {
             this.disenrage();
         }
-
-
 
     }
 
