@@ -38,9 +38,12 @@ class Enemy {
         this.reachedCamp = false;
         this.lastHealTime = 0;
         this.isEnraged = false;
-        this.enrageDuration = 3000;
+        this.enrageDuration = 6000;
         this.enrageStartTime = 0;
         this.player = player;
+        this.customSquare = null;
+        this.customSquareText = null; // the left side of the health bar
+        this.fireTimerEvent = null; // a flag to fix the stacking of fire effect, causing stackable speed
         this.idleAnimations = [`character${this.characterCode}Idle1`, `character${this.characterCode}Idle2`, `character${this.characterCode}Idle3`, `character${this.characterCode}Idle4`];
     }
 
@@ -125,12 +128,10 @@ class Enemy {
 
         this.detectionBar = this.scene.add.graphics();
         this.updateDetectionBar(1);
-
         // let dot = this.scene.add.graphics();
         // dot.fillStyle(0xffffff, 1);
         // dot.fillCircle(this.sprite.x, this.sprite.y, 5);
     }
-
 
     takeDamage(damage, player) {
         console.log('Enemy taking damage');
@@ -546,6 +547,7 @@ class Enemy {
 
         this.detectionBar.destroy();
 
+        this.customSquareContainer.destroy();
 
         [this.attackRangeArc, this.attackRangeRect].forEach(banana => {
             if (banana) banana.destroy();
@@ -553,11 +555,81 @@ class Enemy {
         // this.detectionField.setVisible(false);
     }
 
+    initializeFire() {
+        this.fireWidth = 20;
+        this.fireHeight = 20;
+        this.fireArray = new Array(this.fireWidth * this.fireHeight).fill(0);
+        this.firePixelSize = 1;
+        this.fireGradient = chroma.scale(['#000000', '#000000', '#ffff00', '#ff8700', '#FF0000']).domain([0, 10, 20, 50, 100]);
+    }
+
+    fireEffect() {
+        const fireGraphics = this.scene.add.graphics();
+        this.initializeFire();
+
+        fireGraphics.setPosition(-10, -10); // Position relative to the container
+
+        if (this.fireTimerEvent) {
+            this.fireTimerEvent.remove(false);
+        }
+        this.fireTimerEvent = this.scene.time.addEvent({
+            delay: 50,
+            callback: () => {
+                const updateFire = () => {
+                    for (let x = 0; x < this.fireWidth; x++) {
+                        this.fireArray[(this.fireHeight - 1) * this.fireWidth + x] = Math.floor(Math.random() * 255);
+                    }
+        
+                    for (let y = 0; y < this.fireHeight - 1; y++) {
+                        for (let x = 0; x < this.fireWidth; x++) {
+                            let c = 0;
+                            c += this.fireArray[Math.max(y + 1, 0) * this.fireWidth + Math.max(x - 1, 0)];
+                            c += this.fireArray[Math.max(y + 1, 0) * this.fireWidth + x];
+                            c += this.fireArray[Math.max(y + 1, 0) * this.fireWidth + Math.min(x + 1, this.fireWidth - 1)];
+                            c += this.fireArray[Math.min(y + 2, this.fireHeight - 1) * this.fireWidth + x];
+                            this.fireArray[y * this.fireWidth + x] = c / 4.1;
+                        }
+                    }
+        
+                    fireGraphics.clear();
+                    for (let y = 0; y < this.fireHeight; y++) {
+                        for (let x = 0; x < this.fireWidth; x++) {
+                            const colorValue = this.fireArray[y * this.fireWidth + x] * 100.0 / 255;
+                            const color = this.fireGradient(colorValue).hex();
+                            fireGraphics.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 1);
+                            fireGraphics.fillRect(x * this.firePixelSize, y * this.firePixelSize, this.firePixelSize, this.firePixelSize);
+                        }
+                    }
+                };
+                updateFire();
+            },
+            callbackScope: this,
+            loop: true
+        });
+    
+        return fireGraphics;
+    }
+
     createHealthBar() {
         this.healthBar = this.scene.add.graphics();
         this.healthBar.setDepth(1);
-        this.updateHealthBar(); // initial display
+
+        // this.customSquare = this.fireEffect(); // i do not understand this fire code by the way!
+        this.customSquare = this.scene.add.graphics();
+        this.customSquare.fillStyle(0x0000ff, 1);
+        this.customSquare.fillRect(-10, -10, 20, 20);
+        this.customSquareText = this.scene.add.text(0, 0, '1', {
+            font: '16px Orbitron',
+            fill: '#ffffff',
+        }).setOrigin(0.5, 0.5);
+
+        this.customSquareContainer = this.scene.add.container(0, 0);
+        this.customSquareContainer.add(this.customSquare);
+        this.customSquareContainer.add(this.customSquareText);
+        this.customSquareContainer.setDepth(1);
+        this.updateHealthBar();
     }
+
 
     updateHealthBar() {
         const barX = this.sprite.x - 30;
@@ -574,6 +646,12 @@ class Enemy {
         const healthBarWidth = healthPercentage * 60; // Calculate the width based on health percentage
         this.healthBar.fillStyle(0xff0000, 1);
         this.healthBar.fillRect(0, 0, healthBarWidth, 7);
+
+        if (this.customSquareContainer) {
+            const containerX = this.sprite.x - 40; // Position it to the left of the health bar
+            const containerY = this.sprite.y - this.sprite.body.height / 2 + 5; // Adjust Y as needed
+            this.customSquareContainer.setPosition(containerX, containerY);
+        }
     }
 
     updateDetectionBar(percentage) {
@@ -695,7 +773,12 @@ class Enemy {
             this.damage = this.damage * 2;
             this.speed = this.speed * 2;
             this.enrageStartTime = this.scene.time.now;
-        } else { // reset enrage timer
+
+            this.customSquareContainer.remove(this.customSquare, true);
+            this.customSquare = this.fireEffect();
+            this.customSquareContainer.addAt(this.customSquare, 0);
+        } else {
+            // Reset enrage timer
             this.enrageStartTime = this.scene.time.now;
         }
     }
@@ -704,16 +787,18 @@ class Enemy {
         this.isEnraged = false;
         this.damage = this.damage / 2;
         this.speed = this.speed / 2;
-    
-        // Reset alert state and timers after leaving the enraged state
+
         this.isAlert = true;
         this.timeInAlert = 0;
         this.timeOutOfDetection = 0;
-    
         this.updateDetectionBar(1);
-    }
-    
 
+        this.customSquareContainer.remove(this.customSquare, true);
+        this.customSquare = this.scene.add.graphics();
+        this.customSquare.fillStyle(0x0000ff, 1);
+        this.customSquare.fillRect(-10, -10, 20, 20);
+        this.customSquareContainer.addAt(this.customSquare, 0);
+    }
 
     update(time, delta) {
         if (this.isDead) return;
