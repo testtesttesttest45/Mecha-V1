@@ -372,29 +372,24 @@ class Player {
         this.healthBar.fillRect(0, 0, healthBarWidth, 10);
     }
 
-    takeDamage(damage, enemy) {
+    takeDamage(damage, source) {
         if (this.isDead) return;
-        // console.log('Player taking damage');
-
-
-        this.attacker = enemy; // Store reference to the attacking enemy
-
+    
         this.health -= damage;
         this.health = Math.max(this.health, 0);
-        // console.log(`Player took ${damage} damage. ${this.health} health remaining`);
-
-        // Create and display damage text
-        this.createDamageText(damage);
-
+    
+        const color = source === 'catastrophe' ? '#ff0' : '#000'; // Yellow for catastrophe, black for others
+        this.createDamageText(damage, color);
+    
         if (this.health <= 0 && !this.isDead) {
             this.die();
         }
-
+    
         this.updateHealthBar();
     }
 
-    createDamageText(damage) {
-        const damageText = this.scene.add.text(this.robotSprite.x, this.robotSprite.y - 100, `-${damage}`, { font: '36px Orbitron', fill: '#000' });
+    createDamageText(damage, color) {
+        const damageText = this.scene.add.text(this.robotSprite.x, this.robotSprite.y - 100, `-${damage}`, { font: '36px Orbitron', fill: color });
         damageText.setOrigin(0.5, 0.5);
         damageText.setDepth(1);
         // Animation for damage text (move up and fade out)

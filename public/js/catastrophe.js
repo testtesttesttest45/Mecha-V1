@@ -5,11 +5,13 @@ class Catastrophe {
         this.maxX = 2800;
         this.minY = 700;
         this.maxY = 1300;
-        this.fireballTimer = this.scene.time.now + 10000;
-        this.stormInterval = 10000;
+        this.fireballTimer = this.scene.time.now + 5000;
+        this.stormInterval = 5000;
         this.indicatorDuration = 1000;
         this.fireballPositions = [];
         this.minDistance = 350;
+        this.indicators = [];
+        this.damage = 200;
     }
 
     launchStorm() {
@@ -22,6 +24,7 @@ class Catastrophe {
             let indicatorRadius = 135;
             let indicator = this.scene.add.circle(x, endY, indicatorRadius, 0xff0000, 0.5);
             indicator.setDepth(1);
+            this.indicators.push({indicator, x, y: endY, radius: indicatorRadius});
 
             this.scene.tweens.add({
                 targets: indicator,
@@ -39,13 +42,33 @@ class Catastrophe {
                         alpha: 0.7,
                         duration: 1500,
                         onComplete: () => {
+                            this.checkDamage(x, endY, indicatorRadius);
                             indicator.destroy();
                             fireball.destroy();
+                            this.indicators = this.indicators.filter(item => item.indicator !== indicator);
                         }
                     });
                 },
             });
         }
+    }
+
+    checkDamage(x, y, radius) {
+        // Player damage check (existing logic)
+        let playerPos = this.scene.player.getPosition();
+        let distanceToPlayer = Phaser.Math.Distance.Between(x, y, playerPos.x, playerPos.y);
+        if (distanceToPlayer <= radius) { // player within fireball impact zone
+            this.scene.player.takeDamage(this.damage, 'catastrophe');
+        }
+    
+        // Enemy damage check
+        this.scene.enemies.forEach(enemy => {
+            let enemyPos = enemy.getPosition();
+            let distanceToEnemy = Phaser.Math.Distance.Between(x, y, enemyPos.x, enemyPos.y);
+            if (distanceToEnemy <= radius && !enemy.returningToCamp && !enemy.reachedCamp) {
+                enemy.takeDamage(this.damage, 'catastrophe');
+            }
+        });
     }
 
     getValidFireballPosition() {
@@ -68,8 +91,7 @@ class Catastrophe {
     }
 
     update(time, delta) {
-        if (time > this.fireballTimer) {
-            console.log('Launching storm');
+        if (time > this.fireballTimer && !this.isStorming) {
             this.launchStorm();
             this.fireballTimer = time + this.stormInterval;
         }

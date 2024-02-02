@@ -133,24 +133,32 @@ class Enemy {
         // dot.fillCircle(this.sprite.x, this.sprite.y, 5);
     }
 
-    takeDamage(damage, player) {
-        console.log('Enemy taking damage');
-        if (this.isDead || this.returningToCamp) return;
-        this.attacker = player; // Store reference to the attacking player
-
+    takeDamage(damage, source) {
+        // console.log('Enemy taking damage');
+        if (this.isDead) return;
+    
+        // Enemy is immune to all damage when returning to camp
+        if (this.returningToCamp) return;
+    
+        // Enemy is immune to catastrophe damage if it has reached camp but not to player damage
+        if (this.reachedCamp && source === 'catastrophe') return;
+    
         this.health -= damage;
         this.health = Math.max(this.health, 0);
-        this.hasPlayerBeenDetected = true;
-
-        // console.log(`Enemy took ${damage} damage. ${this.health} health remaining`);
-
-        // Create and display damage text
-        this.createDamageText(damage);
-
+    
+        // Enemy detects player if damage source is the player
+        if (source !== 'catastrophe') {
+            this.hasPlayerBeenDetected = true;
+        };
+    
+        const color = source === 'catastrophe' ? '#ff0' : '#ff0000'; // Yellow for catastrophe, red for player
+        this.createDamageText(damage, color);
+    
+        // Enemy dies if health drops to 0
         if (this.health <= 0 && !this.isDead) {
             this.die();
         }
-
+    
         this.updateHealthBar();
 
         if (this.hasPlayerBeenDetected) {
@@ -160,6 +168,7 @@ class Enemy {
             this.updateDetectionBar(1); // Full detection bar
         }
     }
+    
 
     moveToPlayer(playerX, playerY) {
         if (this.isDead || this.isMoving || this.isAttacking) {
@@ -262,6 +271,7 @@ class Enemy {
                 this.disenrage();
             }
         } else {
+            if (this.returningToCamp) return;
             // Player is within detection radius or the enemy is attacking
             if (distance < this.detectionRadius || (distance <= this.attackRange && this.hasPlayerBeenDetected)) {
                 // Set player as detected if within detection radius for the first time
@@ -486,8 +496,8 @@ class Enemy {
         if (angle >= -67.5 && angle < -22.5) return 'northeast';
     }
 
-    createDamageText(damage) {
-        const damageText = this.scene.add.text(this.sprite.x, this.sprite.y - 100, `-${damage}`, { font: '36px Orbitron', fill: '#ff0000' });
+    createDamageText(damage, color) {
+        const damageText = this.scene.add.text(this.sprite.x, this.sprite.y - 100, `-${damage}`, { font: '36px Orbitron', fill: color });
         damageText.setOrigin(0.5, 0.5);
 
         // Animation for damage text (move up and fade out)
@@ -498,7 +508,7 @@ class Enemy {
             duration: 800,
             ease: 'Power2',
             onComplete: () => {
-                damageText.destroy(); // Remove the text object
+                damageText.destroy();
             }
         });
     }

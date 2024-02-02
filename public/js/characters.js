@@ -89,7 +89,7 @@ const characterMap = {
         class: 'player',
         range: 350,
         speed: 250,
-        damage: 100,
+        damage: 50,
         health: 500,
         attackSpeed: 6,
         attackCount: 1,
