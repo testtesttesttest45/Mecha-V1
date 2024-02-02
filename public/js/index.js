@@ -2,6 +2,7 @@ import Player from './player.js';
 import Enemy from './enemy.js';
 import Camp from './camp.js';
 import Base from './base.js';
+import Catastrophe from './catastrophe.js';
 import BattleUI from './battle_ui.js';
 import { rgbToHex, resize, loadDynamicSpriteSheet, setAttackCursor, setDefaultCursor } from './utilities.js';
 
@@ -16,6 +17,7 @@ class GameScene extends Phaser.Scene {
         this.isDragging = false;
         this.dragStartPoint = null;
         this.cancelClick = false;
+        this.catastrophe = null;
     }
 
     create() {
@@ -31,6 +33,8 @@ class GameScene extends Phaser.Scene {
         this.createBase();
         this.messageText = this.add.text(0, 0, '', { font: '24px Orbitron', fill: '#ff0000', align: 'center' });
         this.messageText.setVisible(false);
+
+        this.catastrophe = new Catastrophe(this);
     }
 
     createStaticBackground() {
@@ -364,6 +368,10 @@ class GameScene extends Phaser.Scene {
         if (this.base) {
             this.base.update(time, delta);
         }
+
+        if (this.catastrophe) {
+            this.catastrophe.update(time, delta);
+        }
     }
 }
 
@@ -433,6 +441,7 @@ class LoadingScene extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'character8', 'assets/sprites/character_8.png', 4000, 4400);
 
         this.load.image('blueBullet', 'assets/projectiles/blue_bullet.png');
+        this.load.image('fireball', 'assets/projectiles/fireball.png');
     }
 
 
