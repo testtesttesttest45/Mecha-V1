@@ -31,6 +31,18 @@ class BattleUI extends Phaser.Scene {
 
         this.maxTime = this.scene.get('GameScene').catastrophe.stormInterval;
         this.currentTime = 0;
+
+        const strengthenTextY = approachingTextY + 80;
+        this.add.text(panelCenterX, strengthenTextY, "Enemy strengthens", {
+            font: '16px Orbitron',
+            fill: '#ffffff'
+        }).setOrigin(0.5, 0).setScrollFactor(0);
+
+        this.strengthenIcon = this.add.image(panelCenterX - 150, strengthenTextY + 15, 'strengthen').setScale(0.5).setScrollFactor(0).setOrigin(0, 0.5);
+
+        const strengthenBarBackground = this.add.rectangle(panelCenterX, strengthenTextY + 40, 300, 20, 0xffffff, 0.2).setOrigin(0.5, 0).setScrollFactor(0);
+        this.strengthenBarFill = this.add.rectangle(strengthenBarBackground.x - strengthenBarBackground.width / 2, strengthenTextY + 40, 0, 20, 0xff0000).setOrigin(0, 0).setScrollFactor(0);
+        
     }
 
     updateTimer(currentTime) {

@@ -458,6 +458,7 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('fireball', 'assets/projectiles/fireball.png');
 
         this.load.image('catastrophe', 'assets/images/catastrophe.png');
+        this.load.image('strengthen', 'assets/images/strengthen.png');
     }
 
 
