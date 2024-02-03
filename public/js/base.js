@@ -84,6 +84,10 @@ class Base {
         this.health = Math.max(this.health, 0);
         this.hasPlayerBeenDetected = true;
 
+        // every 10% health of the base, award 50 points
+        if (this.health % (this.totalHealth / 10) === 0) {
+            this.scene.scene.get('BattleUI').updateScore(50);
+        }
 
         this.createDamageText(damage);
 
