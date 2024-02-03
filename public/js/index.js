@@ -35,6 +35,7 @@ class GameScene extends Phaser.Scene {
         this.messageText.setVisible(false);
 
         this.catastrophe = new Catastrophe(this);
+        this.scene.launch('BattleUI');
     }
 
     createStaticBackground() {
@@ -371,6 +372,8 @@ class GameScene extends Phaser.Scene {
 
         if (this.catastrophe) {
             this.catastrophe.update(time, delta);
+            const timeUntilNextStorm = this.catastrophe.getTimeUntilNextStorm();
+            this.scene.get('BattleUI').updateTimer(timeUntilNextStorm);
         }
     }
 }
@@ -442,6 +445,8 @@ class LoadingScene extends Phaser.Scene {
 
         this.load.image('blueBullet', 'assets/projectiles/blue_bullet.png');
         this.load.image('fireball', 'assets/projectiles/fireball.png');
+
+        this.load.image('catastrophe', 'assets/images/catastrophe.png');
     }
 
 
@@ -458,7 +463,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             width: 1920,
             height: 1080,
             parent: 'battle-scene',
-            scene: [LoadingScene, GameScene],
+            scene: [LoadingScene, GameScene, BattleUI],
             render: {
                 pixelArt: true,
             },
