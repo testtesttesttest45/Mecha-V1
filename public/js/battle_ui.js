@@ -23,13 +23,13 @@ class BattleUI extends Phaser.Scene {
         panel.setScrollFactor(0);
 
         const panelCenterX = this.scale.width - 30 - panel.width / 2;
-        const statsTextY = 175;
-        this.add.text(panelCenterX, statsTextY, "Battle Panel", {
+        const headerTextY = 175;
+        this.add.text(panelCenterX, headerTextY, "Battle Panel", {
             font: '20px Orbitron',
             fill: '#ffffff'
         }).setOrigin(0.5, 0).setScrollFactor(0);
 
-        const approachingTextY = statsTextY + 50;
+        const approachingTextY = headerTextY + 50;
         this.approachingText = this.add.text(panelCenterX + 10, approachingTextY, "Catastrophe approaches", {
             font: '16px Orbitron',
             fill: '#ffffff',
@@ -68,6 +68,28 @@ class BattleUI extends Phaser.Scene {
 
         this.lastMultiplierUpdate = this.scene.get('GameScene').time.now;
 
+        const statsTextY = this.multiplierText.y + 80;
+        this.add.text(panelCenterX, statsTextY, "Player Stats", {
+            font: '20px Orbitron',
+            fill: '#ffffff'
+        }).setOrigin(0.5, 0).setScrollFactor(0);
+
+        this.playerIcon = this.add.image(panelCenterX - 120, statsTextY + 15, 'player').setScale(0.5).setScrollFactor(0).setOrigin(0, 0.5);
+
+        const playerHealth = this.scene.get('GameScene').player.health;
+        const playerDamage = this.scene.get('GameScene').player.damage;
+
+        this.playerHealthText = this.add.text(panelCenterX - 130, statsTextY + 50, `Health: ${playerHealth}`, {
+            font: '16px Orbitron',
+            fill: '#ffffff'
+        }).setOrigin(0, 0.5).setScrollFactor(0);
+
+        this.playerHealthText = this.add.text(panelCenterX - 130, statsTextY + 80, `Damage: ${playerDamage}`, {
+            font: '16px Orbitron',
+            fill: '#ffffff'
+        }).setOrigin(0, 0.5).setScrollFactor(0);
+
+        
         const scorePanelX = this.scale.width - 30;
         const scorePanelY = this.scale.height - 150;
         const scorePanelWidth = 350;
@@ -84,6 +106,7 @@ class BattleUI extends Phaser.Scene {
             fill: '#ffffff'
         }).setOrigin(0, 0.5);
     }
+
 
     updateTimer(currentTime) {
         this.currentTime = currentTime;
