@@ -5,14 +5,22 @@ class Catastrophe {
         this.maxX = 2800;
         this.minY = 700;
         this.maxY = 1300;
-        this.fireballTimer = this.scene.time.now + 10000;
         this.stormInterval = 10000;
         this.indicatorDuration = 1000;
         this.fireballPositions = [];
         this.minDistance = 350;
         this.indicators = [];
-        this.damage = 200;
+        this.damage = 2000;
         this.activeStormEffects = 0;
+        this.timerStarted = false;
+    }
+
+    startStormTimer() {
+        if (!this.timerStarted) {
+            this.fireballTimer = this.scene.time.now + this.stormInterval;
+            this.isStorming = false;
+            this.timerStarted = true;
+        }
     }
 
     launchStorm() {

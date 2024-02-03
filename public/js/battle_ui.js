@@ -10,13 +10,13 @@ class BattleUI extends Phaser.Scene {
 
         const panelCenterX = this.scale.width - 30 - panel.width / 2;
         const statsTextY = 175;
-        this.add.text(panelCenterX, statsTextY, "Battle Stats", {
+        this.add.text(panelCenterX, statsTextY, "Battle Panel", {
             font: '20px Orbitron',
             fill: '#ffffff'
         }).setOrigin(0.5, 0).setScrollFactor(0);
 
         const approachingTextY = statsTextY + 50;
-        this.add.text(panelCenterX + 10, approachingTextY, "Catastrophe approaches", {
+        this.approachingText = this.add.text(panelCenterX + 10, approachingTextY, "Catastrophe approaches", {
             font: '16px Orbitron',
             fill: '#ffffff',
         }).setOrigin(0.5, 0).setScrollFactor(0);
@@ -26,8 +26,8 @@ class BattleUI extends Phaser.Scene {
         this.flashing = false;
         this.flashingTween = null;
         // Catastrophe timer bar setup
-        this.timerBarBackground = this.add.rectangle(panelCenterX, approachingTextY + 40, 260, 20, 0xffffff, 0.2).setOrigin(0.5, 0).setScrollFactor(0);
-        this.timerBarFill = this.add.rectangle(panelCenterX - 130, approachingTextY + 40, 260, 20, 0x00ff00, 1).setOrigin(0, 0).setScrollFactor(0);
+        this.timerBarBackground = this.add.rectangle(panelCenterX, approachingTextY + 40, 300, 20, 0xffffff, 0.2).setOrigin(0.5, 0).setScrollFactor(0);
+        this.timerBarFill = this.add.rectangle(this.timerBarBackground.x - this.timerBarBackground.width / 2, approachingTextY + 40, 0, 20, 0x00ff00).setOrigin(0, 0).setScrollFactor(0);
 
         this.maxTime = this.scene.get('GameScene').catastrophe.stormInterval;
         this.currentTime = 0;
@@ -35,7 +35,7 @@ class BattleUI extends Phaser.Scene {
 
     updateTimer(currentTime) {
         this.currentTime = currentTime;
-        const fillWidth = Math.max(0, (this.currentTime / this.maxTime) * 260);
+        const fillWidth = Math.max(0, (this.currentTime / this.maxTime) * this.timerBarBackground.width);
         this.timerBarFill.width = fillWidth;
 
         // Determine if we need to flash
@@ -75,6 +75,10 @@ class BattleUI extends Phaser.Scene {
             this.timerBarFill.alpha = 1;
             this.flashingTween = null;
         }
+    }
+
+    updateCatastropheText(isStormLaunching) {
+        this.approachingText.setText(isStormLaunching ? "Storm launching!" : "Catastrophe approaches");
     }
 }
 

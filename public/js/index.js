@@ -35,6 +35,7 @@ class GameScene extends Phaser.Scene {
         this.messageText.setVisible(false);
 
         this.catastrophe = new Catastrophe(this);
+        
         this.scene.launch('BattleUI');
     }
 
@@ -370,10 +371,20 @@ class GameScene extends Phaser.Scene {
             this.base.update(time, delta);
         }
 
+        if (this.catastrophe && !this.catastrophe.timerStarted) {
+            this.catastrophe.startStormTimer();
+        }
+    
         if (this.catastrophe) {
             this.catastrophe.update(time, delta);
             const timeUntilNextStorm = this.catastrophe.getTimeUntilNextStorm();
             this.scene.get('BattleUI').updateTimer(timeUntilNextStorm);
+        }
+
+        if (this.catastrophe.isStorming) {
+            this.scene.get('BattleUI').updateCatastropheText(true);
+        } else {
+            this.scene.get('BattleUI').updateCatastropheText(false);
         }
     }
 }
