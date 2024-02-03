@@ -4,7 +4,7 @@ class BattleUI extends Phaser.Scene {
     }
 
     create() {
-        const panel = this.add.rectangle(this.scale.width - 30, 150, 350, 700, 0x000000, 0.5);
+        const panel = this.add.rectangle(this.scale.width - 30, 150, 350, 600, 0x000000, 0.5);
         panel.setOrigin(1, 0);
         panel.setScrollFactor(0);
 
@@ -25,7 +25,7 @@ class BattleUI extends Phaser.Scene {
         
         this.flashing = false;
         this.flashingTween = null;
-        // Catastrophe timer bar setup
+
         this.timerBarBackground = this.add.rectangle(panelCenterX, approachingTextY + 40, 300, 20, 0xffffff, 0.2).setOrigin(0.5, 0).setScrollFactor(0);
         this.timerBarFill = this.add.rectangle(this.timerBarBackground.x - this.timerBarBackground.width / 2, approachingTextY + 40, 0, 20, 0x00ff00).setOrigin(0, 0).setScrollFactor(0);
 
@@ -42,7 +42,23 @@ class BattleUI extends Phaser.Scene {
 
         const strengthenBarBackground = this.add.rectangle(panelCenterX, strengthenTextY + 40, 300, 20, 0xffffff, 0.2).setOrigin(0.5, 0).setScrollFactor(0);
         this.strengthenBarFill = this.add.rectangle(strengthenBarBackground.x - strengthenBarBackground.width / 2, strengthenTextY + 40, 0, 20, 0xff0000).setOrigin(0, 0).setScrollFactor(0);
+
+
+        const scorePanelX = this.scale.width - 30;
+        const scorePanelY = this.scale.height - 150;
+        const scorePanelWidth = 350;
+        const scorePanelHeight = 100;
+
         
+        const scorePanelBackground = this.add.rectangle(scorePanelX, scorePanelY, scorePanelWidth, scorePanelHeight, 0x000000, 0.5);
+        scorePanelBackground.setOrigin(1, 1);
+
+        const scoreTextX = scorePanelX - scorePanelWidth + 20;
+        const scoreTextY = scorePanelY - scorePanelHeight / 2;
+        this.add.text(scoreTextX, scoreTextY, 'Score:', {
+            font: '20px Orbitron',
+            fill: '#ffffff'
+        }).setOrigin(0, 0.5);
     }
 
     updateTimer(currentTime) {
