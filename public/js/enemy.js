@@ -536,6 +536,9 @@ class Enemy {
             this.scene.player.targetedEnemy = null;
         }
         this.isDead = true;
+
+        this.scene.scene.get('BattleUI').updateScore(100);
+        
         console.log('Enemy died');
 
         // Stop any ongoing movement

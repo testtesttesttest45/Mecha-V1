@@ -27,7 +27,7 @@ class GameScene extends Phaser.Scene {
         this.createLand();
         this.createPlayer();
         this.createCamps();
-        
+
         this.createEnemy();
         this.setupCamera();
         this.createBase();
@@ -35,7 +35,7 @@ class GameScene extends Phaser.Scene {
         this.messageText.setVisible(false);
 
         this.catastrophe = new Catastrophe(this);
-        
+
         this.scene.launch('BattleUI');
     }
 
@@ -374,7 +374,7 @@ class GameScene extends Phaser.Scene {
         if (this.catastrophe && !this.catastrophe.timerStarted) {
             this.catastrophe.startStormTimer();
         }
-    
+
         if (this.catastrophe) {
             this.catastrophe.update(time, delta);
             const timeUntilNextStorm = this.catastrophe.getTimeUntilNextStorm();
@@ -385,6 +385,11 @@ class GameScene extends Phaser.Scene {
             this.scene.get('BattleUI').updateCatastropheText(true);
         } else {
             this.scene.get('BattleUI').updateCatastropheText(false);
+        }
+        
+        let battleUIScene = this.scene.get('BattleUI');
+        if (battleUIScene && !battleUIScene.timerStarted) {
+            battleUIScene.startMultiplierTimer();
         }
     }
 }

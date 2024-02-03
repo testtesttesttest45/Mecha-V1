@@ -114,6 +114,9 @@ class Base {
             this.scene.player.targetedEnemy = null;
         }
         this.isDestroyed = true;
+
+        this.scene.scene.get('BattleUI').updateScore(200);
+
         console.log('Base destroyed');
         this.sprite.disableInteractive();
         this.scene.tweens.add({

@@ -1,6 +1,20 @@
 class BattleUI extends Phaser.Scene {
     constructor() {
         super({ key: 'BattleUI', active: false });
+        this.score = 0;
+        this.scoreText = null;
+        this.multiplier = 5;
+        this.multiplierMin = 1;
+        this.multiplierDuration = 10000;
+        this.lastMultiplierUpdate = 0;
+        this.timerStarted = false;
+    }
+
+    startMultiplierTimer() {
+        if (!this.timerStarted) {
+            this.timerStarted = true;
+            this.lastMultiplierUpdate = this.time.now;
+        }
     }
 
     create() {
@@ -43,6 +57,16 @@ class BattleUI extends Phaser.Scene {
         const strengthenBarBackground = this.add.rectangle(panelCenterX, strengthenTextY + 40, 300, 20, 0xffffff, 0.2).setOrigin(0.5, 0).setScrollFactor(0);
         this.strengthenBarFill = this.add.rectangle(strengthenBarBackground.x - strengthenBarBackground.width / 2, strengthenTextY + 40, 0, 20, 0xff0000).setOrigin(0, 0).setScrollFactor(0);
 
+        const multiplierTextY = strengthenTextY + 80;
+        this.multiplierText = this.add.text(panelCenterX, multiplierTextY, `Multiplier: x${this.multiplier}`, {
+            font: '16px Orbitron',
+            fill: '#ffffff'
+        }).setOrigin(0.5, 0).setScrollFactor(0);
+
+        const multiplierBarBackground = this.add.rectangle(panelCenterX, multiplierTextY + 30, 300, 20, 0x000000, 0.5).setOrigin(0.5, 0);
+        this.multiplierBarFill = this.add.rectangle(multiplierBarBackground.x - multiplierBarBackground.width / 2, multiplierTextY + 30, 300, 20, 0x00ff00).setOrigin(0, 0).setScrollFactor(0);
+
+        this.lastMultiplierUpdate = this.scene.get('GameScene').time.now;
 
         const scorePanelX = this.scale.width - 30;
         const scorePanelY = this.scale.height - 150;
@@ -55,7 +79,7 @@ class BattleUI extends Phaser.Scene {
 
         const scoreTextX = scorePanelX - scorePanelWidth + 20;
         const scoreTextY = scorePanelY - scorePanelHeight / 2;
-        this.add.text(scoreTextX, scoreTextY, 'Score:', {
+        this.scoreText = this.add.text(scoreTextX, scoreTextY, 'Score: 0', {
             font: '20px Orbitron',
             fill: '#ffffff'
         }).setOrigin(0, 0.5);
@@ -80,6 +104,7 @@ class BattleUI extends Phaser.Scene {
                 this.stopFlashing();
             }
         }
+
     }
 
     startFlashing() {
@@ -107,6 +132,39 @@ class BattleUI extends Phaser.Scene {
 
     updateCatastropheText(isStormLaunching) {
         this.approachingText.setText(isStormLaunching ? "Storm launching!" : "Catastrophe approaches");
+    }
+
+    updateScore(amount) {
+        this.score += amount * this.multiplier;
+        this.scoreText.setText(`Score: ${this.score}`);
+    }
+
+    update() {
+        if (!this.timerStarted) return;
+        this.updateMultiplierFill();
+    }
+
+    updateMultiplierFill() {
+        if (!this.timerStarted) return;
+        const currentTime = this.scene.get('GameScene').time.now;
+        if (this.multiplier > this.multiplierMin) {
+            const elapsedTime = currentTime - this.lastMultiplierUpdate;
+            const remainingTime = this.multiplierDuration - elapsedTime;
+            const fillPercentage = remainingTime / this.multiplierDuration;
+    
+            const newWidth = fillPercentage * 300;
+            this.multiplierBarFill.width = newWidth;
+    
+            if (remainingTime <= 0) {
+                this.multiplier--;
+                this.multiplierText.setText(`Multiplier: x${this.multiplier}`);
+                this.lastMultiplierUpdate = currentTime;
+                this.multiplierBarFill.width = this.multiplier > this.multiplierMin ? 300 : this.multiplierBarFill.width;
+            }
+        } else {
+            // If the multiplier is at its minimum, ensure the bar remains fully filled
+            this.multiplierBarFill.width = 300;
+        }
     }
 }
 
