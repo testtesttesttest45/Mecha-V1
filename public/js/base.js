@@ -11,7 +11,7 @@ class Base {
         this.totalHealth = 1000;
         this.healthBar = null;
         this.isDestroyed = false;
-        this.rebuildTime = 3000; // 5sec after destroyed
+        this.rebuildTime = 10000;
         this.destroyedTime = 0;
         this.enemies = enemies;
     }
@@ -114,6 +114,7 @@ class Base {
     }
 
     destroyed() {
+        if (this.isDestroyed) return;
         if (this.scene.player.targetedEnemy === this) {
             this.scene.player.targetedEnemy = null;
         }
@@ -130,6 +131,12 @@ class Base {
             ease: 'Power1',
             onComplete: () => {
                 this.sprite.setVisible(false);
+            }
+        });
+
+        this.enemies.forEach(enemy => {
+            if (!enemy.isDead) {
+                enemy.die(true);
             }
         });
     
@@ -152,6 +159,7 @@ class Base {
     update(time, delta) {
         if (this.isDestroyed) {
             if (time - this.destroyedTime > this.rebuildTime) {
+                this.scene.scene.get('BattleUI').resetBaseRebuildUI();
                 // recreate base
                 const newBaseLocation = this.findSuitableBaseLocation();
                 this.sprite.setPosition(newBaseLocation.x, newBaseLocation.y);

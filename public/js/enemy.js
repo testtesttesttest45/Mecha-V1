@@ -530,14 +530,14 @@ class Enemy {
     }
 
 
-    die() {
+    die(causedByBaseDestruction = false) {
         if (this.isDead) return;
         if (this.scene.player.targetedEnemy === this) {
             this.scene.player.targetedEnemy = null;
         }
         this.isDead = true;
-
-        this.scene.scene.get('BattleUI').updateScore(100);
+        const scoreAward = causedByBaseDestruction ? 50 : 100;
+        this.scene.scene.get('BattleUI').updateScore(scoreAward);
         
         console.log('Enemy died');
 

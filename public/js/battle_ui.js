@@ -8,6 +8,10 @@ class BattleUI extends Phaser.Scene {
         this.multiplierDuration = 10000;
         this.lastMultiplierUpdate = 0;
         this.timerStarted = false;
+        this.baseRebuildText = null;
+        this.baseRebuildBarBackground = null;
+        this.baseRebuildBarFill = null;
+        this.baseRebuilding = false;
     }
 
     startMultiplierTimer() {
@@ -105,6 +109,9 @@ class BattleUI extends Phaser.Scene {
             font: '20px Orbitron',
             fill: '#ffffff'
         }).setOrigin(0, 0.5);
+
+
+        this.createBaseRebuildTimer();
     }
 
 
@@ -113,7 +120,6 @@ class BattleUI extends Phaser.Scene {
         const fillWidth = Math.max(0, (this.currentTime / this.maxTime) * this.timerBarBackground.width);
         this.timerBarFill.width = fillWidth;
 
-        // Determine if we need to flash
         if (this.currentTime / this.maxTime <= 0.5) {
             this.timerBarFill.setFillStyle(0xff0000); // red
             if (!this.flashing) {
@@ -160,6 +166,37 @@ class BattleUI extends Phaser.Scene {
     updateScore(amount) {
         this.score += amount * this.multiplier;
         this.scoreText.setText(`Score: ${this.score}`);
+    }
+
+    createBaseRebuildTimer() {
+        this.baseRebuildText = this.add.text(this.scale.width / 2, 150, '', {
+            font: '20px Orbitron',
+            fill: '#000'
+        }).setOrigin(0.5, 0).setScrollFactor(0).setVisible(false);
+    
+        this.baseRebuildGraphics = this.add.graphics().setScrollFactor(0).setVisible(false);
+    }
+    
+    updateBaseRebuildUI(rebuildProgress) {
+        this.baseRebuildText.setVisible(true);
+        this.baseRebuildGraphics.setVisible(true);
+    
+        this.baseRebuildText.setText('REBUILDING BASE...');
+    
+        this.baseRebuildGraphics.clear();
+        this.baseRebuildGraphics.fillStyle(0x000000, 0.5);
+        this.baseRebuildGraphics.fillRoundedRect(this.scale.width / 2 - 150, 200, 300, 30, 10);
+        this.baseRebuildBarFillWidth = Math.max(0, (1 - rebuildProgress) * 300);
+        this.baseRebuildBarFillWidth = Math.min(this.baseRebuildBarFillWidth, 300);
+    
+        this.baseRebuildGraphics.fillStyle(0x00ff00, 1);
+        this.baseRebuildGraphics.fillRoundedRect(this.scale.width / 2 - 150, 200, this.baseRebuildBarFillWidth + 10, 30, 10);
+    }
+
+    resetBaseRebuildUI() {
+        this.baseRebuilding = false;
+        this.baseRebuildText.setText('');
+        this.baseRebuildGraphics.clear();
     }
 
     update() {

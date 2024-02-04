@@ -391,6 +391,15 @@ class GameScene extends Phaser.Scene {
         if (battleUIScene && !battleUIScene.timerStarted) {
             battleUIScene.startMultiplierTimer();
         }
+
+        if (this.base.isDestroyed) {
+            const timeElapsedSinceDestruction = this.time.now - this.base.destroyedTime;
+            const rebuildProgress = Math.min(timeElapsedSinceDestruction / this.base.rebuildTime, 1);
+        
+            if (rebuildProgress < 1) {
+                this.scene.get('BattleUI').updateBaseRebuildUI(rebuildProgress);
+            }
+        }
     }
 }
 
