@@ -1,7 +1,7 @@
 import characterMap from './characters.js';
 
 class Enemy {
-    constructor(scene, x, y, characterCode = 2, originalCamp, player) {
+    constructor(scene, x, y, characterCode = 2, originalCamp, player, level = 1) {
         this.scene = scene;
         this.x = x;
         this.y = y;
@@ -9,11 +9,13 @@ class Enemy {
         this.sprite = null;
         this.currentAnimationIndex = 0;
         const character = characterMap[this.characterCode];
-        this.health = character.health;
+        this.level = level;
+        const levelMultiplier = 1 + (this.level - 1) * 0.1; // 10% increase per level
+        this.health = character.health * levelMultiplier;
+        this.totalHealth = this.health; // Store the total health, already adjusted
         this.isDead = false;
-        this.totalHealth = character.health; // Store the total health
         this.healthBar = null;
-        this.speed = character.speed;
+        this.speed = character.speed; // Consider if speed should also increase with level
         this.attackSpeed = character.attackSpeed;
         this.attackRange = character.range;
         this.isMoving = false;
@@ -22,18 +24,18 @@ class Enemy {
         this.detectionRadius = 200;
         this.timeOutOfDetection = 0;
         this.detectionBar = null;
-        this.isAlert = false; // enemy is on alert. during alert, enemy will never stop chasing player
+        this.isAlert = false;
         this.alertTime = 2000;
         this.timeInAlert = 0;
         this.hasPlayerBeenDetected = false;
         this.lastActionTime = 0;
         this.isAttacking = false;
         this.attackEvent = null;
-        this.damage = character.damage;
+        this.damage = character.damage * levelMultiplier;
         this.attackRangeRect = null;
         this.attackRangeArc = null;
         this.projectile = character.projectile;
-        this.originalCamp = originalCamp; // ref original camp to return to
+        this.originalCamp = originalCamp;
         this.returningToCamp = false;
         this.reachedCamp = false;
         this.lastHealTime = 0;
@@ -42,11 +44,10 @@ class Enemy {
         this.enrageStartTime = 0;
         this.player = player;
         this.customSquare = null;
-        this.customSquareText = null; // the left side of the health bar
-        this.fireTimerEvent = null; // a flag to fix the stacking of fire effect, causing stackable speed
+        this.customSquareText = null;
+        this.fireTimerEvent = null;
         this.idleAnimations = [`character${this.characterCode}Idle1`, `character${this.characterCode}Idle2`, `character${this.characterCode}Idle3`, `character${this.characterCode}Idle4`];
     }
-
     create() {
         const character = characterMap[this.characterCode];
 
@@ -555,6 +556,10 @@ class Enemy {
         if (this.attacker) {
             this.attacker.stopAttackingEnemy();
         }
+        
+        // this.scene.enemies contain an array of all enemies. We remove the current enemy from the array
+        this.scene.enemies = this.scene.enemies.filter(enemy => enemy !== this);
+        
 
         this.healthBar.destroy();
 
@@ -631,7 +636,7 @@ class Enemy {
         this.customSquare = this.scene.add.graphics();
         this.customSquare.fillStyle(0x0000ff, 1);
         this.customSquare.fillRect(-10, -10, 20, 20);
-        this.customSquareText = this.scene.add.text(0, 0, '1', {
+        this.customSquareText = this.scene.add.text(0, 0, this.level, {
             font: '16px Orbitron',
             fill: '#ffffff',
         }).setOrigin(0.5, 0.5);

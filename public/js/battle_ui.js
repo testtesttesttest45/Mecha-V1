@@ -12,6 +12,7 @@ class BattleUI extends Phaser.Scene {
         this.baseRebuildBarBackground = null;
         this.baseRebuildBarFill = null;
         this.baseRebuilding = false;
+        this.isMultiplierPaused = false; 
     }
 
     startMultiplierTimer() {
@@ -95,7 +96,7 @@ class BattleUI extends Phaser.Scene {
 
         
         const scorePanelX = this.scale.width - 30;
-        const scorePanelY = this.scale.height - 150;
+        const scorePanelY = this.scale.height - 120;
         const scorePanelWidth = 350;
         const scorePanelHeight = 100;
 
@@ -200,32 +201,46 @@ class BattleUI extends Phaser.Scene {
     }
 
     update() {
-        if (!this.timerStarted) return;
+        if (!this.timerStarted || this.isMultiplierPaused) return;
         this.updateMultiplierFill();
     }
 
     updateMultiplierFill() {
-        if (!this.timerStarted) return;
+        // Ensure updates are paused when the multiplier is supposed to be paused.
+        if (!this.timerStarted || this.isMultiplierPaused) return;
+
+        // Remaining logic for updating the multiplier fill...
         const currentTime = this.scene.get('GameScene').time.now;
-        if (this.multiplier > this.multiplierMin) {
-            const elapsedTime = currentTime - this.lastMultiplierUpdate;
-            const remainingTime = this.multiplierDuration - elapsedTime;
-            const fillPercentage = remainingTime / this.multiplierDuration;
-    
-            const newWidth = fillPercentage * 300;
-            this.multiplierBarFill.width = newWidth;
-    
-            if (remainingTime <= 0) {
-                this.multiplier--;
-                this.multiplierText.setText(`Multiplier: x${this.multiplier}`);
-                this.lastMultiplierUpdate = currentTime;
-                this.multiplierBarFill.width = this.multiplier > this.multiplierMin ? 300 : this.multiplierBarFill.width;
+        const elapsedTime = currentTime - this.lastMultiplierUpdate;
+        const remainingTime = this.multiplierDuration - elapsedTime;
+        const fillPercentage = remainingTime / this.multiplierDuration;
+        const newWidth = fillPercentage * 300; // Assuming full width is 300.
+        this.multiplierBarFill.width = newWidth;
+
+        // Check if it's time to decrement the multiplier.
+        if (remainingTime <= 0 && this.multiplier > this.multiplierMin) {
+            this.multiplier--;
+            this.multiplierText.setText(`Multiplier: x${this.multiplier}`);
+            this.lastMultiplierUpdate = currentTime;
+            // Reset bar width if multiplier is still above the minimum.
+            if (this.multiplier > this.multiplierMin) {
+                this.multiplierBarFill.width = 300;
             }
-        } else {
-            // If the multiplier is at its minimum, ensure the bar remains fully filled
-            this.multiplierBarFill.width = 300;
         }
     }
+    pauseMultiplier() {
+        this.isMultiplierPaused = true;
+    }
+    resetMultiplier() {
+        this.multiplier = 5;
+        this.multiplierText.setText(`Multiplier: x${this.multiplier}`);
+        this.isMultiplierPaused = false;
+
+        this.multiplierBarFill.width = 300;
+
+        this.lastMultiplierUpdate = this.time.now;
+    }
+
 }
 
 

@@ -27,10 +27,10 @@ class GameScene extends Phaser.Scene {
         this.createLand();
         this.createPlayer();
         this.createCamps();
-
+        this.createBase();
         this.createEnemy();
         this.setupCamera();
-        this.createBase();
+        
         this.messageText = this.add.text(0, 0, '', { font: '24px Orbitron', fill: '#ff0000', align: 'center' });
         this.messageText.setVisible(false);
 
@@ -209,13 +209,12 @@ class GameScene extends Phaser.Scene {
     }
 
     createEnemy() {
-        // Array of camp objects
         const camps = [this.camp1, this.camp2, this.camp3];
 
         camps.forEach(camp => {
             for (let i = 0; i < 2; i++) {
                 const randomPosition = camp.getRandomPositionInRadius();
-                let enemy = new Enemy(this, randomPosition.x, randomPosition.y, 2, camp, this.player);
+                const enemy = new Enemy(this, randomPosition.x, randomPosition.y, 2, camp, this.player, this.base.baseLevel);
                 enemy.create();
                 this.enemies.push(enemy);
 
@@ -251,6 +250,9 @@ class GameScene extends Phaser.Scene {
 
             }
         });
+        
+        // update this.base.enemies to include updated array of enemies
+        this.base.enemies = this.enemies;
     }
 
 
@@ -395,7 +397,7 @@ class GameScene extends Phaser.Scene {
         if (this.base.isDestroyed) {
             const timeElapsedSinceDestruction = this.time.now - this.base.destroyedTime;
             const rebuildProgress = Math.min(timeElapsedSinceDestruction / this.base.rebuildTime, 1);
-        
+            
             if (rebuildProgress < 1) {
                 this.scene.get('BattleUI').updateBaseRebuildUI(rebuildProgress);
             }
@@ -459,7 +461,7 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('enemy_camp', 'assets/images/enemy_camp1.png');
         this.load.image('enemy_base', 'assets/images/enemy_base1.png');
 
-        // loadDynamicSpriteSheet.call(this, 'character1', 'assets/sprites/character_1.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character1', 'assets/sprites/character_1.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character2', 'assets/sprites/character_2.png', 4000, 4400);
         // loadDynamicSpriteSheet.call(this, 'character3', 'assets/sprites/character_3.png', 4000, 3520);
         // loadDynamicSpriteSheet.call(this, 'character4', 'assets/sprites/character_4.png', 4000, 4400);

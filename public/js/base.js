@@ -11,9 +11,12 @@ class Base {
         this.totalHealth = 1000;
         this.healthBar = null;
         this.isDestroyed = false;
-        this.rebuildTime = 10000;
+        this.rebuildTime = 5000;
         this.destroyedTime = 0;
+        this.customSquare = null;
+        this.baseLevel = 1;
         this.enemies = enemies;
+        this.isRebuilding = false;
     }
 
     create() {
@@ -24,13 +27,13 @@ class Base {
         this.sprite.setInteractive();
         this.isDestroyed = false;
         this.health = this.totalHealth;
-    
+
         if (this.healthBar) {
             this.healthBar.clear();
         }
         this.createHealthBar();
     }
-    
+
 
     findSuitableBaseLocation() {
         let baseX, baseY, tooCloseToPlayer, tooCloseToCamp;
@@ -58,7 +61,22 @@ class Base {
     createHealthBar() {
         this.healthBar = this.scene.add.graphics();
         this.healthBar.setDepth(1);
-        this.updateHealthBar(); // initial display
+        this.updateHealthBar();
+
+        this.customSquare = this.scene.add.graphics();
+        this.customSquare.fillStyle(0x0000ff, 1);
+        this.customSquare.fillRect(-10, -10, 20, 20);
+        this.customSquareText = this.scene.add.text(0, 0, this.baseLevel, {
+            font: '16px Orbitron',
+            fill: '#ffffff',
+        }).setOrigin(0.5, 0.5);
+
+        this.customSquareContainer = this.scene.add.container(0, 0);
+        this.customSquareContainer.add(this.customSquare);
+        this.customSquareContainer.add(this.customSquareText);
+        this.customSquareContainer.setDepth(1);
+
+        this.updateHealthBar();
     }
 
     updateHealthBar() {
@@ -69,13 +87,22 @@ class Base {
         // Background of health bar (transparent part)
         this.healthBar.fillStyle(0x000000, 0.5);
         this.healthBar.fillRect(0, 0, this.sprite.width, 10);
-
-        // Health portion (dynamic width based on current health)
+        this.healthBar.setDepth(11);
+    
         const healthPercentage = this.health / this.totalHealth;
-        const healthBarWidth = healthPercentage * this.sprite.width; // Calculate the width based on health percentage
+        const healthBarWidth = healthPercentage * this.sprite.width;
         this.healthBar.fillStyle(0xff0000, 1);
         this.healthBar.fillRect(0, 0, healthBarWidth, 10);
+    
+        const squareSize = 20;
+        const containerX = barX - squareSize / 2;
+        const containerY = barY + 5;
+    
+        if (this.customSquareContainer) {
+            this.customSquareContainer.setPosition(containerX, containerY);
+        }
     }
+
 
     takeDamage(damage, player) {
         this.attacker = player; // Store reference to the attacking player
@@ -94,7 +121,7 @@ class Base {
         if (this.health <= 0 && !this.isDestroyed) {
             this.destroyed();
         }
-        this.updateHealthBar(); 
+        this.updateHealthBar();
     }
 
     createDamageText(damage) {
@@ -118,8 +145,7 @@ class Base {
         if (this.scene.player.targetedEnemy === this) {
             this.scene.player.targetedEnemy = null;
         }
-        this.isDestroyed = true;
-
+        
         this.scene.scene.get('BattleUI').updateScore(200);
 
         console.log('Base destroyed');
@@ -139,13 +165,17 @@ class Base {
                 enemy.die(true);
             }
         });
-    
+
         if (this.attacker) {
             this.attacker.stopAttackingEnemy();
         }
-    
+
         this.healthBar.destroy();
+        this.customSquareContainer.destroy();
         this.destroyedTime = this.scene.time.now;
+        this.isDestroyed = true;
+        this.isRebuilding = true; // Indicate that the base is now rebuilding.
+        this.scene.scene.get('BattleUI').pauseMultiplier();
     }
 
     enrageEnemies() {
@@ -155,32 +185,37 @@ class Base {
             }
         });
     }
+
+    recreateBaseAndEnemies() {
+        this.scene.scene.get('BattleUI').resetBaseRebuildUI();
+        const newBaseLocation = this.findSuitableBaseLocation();
+        this.sprite.setPosition(newBaseLocation.x, newBaseLocation.y);
+        this.sprite.setVisible(true).setAlpha(1).setInteractive();
+        this.health = this.totalHealth;
+        this.isDestroyed = false;
+        this.createHealthBar();
+        
+        this.enemies.forEach(enemy => {
+            if (enemy.isDead) {
+                enemy.sprite.destroy();
+            }
+        });
+        this.scene.createEnemy(this.baseLevel);
+    }
     
     update(time, delta) {
-        if (this.isDestroyed) {
+        if (this.isDestroyed && this.isRebuilding) {
             if (time - this.destroyedTime > this.rebuildTime) {
-                this.scene.scene.get('BattleUI').resetBaseRebuildUI();
-                // recreate base
-                const newBaseLocation = this.findSuitableBaseLocation();
-                this.sprite.setPosition(newBaseLocation.x, newBaseLocation.y);
-    
-                this.sprite.setVisible(true);
-                this.sprite.setAlpha(1);
-                this.sprite.setInteractive(true);
-    
-                this.health = this.totalHealth;
-                this.isDestroyed = false;
-    
-                if (this.healthBar) {
-                    this.healthBar.clear();
-                }
-                this.createHealthBar();
+                // Base has finished rebuilding.
+                this.isRebuilding = false;
+                this.recreateBaseAndEnemies();
+                this.scene.scene.get('BattleUI').resetMultiplier(); // Call a method in BattleUI to reset the multiplier.
             }
         }
     }
-    
 
-    
+
+
 }
 
 

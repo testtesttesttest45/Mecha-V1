@@ -421,7 +421,7 @@ class Player {
         this.robotSprite.stop();
         this.robotSprite.play(`death`);
 
-        if (this.attacker) {
+        if (this.attacker && !this.attacker.isDead) {
             this.attacker.stopAttackingPlayer();
         }
 
