@@ -137,29 +137,29 @@ class Enemy {
     takeDamage(damage, source) {
         // console.log('Enemy taking damage');
         if (this.isDead) return;
-    
+
         // Enemy is immune to all damage when returning to camp
         if (this.returningToCamp) return;
-    
+
         // Enemy is immune to catastrophe damage if it has reached camp but not to player damage
         if (this.reachedCamp && source === 'catastrophe') return;
-    
+
         this.health -= damage;
         this.health = Math.max(this.health, 0);
-    
+
         // Enemy detects player if damage source is the player
         if (source !== 'catastrophe') {
             this.hasPlayerBeenDetected = true;
         };
-    
+
         const color = source === 'catastrophe' ? '#ff0' : '#ff0000'; // Yellow for catastrophe, red for player
         this.createDamageText(damage, color);
-    
+
         // Enemy dies if health drops to 0
         if (this.health <= 0 && !this.isDead) {
             this.die();
         }
-    
+
         this.updateHealthBar();
 
         if (this.hasPlayerBeenDetected) {
@@ -169,7 +169,7 @@ class Enemy {
             this.updateDetectionBar(1); // Full detection bar
         }
     }
-    
+
 
     moveToPlayer(playerX, playerY) {
         if (this.isDead || this.isMoving || this.isAttacking) {
@@ -539,7 +539,7 @@ class Enemy {
         this.isDead = true;
         const scoreAward = causedByBaseDestruction ? 50 : 100;
         this.scene.scene.get('BattleUI').updateScore(scoreAward);
-        
+
         console.log('Enemy died');
 
         // Stop any ongoing movement
@@ -556,10 +556,10 @@ class Enemy {
         if (this.attacker) {
             this.attacker.stopAttackingEnemy();
         }
-        
+
         // this.scene.enemies contain an array of all enemies. We remove the current enemy from the array
         this.scene.enemies = this.scene.enemies.filter(enemy => enemy !== this);
-        
+
 
         this.healthBar.destroy();
 
@@ -597,7 +597,7 @@ class Enemy {
                     for (let x = 0; x < this.fireWidth; x++) {
                         this.fireArray[(this.fireHeight - 1) * this.fireWidth + x] = Math.floor(Math.random() * 255);
                     }
-        
+
                     for (let y = 0; y < this.fireHeight - 1; y++) {
                         for (let x = 0; x < this.fireWidth; x++) {
                             let c = 0;
@@ -608,7 +608,7 @@ class Enemy {
                             this.fireArray[y * this.fireWidth + x] = c / 4.1;
                         }
                     }
-        
+
                     fireGraphics.clear();
                     for (let y = 0; y < this.fireHeight; y++) {
                         for (let x = 0; x < this.fireWidth; x++) {
@@ -624,7 +624,7 @@ class Enemy {
             callbackScope: this,
             loop: true
         });
-    
+
         return fireGraphics;
     }
 
@@ -788,12 +788,18 @@ class Enemy {
     setEnraged() {
         if (!this.isEnraged) {
             this.isEnraged = true;
-            this.damage = this.damage * 2;
-            this.speed = this.speed * 2;
+            this.damage *= 2;
+            this.speed *= 2;
             this.enrageStartTime = this.scene.time.now;
 
-            this.customSquareContainer.remove(this.customSquare, true);
-            this.customSquare = this.fireEffect();
+            // Remove any existing fire effect safely
+            if (this.customSquare) {
+                this.scene.returnFireEffectToPool(this.customSquare);
+                this.customSquareContainer.remove(this.customSquare, false); // false to not destroy the object as it's managed by the pool
+            }
+
+            // Obtain a new fire effect from the pool
+            this.customSquare = this.scene.getFireEffectFromPool();
             this.customSquareContainer.addAt(this.customSquare, 0);
         } else {
             // Reset enrage timer
@@ -801,21 +807,27 @@ class Enemy {
         }
     }
 
+
     disenrage() {
-        this.isEnraged = false;
-        this.damage = this.damage / 2;
-        this.speed = this.speed / 2;
+        if (this.isEnraged) {
+            this.isEnraged = false;
+            this.damage /= 2;
+            this.speed /= 2;
 
-        this.isAlert = true;
-        this.timeInAlert = 0;
-        this.timeOutOfDetection = 0;
-        this.updateDetectionBar(1);
+            this.isAlert = true;
+            this.timeInAlert = 0;
+            this.timeOutOfDetection = 0;
+            this.updateDetectionBar(1);
 
-        this.customSquareContainer.remove(this.customSquare, true);
-        this.customSquare = this.scene.add.graphics();
-        this.customSquare.fillStyle(0x0000ff, 1);
-        this.customSquare.fillRect(-10, -10, 20, 20);
-        this.customSquareContainer.addAt(this.customSquare, 0);
+            // Return the fire effect to the pool and remove it from the container
+            if (this.customSquare) {
+                this.scene.returnFireEffectToPool(this.customSquare);
+                this.customSquareContainer.remove(this.customSquare, false); // false because we don't want to destroy it
+            }
+
+            // Reset the reference to customSquare
+            this.customSquare = null;
+        }
     }
 
     update(time, delta) {

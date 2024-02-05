@@ -19,7 +19,7 @@ class GameScene extends Phaser.Scene {
         this.cancelClick = false;
         this.catastrophe = null;
     }
-
+    
     create() {
         this.gameScreenWidth = this.sys.game.config.width;
         this.gameScreenHeight = this.sys.game.config.height;
@@ -30,7 +30,7 @@ class GameScene extends Phaser.Scene {
         this.createBase();
         this.createEnemy();
         this.setupCamera();
-        
+
         this.messageText = this.add.text(0, 0, '', { font: '24px Orbitron', fill: '#ff0000', align: 'center' });
         this.messageText.setVisible(false);
 
@@ -250,7 +250,7 @@ class GameScene extends Phaser.Scene {
 
             }
         });
-        
+
         // update this.base.enemies to include updated array of enemies
         this.base.enemies = this.enemies;
     }
@@ -288,6 +288,9 @@ class GameScene extends Phaser.Scene {
             this.enemyClicked = true;
             this.player.targetedEnemy = this.base;
             this.player.isMovingTowardsEnemy = true;
+            if (this.player.targetedEnemy === this.base && this.player.isAttacking) {
+                return; // Do not reset attack animation if already attacking the same enemy
+            }
             this.cancelClick = true;
             this.player.moveStraight(this.base.sprite.x, this.base.sprite.y, () => {
                 this.player.playAttackAnimation(this.base);
@@ -350,7 +353,6 @@ class GameScene extends Phaser.Scene {
         this.sceneName = "battle-scene";
     }
 
-
     update(time, delta) {
         if (this.player) {
             this.player.update(time, delta, this.enemies);
@@ -388,7 +390,7 @@ class GameScene extends Phaser.Scene {
         } else {
             this.scene.get('BattleUI').updateCatastropheText(false);
         }
-        
+
         let battleUIScene = this.scene.get('BattleUI');
         if (battleUIScene && !battleUIScene.timerStarted) {
             battleUIScene.startMultiplierTimer();
@@ -397,7 +399,7 @@ class GameScene extends Phaser.Scene {
         if (this.base.isDestroyed) {
             const timeElapsedSinceDestruction = this.time.now - this.base.destroyedTime;
             const rebuildProgress = Math.min(timeElapsedSinceDestruction / this.base.rebuildTime, 1);
-            
+
             if (rebuildProgress < 1) {
                 this.scene.get('BattleUI').updateBaseRebuildUI(rebuildProgress);
             }

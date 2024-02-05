@@ -172,13 +172,13 @@ class Player {
     playAttackAnimation(targetEnemy) {
         const direction = this.determineDirectionToEnemy(targetEnemy);
         const attackAnimationKey = `attack${direction}`;
-
+        
         if (this.isAttacking && !this.attackAnimationComplete && this.targetedEnemy === targetEnemy) {
             return;
         }
         this.isAttacking = true;
         this.attackAnimationComplete = false;
-        this.attacker = targetEnemy;
+        this.attackingWho = targetEnemy;
         this.robotSprite.play(attackAnimationKey);
         this.robotSprite.off('animationupdate');
         this.robotSprite.off('animationcomplete');
@@ -256,7 +256,7 @@ class Player {
         this.isMovingTowardsEnemy = false;
         this.continueAttacking = false;
         this.isAttacking = false;
-        this.attacker = null;
+        this.attackingWho = null;
         if (this.attackEvent) {
             this.attackEvent.remove(false);
             this.attackEvent = null;
@@ -420,8 +420,8 @@ class Player {
         // Stop any ongoing animation and play the death animation
         this.robotSprite.stop();
         this.robotSprite.play(`death`);
-
-        if (this.attacker && !this.attacker.isDead) {
+        
+        if (this.attacker && !this.attacker.isDead && this.isDead) {
             this.attacker.stopAttackingPlayer();
         }
 

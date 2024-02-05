@@ -16,9 +16,9 @@ const characterMap = {
         name: 'orc',
         class: 'enemy',
         health: 220,
-        damage: 10,
+        damage: 20,
         range: 100,
-        speed: 100,
+        speed: 120,
         attackSpeed: 0.8,
         attackCount: 1,
         projectile: ''
@@ -89,8 +89,8 @@ const characterMap = {
         class: 'player',
         range: 350,
         speed: 250,
-        damage: 50,
-        health: 500,
+        damage: 300,
+        health: 5000,
         attackSpeed: 6,
         attackCount: 1,
         projectile: 'blueBullet'

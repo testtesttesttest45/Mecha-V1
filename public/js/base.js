@@ -11,7 +11,7 @@ class Base {
         this.totalHealth = 1000;
         this.healthBar = null;
         this.isDestroyed = false;
-        this.rebuildTime = 5000;
+        this.rebuildTime = 2000;
         this.destroyedTime = 0;
         this.customSquare = null;
         this.baseLevel = 1;
@@ -113,6 +113,7 @@ class Base {
 
         // every 10% health of the base, award 50 points
         if (this.health % (this.totalHealth / 10) === 0) {
+            console.log('Awarding 50 points');
             this.scene.scene.get('BattleUI').updateScore(50);
         }
 
@@ -162,7 +163,7 @@ class Base {
 
         this.enemies.forEach(enemy => {
             if (!enemy.isDead) {
-                enemy.die(true);
+               enemy.die(true);
             }
         });
 
@@ -206,7 +207,7 @@ class Base {
     update(time, delta) {
         if (this.isDestroyed && this.isRebuilding) {
             if (time - this.destroyedTime > this.rebuildTime) {
-                // Base has finished rebuilding.
+                this.baseLevel++;
                 this.isRebuilding = false;
                 this.recreateBaseAndEnemies();
                 this.scene.scene.get('BattleUI').resetMultiplier(); // Call a method in BattleUI to reset the multiplier.

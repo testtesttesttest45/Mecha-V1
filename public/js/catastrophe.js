@@ -10,7 +10,7 @@ class Catastrophe {
         this.fireballPositions = [];
         this.minDistance = 350;
         this.indicators = [];
-        this.damage = 2000;
+        this.damage = 100;
         this.activeStormEffects = 0;
         this.timerStarted = false;
     }
