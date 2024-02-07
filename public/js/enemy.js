@@ -45,6 +45,8 @@ class Enemy {
         this.player = player;
         this.customSquare = null;
         this.customSquareText = null;
+        this.strengthenedSquare = null;
+        this.strengthenedSquareText = null;
         this.fireTimerEvent = null;
         this.base = base;
         this.idleAnimations = [`character${this.characterCode}Idle1`, `character${this.characterCode}Idle2`, `character${this.characterCode}Idle3`, `character${this.characterCode}Idle4`];
@@ -54,7 +56,7 @@ class Enemy {
 
         this.sprite = this.scene.add.sprite(this.x, this.y, character.idle);
         this.sprite.setOrigin(0.5, 0.5);
-        this.sprite.setScale(2);
+        this.sprite.setScale(0.5);
 
         // Check and create idle animations
         for (let i = 0; i < 4; i++) {
@@ -562,12 +564,13 @@ class Enemy {
         // this.scene.enemies contain an array of all enemies. We remove the current enemy from the array
         this.scene.enemies = this.scene.enemies.filter(enemy => enemy !== this);
 
-
         this.healthBar.destroy();
 
         this.detectionBar.destroy();
 
         this.customSquareContainer.destroy();
+
+        this.strengthenedSquareContainer.destroy();
 
         [this.attackRangeArc, this.attackRangeRect].forEach(banana => {
             if (banana) banana.destroy();
@@ -648,9 +651,38 @@ class Enemy {
         this.customSquareContainer.add(this.customSquare);
         this.customSquareContainer.add(this.customSquareText);
         this.customSquareContainer.setDepth(1);
+
+        this.strengthenedSquare = this.scene.add.graphics();
+        this.strengthenedSquareContainer = this.scene.add.container(this.sprite.x + 40, this.sprite.y);
+        this.drawStrengthenedSquare();
+        this.strengthenedSquareContainer.add(this.strengthenedSquare);
+        this.strengthenedSquareText = this.scene.add.text(0, 0, 'S', {
+            font: '16px Orbitron',
+            fill: '#ffffff',
+        }).setOrigin(0.5, 0.5);
+        this.strengthenedSquareContainer.add(this.strengthenedSquareText);
+        this.strengthenedSquareContainer.setDepth(1);
+
         this.updateHealthBar();
     }
 
+    drawStrengthenedSquare() {
+        this.strengthenedSquare.clear();
+        this.strengthenedSquare.fillStyle('#000', 1); // black, 100% opacity
+
+        // Draw a hexagon
+        const radius = 15;
+        this.strengthenedSquare.beginPath();
+        for (let i = 0; i < 6; i++) {
+            // calculate vertex positions
+            const x = radius * Math.cos(2 * Math.PI * i / 6 - Math.PI / 2);
+            const y = radius * Math.sin(2 * Math.PI * i / 6 - Math.PI / 2);
+            if (i === 0) this.strengthenedSquare.moveTo(x, y);
+            else this.strengthenedSquare.lineTo(x, y);
+        }
+        this.strengthenedSquare.closePath();
+        this.strengthenedSquare.fill();
+    }
 
     updateHealthBar() {
         const barX = this.sprite.x - 30;
@@ -664,14 +696,19 @@ class Enemy {
 
         // Health portion (dynamic width based on current health)
         const healthPercentage = this.health / this.totalHealth;
-        const healthBarWidth = healthPercentage * 60; // Calculate the width based on health percentage
+        const healthBarWidth = healthPercentage * 60;
         this.healthBar.fillStyle(0xff0000, 1);
         this.healthBar.fillRect(0, 0, healthBarWidth, 7);
 
         if (this.customSquareContainer) {
-            const containerX = this.sprite.x - 40; // Position it to the left of the health bar
-            const containerY = this.sprite.y - this.sprite.body.height / 2 + 5; // Adjust Y as needed
+            const containerX = this.sprite.x - 40;
+            const containerY = this.sprite.y - this.sprite.body.height / 2 + 5;
             this.customSquareContainer.setPosition(containerX, containerY);
+        }
+        if (this.strengthenedSquareContainer) {
+            const strengthenedSquareX = this.sprite.x + 42;
+            const strengthenedSquareY = this.sprite.y - this.sprite.body.height / 2 + 3;
+            this.strengthenedSquareContainer.setPosition(strengthenedSquareX, strengthenedSquareY);
         }
     }
 
@@ -795,7 +832,7 @@ class Enemy {
             this.damage = this.damage * 2;
             this.speed = this.speed * 2;
             this.enrageStartTime = this.scene.time.now;
-            
+
             this.customSquareContainer.remove(this.customSquare, false);
             this.customSquare = this.fireEffect();
             this.customSquareContainer.addAt(this.customSquare, 0);
@@ -853,7 +890,6 @@ class Enemy {
         } else {
             this.reachedCamp = false;
         }
-
 
         if (this.reachedCamp && this.health < this.totalHealth) {
             if (time - this.lastHealTime > 1000) { // Heal every 1 second

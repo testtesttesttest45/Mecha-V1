@@ -201,7 +201,6 @@ class BattleUI extends Phaser.Scene {
     }
 
     update() {
-        console.log('current multiplier:', this.multiplier);
         if (!this.timerStarted || this.isMultiplierPaused) return;
         this.updateMultiplierFill();
     }

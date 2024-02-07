@@ -215,7 +215,7 @@ class GameScene extends Phaser.Scene {
         camps.forEach(camp => {
             for (let i = 0; i < 2; i++) {
                 const randomPosition = camp.getRandomPositionInRadius();
-                const enemy = new Enemy(this, randomPosition.x, randomPosition.y, 7, camp, this.player, this.base.baseLevel, this.base);
+                const enemy = new Enemy(this, randomPosition.x, randomPosition.y, 2, camp, this.player, this.base.baseLevel, this.base);
                 enemy.create();
                 this.enemies.push(enemy);
 
@@ -463,13 +463,13 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('enemy_camp', 'assets/images/enemy_camp1.png');
         this.load.image('enemy_base', 'assets/images/enemy_base1.png');
 
-        loadDynamicSpriteSheet.call(this, 'character1', 'assets/sprites/character_1.png', 4000, 4400);
+        //loadDynamicSpriteSheet.call(this, 'character1', 'assets/sprites/character_1.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character2', 'assets/sprites/character_2.png', 4000, 4400);
-        loadDynamicSpriteSheet.call(this, 'character3', 'assets/sprites/character_3.png', 4000, 3520);
+        // loadDynamicSpriteSheet.call(this, 'character3', 'assets/sprites/character_3.png', 4000, 3520);
         // loadDynamicSpriteSheet.call(this, 'character4', 'assets/sprites/character_4.png', 4000, 4400);
         // loadDynamicSpriteSheet.call(this, 'character5', 'assets/sprites/character_5.png', 4000, 2640);
         // loadDynamicSpriteSheet.call(this, 'character6', 'assets/sprites/character_6.png', 4000, 4400);
-         loadDynamicSpriteSheet.call(this, 'character7', 'assets/sprites/character_7.png', 4000, 4400);
+        // loadDynamicSpriteSheet.call(this, 'character7', 'assets/sprites/character_7.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character8', 'assets/sprites/character_8.png', 4000, 4400);
 
         this.load.image('blueBullet', 'assets/projectiles/blue_bullet.png');
