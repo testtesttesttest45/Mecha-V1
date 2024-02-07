@@ -54,7 +54,7 @@ class Enemy {
 
         this.sprite = this.scene.add.sprite(this.x, this.y, character.idle);
         this.sprite.setOrigin(0.5, 0.5);
-        this.sprite.setScale(0.5);
+        this.sprite.setScale(2);
 
         // Check and create idle animations
         for (let i = 0; i < 4; i++) {
