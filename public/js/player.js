@@ -1,5 +1,5 @@
 import characterMap from './characters.js';
-
+import Base from './base.js';
 class Player {
     constructor(scene, initialX, initialY, characterCode = 1, enemies) {
         this.scene = scene;
@@ -89,8 +89,6 @@ class Player {
     moveStraight(newX, newY, onCompleteCallback = null) {
         if (this.isDead) return;
         if (this.currentTween && this.currentTween.isPlaying() && !this.scene.cancelClick) {
-            console.log(this.isAttacking)
-            
             return;
         }
         if (this.currentTween) {
@@ -454,7 +452,7 @@ class Player {
         }
 
         // Check if the player is moving towards the targeted enemy
-        if (!this.isDead && this.targetedEnemy && (this.targetedEnemy.returningToCamp || this.targetedEnemy.reachedCamp)) {
+        if (!this.isDead && this.targetedEnemy && (this.targetedEnemy.returningToCamp || this.targetedEnemy.reachedCamp || this.targetedEnemy instanceof Base)) {
             //console.log('Targeted enemy is returning to camp');
             let enemyPosition = this.targetedEnemy.getPosition();
             let distanceToEnemy = Phaser.Math.Distance.Between(this.position.x, this.position.y, enemyPosition.x, enemyPosition.y);

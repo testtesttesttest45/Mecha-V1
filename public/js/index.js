@@ -356,6 +356,7 @@ class GameScene extends Phaser.Scene {
 
     update(time, delta) {
         if (this.player) {
+            console.log(this.player.targetedEnemy)
             this.player.update(time, delta, this.enemies);
         }
         this.enemies.forEach(enemy => {
