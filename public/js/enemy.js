@@ -1,7 +1,7 @@
 import characterMap from './characters.js';
 
 class Enemy {
-    constructor(scene, x, y, characterCode = 2, originalCamp, player, level = 1) {
+    constructor(scene, x, y, characterCode = 2, originalCamp, player, level = 1, base) {
         this.scene = scene;
         this.x = x;
         this.y = y;
@@ -31,7 +31,7 @@ class Enemy {
         this.lastActionTime = 0;
         this.isAttacking = false;
         this.attackEvent = null;
-        this.damage = character.damage * levelMultiplier;
+        this.damage = Math.round(character.damage * levelMultiplier);
         this.attackRangeRect = null;
         this.attackRangeArc = null;
         this.projectile = character.projectile;
@@ -46,6 +46,7 @@ class Enemy {
         this.customSquare = null;
         this.customSquareText = null;
         this.fireTimerEvent = null;
+        this.base = base;
         this.idleAnimations = [`character${this.characterCode}Idle1`, `character${this.characterCode}Idle2`, `character${this.characterCode}Idle3`, `character${this.characterCode}Idle4`];
     }
     create() {
@@ -532,6 +533,7 @@ class Enemy {
 
 
     die(causedByBaseDestruction = false) {
+        if (this.fireTimerEvent) this.fireTimerEvent.destroy();
         if (this.isDead) return;
         if (this.scene.player.targetedEnemy === this) {
             this.scene.player.targetedEnemy = null;
@@ -582,50 +584,51 @@ class Enemy {
     }
 
     fireEffect() {
-        const fireGraphics = this.scene.add.graphics();
-        this.initializeFire();
-
-        fireGraphics.setPosition(-10, -10); // Position relative to the container
-
-        if (this.fireTimerEvent) {
-            this.fireTimerEvent.remove(false);
+        console.log('fire effect')
+        if (this.isDead) return;
+        if (!this.fireGraphics) {
+            this.fireGraphics = this.scene.add.graphics();
+            this.initializeFire();
+            this.fireGraphics.setPosition(-10, -10); // Position relative to the container
         }
-        this.fireTimerEvent = this.scene.time.addEvent({
-            delay: 50,
-            callback: () => {
-                const updateFire = () => {
-                    for (let x = 0; x < this.fireWidth; x++) {
-                        this.fireArray[(this.fireHeight - 1) * this.fireWidth + x] = Math.floor(Math.random() * 255);
-                    }
-
-                    for (let y = 0; y < this.fireHeight - 1; y++) {
+        if (!this.fireTimerEvent) {
+            this.fireTimerEvent = this.scene.time.addEvent({
+                callback: () => {
+                    const updateFire = () => {
                         for (let x = 0; x < this.fireWidth; x++) {
-                            let c = 0;
-                            c += this.fireArray[Math.max(y + 1, 0) * this.fireWidth + Math.max(x - 1, 0)];
-                            c += this.fireArray[Math.max(y + 1, 0) * this.fireWidth + x];
-                            c += this.fireArray[Math.max(y + 1, 0) * this.fireWidth + Math.min(x + 1, this.fireWidth - 1)];
-                            c += this.fireArray[Math.min(y + 2, this.fireHeight - 1) * this.fireWidth + x];
-                            this.fireArray[y * this.fireWidth + x] = c / 4.1;
+                            this.fireArray[(this.fireHeight - 1) * this.fireWidth + x] = Math.floor(Math.random() * 255);
                         }
-                    }
 
-                    fireGraphics.clear();
-                    for (let y = 0; y < this.fireHeight; y++) {
-                        for (let x = 0; x < this.fireWidth; x++) {
-                            const colorValue = this.fireArray[y * this.fireWidth + x] * 100.0 / 255;
-                            const color = this.fireGradient(colorValue).hex();
-                            fireGraphics.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 1);
-                            fireGraphics.fillRect(x * this.firePixelSize, y * this.firePixelSize, this.firePixelSize, this.firePixelSize);
+                        for (let y = 0; y < this.fireHeight - 1; y++) {
+                            for (let x = 0; x < this.fireWidth; x++) {
+                                let c = 0;
+                                c += this.fireArray[Math.max(y + 1, 0) * this.fireWidth + Math.max(x - 1, 0)];
+                                c += this.fireArray[Math.max(y + 1, 0) * this.fireWidth + x];
+                                c += this.fireArray[Math.max(y + 1, 0) * this.fireWidth + Math.min(x + 1, this.fireWidth - 1)];
+                                c += this.fireArray[Math.min(y + 2, this.fireHeight - 1) * this.fireWidth + x];
+                                this.fireArray[y * this.fireWidth + x] = c / 4.1;
+                            }
                         }
-                    }
-                };
-                updateFire();
-            },
-            callbackScope: this,
-            loop: true
-        });
 
-        return fireGraphics;
+                        this.fireGraphics.clear();
+                        for (let y = 0; y < this.fireHeight; y++) {
+                            for (let x = 0; x < this.fireWidth; x++) {
+                                const colorValue = this.fireArray[y * this.fireWidth + x] * 100.0 / 255;
+                                const color = this.fireGradient(colorValue).hex();
+                                this.fireGraphics.fillStyle(Phaser.Display.Color.HexStringToColor(color).color, 1);
+                                this.fireGraphics.fillRect(x * this.firePixelSize, y * this.firePixelSize, this.firePixelSize, this.firePixelSize);
+                            }
+                        }
+                    };
+                    updateFire();
+                },
+                callbackScope: this,
+                loop: true,
+                delay: 50
+            });
+        }
+
+        return this.fireGraphics;
     }
 
     createHealthBar() {
@@ -786,20 +789,15 @@ class Enemy {
     }
 
     setEnraged() {
+        if (this.base.isDestroyed) return;
         if (!this.isEnraged) {
             this.isEnraged = true;
-            this.damage *= 2;
-            this.speed *= 2;
+            this.damage = this.damage * 2;
+            this.speed = this.speed * 2;
             this.enrageStartTime = this.scene.time.now;
-
-            // Remove any existing fire effect safely
-            if (this.customSquare) {
-                this.scene.returnFireEffectToPool(this.customSquare);
-                this.customSquareContainer.remove(this.customSquare, false); // false to not destroy the object as it's managed by the pool
-            }
-
-            // Obtain a new fire effect from the pool
-            this.customSquare = this.scene.getFireEffectFromPool();
+            
+            this.customSquareContainer.remove(this.customSquare, false);
+            this.customSquare = this.fireEffect();
             this.customSquareContainer.addAt(this.customSquare, 0);
         } else {
             // Reset enrage timer
@@ -807,27 +805,21 @@ class Enemy {
         }
     }
 
-
     disenrage() {
-        if (this.isEnraged) {
-            this.isEnraged = false;
-            this.damage /= 2;
-            this.speed /= 2;
+        this.isEnraged = false;
+        this.damage = this.damage / 2;
+        this.speed = this.speed / 2;
 
-            this.isAlert = true;
-            this.timeInAlert = 0;
-            this.timeOutOfDetection = 0;
-            this.updateDetectionBar(1);
+        this.isAlert = true;
+        this.timeInAlert = 0;
+        this.timeOutOfDetection = 0;
+        this.updateDetectionBar(1);
 
-            // Return the fire effect to the pool and remove it from the container
-            if (this.customSquare) {
-                this.scene.returnFireEffectToPool(this.customSquare);
-                this.customSquareContainer.remove(this.customSquare, false); // false because we don't want to destroy it
-            }
-
-            // Reset the reference to customSquare
-            this.customSquare = null;
-        }
+        this.customSquareContainer.remove(this.customSquare, false);
+        this.customSquare = this.scene.add.graphics();
+        this.customSquare.fillStyle(0x0000ff, 1);
+        this.customSquare.fillRect(-10, -10, 20, 20);
+        this.customSquareContainer.addAt(this.customSquare, 0);
     }
 
     update(time, delta) {

@@ -106,6 +106,10 @@ class Base {
 
     takeDamage(damage, player) {
         this.attacker = player; // Store reference to the attacking player
+        if (damage >= this.health) {
+            this.destroyed();
+            return;
+        }
         this.enrageEnemies();
         this.health -= damage;
         this.health = Math.max(this.health, 0);
@@ -143,6 +147,7 @@ class Base {
 
     destroyed() {
         if (this.isDestroyed) return;
+        this.isDestroyed = true;
         if (this.scene.player.targetedEnemy === this) {
             this.scene.player.targetedEnemy = null;
         }
@@ -174,7 +179,7 @@ class Base {
         this.healthBar.destroy();
         this.customSquareContainer.destroy();
         this.destroyedTime = this.scene.time.now;
-        this.isDestroyed = true;
+        
         this.isRebuilding = true; // Indicate that the base is now rebuilding.
         this.scene.scene.get('BattleUI').pauseMultiplier();
     }
@@ -201,6 +206,7 @@ class Base {
                 enemy.sprite.destroy();
             }
         });
+        console.log("Base rebuilt, new sets of enemies created")
         this.scene.createEnemy(this.baseLevel);
     }
     
