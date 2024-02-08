@@ -633,8 +633,8 @@ class Enemy {
     dropGold(causedByBaseDestruction) {
         const goldPieces = causedByBaseDestruction ? 1 : 2;
         for (let i = 0; i < goldPieces; i++) {
-            let goldX = this.sprite.x + (i * 30) - (goldPieces * 2.5); // Spread the gold pieces
-            let goldY = this.sprite.y + (i * 30) - (goldPieces * 1);
+            let goldX = this.sprite.x + (Math.random() * 100) - 50; // random between -50 and 50
+            let goldY = this.sprite.y + (Math.random() * 100) - 50;
             let gold = this.scene.add.sprite(goldX, goldY, 'gold');
             gold.setScale(0.5);
             gold.setData('value', 100);
@@ -652,19 +652,17 @@ class Enemy {
                 this.scene.collectCash(cash);
             }, [], this);
         }
-
     }
 
     initializeFire() {
-        this.fireWidth = 20;
-        this.fireHeight = 20;
+        this.fireWidth = 25;
+        this.fireHeight = 25;
         this.fireArray = new Array(this.fireWidth * this.fireHeight).fill(0);
         this.firePixelSize = 1;
         this.fireGradient = chroma.scale(['#000000', '#000000', '#ffff00', '#ff8700', '#FF0000']).domain([0, 10, 20, 50, 100]);
     }
 
     fireEffect() {
-        console.log('fire effect')
         if (this.isDead) return;
         if (!this.fireGraphics) {
             this.fireGraphics = this.scene.add.graphics();
@@ -718,7 +716,7 @@ class Enemy {
         // this.customSquare = this.fireEffect(); // i do not understand this fire code by the way!
         this.customSquare = this.scene.add.graphics();
         this.customSquare.fillStyle(0x0000ff, 1);
-        this.customSquare.fillRect(-10, -10, 20, 20);
+        this.customSquare.fillRect(-10, -10, 25, 25);
         this.customSquareText = this.scene.add.text(0, 0, this.level, {
             font: '16px Orbitron',
             fill: '#ffffff',
@@ -936,7 +934,7 @@ class Enemy {
         this.customSquareContainer.remove(this.customSquare, false);
         this.customSquare = this.scene.add.graphics();
         this.customSquare.fillStyle(0x0000ff, 1);
-        this.customSquare.fillRect(-10, -10, 20, 20);
+        this.customSquare.fillRect(-10, -10, 25, 25);
         this.customSquareContainer.addAt(this.customSquare, 0);
     }
 

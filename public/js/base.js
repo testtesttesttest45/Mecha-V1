@@ -11,7 +11,7 @@ class Base {
         this.totalHealth = 1000;
         this.healthBar = null;
         this.isDestroyed = false;
-        this.rebuildTime = 12000;
+        this.rebuildTime = 3000;
         this.destroyedTime = 0;
         this.customSquare = null;
         this.baseLevel = 1;
@@ -154,6 +154,8 @@ class Base {
         
         this.scene.scene.get('BattleUI').updateScore(200);
 
+        this.randomGoldDrop();
+
         console.log('Base destroyed');
         this.sprite.disableInteractive();
         this.scene.tweens.add({
@@ -182,6 +184,30 @@ class Base {
         
         this.isRebuilding = true; // Indicate that the base is now rebuilding.
         this.scene.scene.get('BattleUI').pauseMultiplier();
+    }
+
+    randomGoldDrop() {
+        const goldPieces = 4;
+        for (let i = 0; i < goldPieces; i++) {
+            let goldX = this.sprite.x + (Math.random() * 100) - 50; // random between -50 and 50
+            let goldY = this.sprite.y + (Math.random() * 100) - 50;
+            let gold = this.scene.add.sprite(goldX, goldY, 'gold');
+            gold.setScale(0.5);
+            gold.setData('value', 100);
+            this.scene.time.delayedCall(2000, () => {
+                this.scene.collectGold(gold);
+            }, [], this);
+        }
+    }
+
+    dropCash() {
+        if (Math.random() < 0.25) {
+            let cash = this.scene.add.sprite(this.sprite.x - 70, this.sprite.y, 'cash');
+            cash.setData('value', 1);
+            this.scene.time.delayedCall(2000, () => {
+                this.scene.collectCash(cash);
+            }, [], this);
+        }
     }
 
     enrageEnemies() {

@@ -28,16 +28,16 @@ class BattleUI extends Phaser.Scene {
         this.gold += value;
         this.updateGoldDisplay();
     }
-    
+
     updateGoldDisplay() {
-        this.goldText.setText(`${this.gold} Shop`);
+        this.goldText.setText(`    ${this.gold} Shop`);
     }
 
     addCash(value) {
         this.cash += value;
         this.updateCashDisplay();
     }
-    
+
     updateCashDisplay() {
         this.cashText.setText(`Cash:   ${this.cash}`);
     }
@@ -61,7 +61,7 @@ class BattleUI extends Phaser.Scene {
         }).setOrigin(0.5, 0).setScrollFactor(0);
 
         this.catastropheIcon = this.add.image(panelCenterX - 150, approachingTextY + 15, 'catastrophe').setScale(0.5).setScrollFactor(0).setOrigin(0, 0.5);
-        
+
         this.flashing = false;
         this.flashingTween = null;
 
@@ -130,25 +130,45 @@ class BattleUI extends Phaser.Scene {
 
 
         const shopTextY = statsTextY + 120;
-        this.goldText = this.add.text(panelCenterX, shopTextY, "0 Shop", {
+
+        this.shopButtonContainer = this.add.container(panelCenterX, shopTextY).setScrollFactor(0);
+
+        this.shopIcon = this.add.image(-140, 0, 'gold').setOrigin(0, 0.5).setScale(0.75);
+
+        this.goldText = this.add.text(0, 0, "Gold: 0", {
             font: '20px Orbitron',
             fill: '#ffffff'
-        }).setOrigin(0.5, 0).setScrollFactor(0);
+        }).setOrigin(0.5, 0);
 
-        this.shopIcon = this.add.image(panelCenterX - 140, shopTextY + 15, 'gold').setScrollFactor(0).setOrigin(0, 0.5);
-        
+        this.shopButtonContainer.add([this.shopIcon, this.goldText]);
+
+        this.shopButtonContainer.setSize(300, 50);
+
+        this.shopButtonContainer.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+            this.createShopModal(); // Create or prepare the modal
+            this.toggleShopModal(true); // Open the modal
+        });
+
+        let outline = this.add.graphics();
+        outline.lineStyle(2, 0xffffff, 1); // white
+        outline.strokeRect(
+            this.shopButtonContainer.x - this.shopButtonContainer.width / 2,
+            this.shopButtonContainer.y - this.shopButtonContainer.height / 2,
+            this.shopButtonContainer.width,
+            this.shopButtonContainer.height
+        );
 
         const scorePanelX = this.scale.width - 30;
         const scorePanelY = this.scale.height - 120;
         const scorePanelWidth = 350;
         const scorePanelHeight = 100;
 
-        
+
         const scorePanelBackground = this.add.rectangle(scorePanelX, scorePanelY, scorePanelWidth, scorePanelHeight, 0x000000, 0.5);
         scorePanelBackground.setOrigin(1, 1);
 
         const scoreTextX = scorePanelX - scorePanelWidth + 20;
-        const scoreTextY = scorePanelY - scorePanelHeight / 2;
+        const scoreTextY = scorePanelY - scorePanelHeight / 2 - 20;
         this.scoreText = this.add.text(scoreTextX, scoreTextY, 'Score: 0', {
             font: '20px Orbitron',
             fill: '#ffffff'
@@ -168,12 +188,101 @@ class BattleUI extends Phaser.Scene {
         this.createBaseRebuildTimer();
     }
 
-    getCenter() {
-        // get the center of shop icon
-        return {
-            x: this.goldText.x,
-            y: this.goldText.y
-        };
+    createShopModal() {
+        const screenWidth = this.scale.width;
+        const screenHeight = this.scale.height;
+
+        this.shopModalContainer = this.add.container(0, 0).setDepth(10).setVisible(false);
+
+        const modalWidth = 1000;
+        const modalHeight = 800;
+        const modalX = (screenWidth - modalWidth) / 2;
+        const modalY = (screenHeight - modalHeight) / 2;
+
+        this.invisibleBackground = this.add.rectangle(0, 0, screenWidth, screenHeight, 0x000000, 0.5)
+            .setOrigin(0, 0)
+            .setInteractive()
+            .on('pointerdown', () => { }); // This captures clicks without doing anything
+
+        this.modalBackground = this.add.graphics()
+            .fillStyle(0x222222, 0.95)
+            .fillRoundedRect(modalX, modalY, modalWidth, modalHeight, 20);
+
+        this.shopModalContainer.add([this.invisibleBackground, this.modalBackground]);
+
+        this.closeButtonText = this.add.text(modalX + modalWidth - 40, modalY + 20, 'CLOSE', {
+            font: '24px Orbitron',
+            fill: '#ff0000'
+        }).setInteractive({ useHandCursor: true }).setOrigin(1, 0)
+            .on('pointerdown', () => this.toggleShopModal(false));
+
+        // Damage Section Title
+        const damageSectionX = modalX + 50;
+        const damageSectionY = modalY + 40;
+        this.damageSectionTitle = this.add.text(damageSectionX, damageSectionY, "Damage Upgrades", {
+            font: '28px Orbitron',
+            fill: '#FFD700'
+        });
+
+        // Upgrades array
+        const upgrades = [
+            { description: "Enhanced Sword - Increase damage by 10%", cost: "200 Gold" },
+            { description: "Sharpened Edge - Increase critical hit chance", cost: "300 Gold" },
+            // Additional upgrades can be added here
+        ];
+
+        // Dynamically create upgrade items
+        this.createUpgradeItems(upgrades, damageSectionX, damageSectionY + 60);
+
+        // Add the close button and section title after the background to ensure they appear on top
+        this.shopModalContainer.add([this.closeButtonText, this.damageSectionTitle]);
+
+        // Initially, the modal is not visible
+        this.toggleShopModal(false);
+    }
+
+    createUpgradeItems(upgrades, startX, startY) {
+        upgrades.forEach((upgrade, index) => {
+            const itemY = startY + (index * 100); // Vertical spacing between items
+
+            // Background for each upgrade item for better visibility
+            const itemBg = this.add.graphics()
+                .fillStyle(0x333333, 0.8)
+                .fillRoundedRect(startX, itemY, 880, 80, 10);
+
+            // Description text
+            const descText = this.add.text(startX + 10, itemY + 10, upgrade.description, {
+                font: '18px Orbitron',
+                fill: '#FFFFFF'
+            });
+
+            // Cost text
+            const costText = this.add.text(startX + 10, itemY + 50, upgrade.cost, {
+                font: '16px Orbitron',
+                fill: '#FFD700'
+            });
+
+            // Buy button with dynamic interaction
+            const buyButton = this.add.text(startX + 760, itemY + 25, 'BUY', {
+                font: '20px Orbitron',
+                fill: '#4CAF50'
+            }).setInteractive({ useHandCursor: true })
+                .on('pointerdown', () => this.purchaseUpgrade(upgrade.description));
+
+            // Adding the item's elements to the modal container
+            this.shopModalContainer.add([itemBg, descText, costText, buyButton]);
+        });
+    }
+
+    purchaseUpgrade(upgradeDescription) {
+        console.log(`Purchasing Upgrade: ${upgradeDescription}`);
+        // Implement purchase logic here
+    }
+
+
+    toggleShopModal(visible) {
+        // Set the container (and all its children) visibility
+        this.shopModalContainer.setVisible(visible);
     }
 
     updateTimer(currentTime) {
@@ -234,22 +343,22 @@ class BattleUI extends Phaser.Scene {
             font: '20px Orbitron',
             fill: '#000'
         }).setOrigin(0.5, 0).setScrollFactor(0).setVisible(false);
-    
+
         this.baseRebuildGraphics = this.add.graphics().setScrollFactor(0).setVisible(false);
     }
-    
+
     updateBaseRebuildUI(rebuildProgress) {
         this.baseRebuildText.setVisible(true);
         this.baseRebuildGraphics.setVisible(true);
-    
+
         this.baseRebuildText.setText('REBUILDING BASE...');
-    
+
         this.baseRebuildGraphics.clear();
         this.baseRebuildGraphics.fillStyle(0x000000, 0.5);
         this.baseRebuildGraphics.fillRoundedRect(this.scale.width / 2 - 150, 200, 300, 30, 10);
         this.baseRebuildBarFillWidth = Math.max(0, (1 - rebuildProgress) * 300);
         this.baseRebuildBarFillWidth = Math.min(this.baseRebuildBarFillWidth, 300);
-    
+
         this.baseRebuildGraphics.fillStyle(0x00ff00, 1);
         this.baseRebuildGraphics.fillRoundedRect(this.scale.width / 2 - 150, 200, this.baseRebuildBarFillWidth + 10, 30, 10);
     }
@@ -285,7 +394,7 @@ class BattleUI extends Phaser.Scene {
         const fillPercentage = remainingTime / this.multiplierDuration;
         const newWidth = fillPercentage * 300; // Assuming full width is 300.
         this.multiplierBarFill.width = newWidth;
-    
+
         // Check if it's time to decrement the multiplier
         if (remainingTime <= 0) {
             if (this.multiplier > this.multiplierMin) {
@@ -294,14 +403,14 @@ class BattleUI extends Phaser.Scene {
                 this.multiplierText.setText(`Multiplier: x${this.multiplier}`);
                 this.lastMultiplierUpdate = currentTime;
             }
-            
+
             // If the multiplier is at its minimum, reset the fill width to full
             if (this.multiplier === this.multiplierMin) {
                 this.multiplierBarFill.width = 300;
             }
         }
     }
-    
+
     pauseMultiplier() {
         this.isMultiplierPaused = true;
     }
