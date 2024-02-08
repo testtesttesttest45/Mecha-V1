@@ -14,6 +14,7 @@ class BattleUI extends Phaser.Scene {
         this.baseRebuilding = false;
         this.isMultiplierPaused = false;
         this.gold = 0;
+        this.cash = 0;
     }
 
     startMultiplierTimer() {
@@ -30,6 +31,15 @@ class BattleUI extends Phaser.Scene {
     
     updateGoldDisplay() {
         this.goldText.setText(`${this.gold} Shop`);
+    }
+
+    addCash(value) {
+        this.cash += value;
+        this.updateCashDisplay();
+    }
+    
+    updateCashDisplay() {
+        this.cashText.setText(`Cash:   ${this.cash}`);
     }
 
     create() {
@@ -127,7 +137,6 @@ class BattleUI extends Phaser.Scene {
 
         this.shopIcon = this.add.image(panelCenterX - 140, shopTextY + 15, 'gold').setScrollFactor(0).setOrigin(0, 0.5);
         
-        
 
         const scorePanelX = this.scale.width - 30;
         const scorePanelY = this.scale.height - 120;
@@ -144,6 +153,16 @@ class BattleUI extends Phaser.Scene {
             font: '20px Orbitron',
             fill: '#ffffff'
         }).setOrigin(0, 0.5);
+
+
+        const cashTextX = scorePanelX - scorePanelWidth + 20;
+        const cashTextY = scorePanelY - scorePanelHeight / 2 + 30;
+        this.cashText = this.add.text(cashTextX, cashTextY, 'Cash:   0', {
+            font: '20px Orbitron',
+            fill: '#ffffff'
+        }).setOrigin(0, 0.5);
+
+        this.cashIcon = this.add.image(cashTextX + 200, cashTextY, 'cash').setScrollFactor(0).setOrigin(1, 0.5);
 
 
         this.createBaseRebuildTimer();

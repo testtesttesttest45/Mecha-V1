@@ -601,17 +601,8 @@ class Enemy {
         }
         this.isMoving = false;
 
-        const goldPieces = causedByBaseDestruction ? 1 : 2;
-        for (let i = 0; i < goldPieces; i++) {
-            let goldX = this.sprite.x + (i * 20) - (goldPieces * 2.5); // Spread the gold pieces
-            let goldY = this.sprite.y + (i * 20) - (goldPieces * 1);
-            let gold = this.scene.add.sprite(goldX, goldY, 'gold');
-            gold.setScale(0.5);
-            gold.setData('value', 100);
-            this.scene.time.delayedCall(2000, () => {
-                this.scene.collectGold(gold);
-            }, [], this);
-        }
+        this.dropGold(causedByBaseDestruction);
+        this.dropCash();
 
         // Stop any ongoing animation and play the death animation
         this.sprite.stop();
@@ -637,6 +628,31 @@ class Enemy {
             if (banana) banana.destroy();
         });
         // this.detectionField.setVisible(false);
+    }
+
+    dropGold(causedByBaseDestruction) {
+        const goldPieces = causedByBaseDestruction ? 1 : 2;
+        for (let i = 0; i < goldPieces; i++) {
+            let goldX = this.sprite.x + (i * 30) - (goldPieces * 2.5); // Spread the gold pieces
+            let goldY = this.sprite.y + (i * 30) - (goldPieces * 1);
+            let gold = this.scene.add.sprite(goldX, goldY, 'gold');
+            gold.setScale(0.5);
+            gold.setData('value', 100);
+            this.scene.time.delayedCall(2000, () => {
+                this.scene.collectGold(gold);
+            }, [], this);
+        }
+    }
+
+    dropCash() {
+        if (Math.random() < 0.25) {
+            let cash = this.scene.add.sprite(this.sprite.x - 70, this.sprite.y, 'cash');
+            cash.setData('value', 1);
+            this.scene.time.delayedCall(2000, () => {
+                this.scene.collectCash(cash);
+            }, [], this);
+        }
+
     }
 
     initializeFire() {

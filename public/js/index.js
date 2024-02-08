@@ -205,7 +205,7 @@ class GameScene extends Phaser.Scene {
 
 
     createPlayer() {
-        this.player = new Player(this, 1500, 800, 6, this.enemies);
+        this.player = new Player(this, 1500, 800, 8, this.enemies);
         this.player.create();
     }
 
@@ -215,7 +215,7 @@ class GameScene extends Phaser.Scene {
         camps.forEach(camp => {
             for (let i = 0; i < 2; i++) {
                 const randomPosition = camp.getRandomPositionInRadius();
-                const enemy = new Enemy(this, randomPosition.x, randomPosition.y, 4, camp, this.player, this.base.baseLevel, this.base);
+                const enemy = new Enemy(this, randomPosition.x, randomPosition.y, 2, camp, this.player, this.base.baseLevel, this.base);
                 enemy.create();
                 this.enemies.push(enemy);
 
@@ -371,6 +371,23 @@ class GameScene extends Phaser.Scene {
         });
     }
 
+    collectCash(cashSprite) {
+        const targetPosition = { x: 3000, y: 1600}
+        this.tweens.add({
+            targets: cashSprite,
+            x: targetPosition.x,
+            y: targetPosition.y,
+            alpha: 0,
+            scale: 2,
+            ease: 'Power2',
+            onComplete: () => {
+                console.log(cashSprite.getData('value') + ' cash collected');
+                this.scene.get('BattleUI').addCash(cashSprite.getData('value'));
+                cashSprite.destroy();
+            }
+        });
+    }
+
     update(time, delta) {
         if (this.player) {
             this.player.update(time, delta, this.enemies);
@@ -488,9 +505,9 @@ class LoadingScene extends Phaser.Scene {
         //loadDynamicSpriteSheet.call(this, 'character1', 'assets/sprites/character_1.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character2', 'assets/sprites/character_2.png', 4000, 4400);
         // loadDynamicSpriteSheet.call(this, 'character3', 'assets/sprites/character_3.png', 4000, 3520);
-        loadDynamicSpriteSheet.call(this, 'character4', 'assets/sprites/character_4.png', 4000, 4400);
+        // loadDynamicSpriteSheet.call(this, 'character4', 'assets/sprites/character_4.png', 4000, 4400);
         // loadDynamicSpriteSheet.call(this, 'character5', 'assets/sprites/character_5.png', 4000, 2640);
-        loadDynamicSpriteSheet.call(this, 'character6', 'assets/sprites/character_6.png', 4000, 4400);
+        // loadDynamicSpriteSheet.call(this, 'character6', 'assets/sprites/character_6.png', 4000, 4400);
         // loadDynamicSpriteSheet.call(this, 'character7', 'assets/sprites/character_7.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character8', 'assets/sprites/character_8.png', 4000, 4400);
 
@@ -501,6 +518,7 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('strengthen', 'assets/images/strengthen.png');
         this.load.image('player', 'assets/images/player.png');
         this.load.image('gold', 'assets/images/gold.png');
+        this.load.image('cash', 'assets/images/cash.png');
     }
 
 
