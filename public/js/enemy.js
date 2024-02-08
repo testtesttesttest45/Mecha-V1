@@ -52,7 +52,7 @@ class Enemy {
         this.base = base;
         this.idleAnimations = [`character${this.characterCode}Idle1`, `character${this.characterCode}Idle2`, `character${this.characterCode}Idle3`, `character${this.characterCode}Idle4`];
         this.timerStarted = false;
-        this.enemyStrengthenInterval = 5000;
+        this.enemyStrengthenInterval = 20000;
     }
 
     startTimer() {
@@ -66,26 +66,26 @@ class Enemy {
         return Math.max(0, this.strengthenTimer - this.scene.time.now);
     }
 
-    
+
     strengthenEnemies() {
-        const healthIncrease = this.maxHealth * 0.25;
-        const damageIncrease = this.damage * 0.25;
-    
+        const healthIncrease = Math.round(this.maxHealth * 0.25);
+        const damageIncrease = Math.round(this.damage * 0.25);
+
         this.strengthenLevel++;
         this.maxHealth += healthIncrease;
         this.damage += damageIncrease;
         this.strengthenTimer = this.scene.time.now + this.enemyStrengthenInterval;
-        
+
         this.createStrengthenedText(damageIncrease, healthIncrease);
     }
 
     createStrengthenedText(damageIncrease, healthIncrease) {
         const roundedDamageIncrease = Math.round(damageIncrease);
         const roundedHealthIncrease = Math.round(healthIncrease);
-    
-        const strengthenedText = this.scene.add.text(this.sprite.x, this.sprite.y - 100, `DMG +${roundedDamageIncrease}\nMax HP +${roundedHealthIncrease}`, { 
-            font: '24px Orbitron', 
-            fill: '#0d00ff' 
+
+        const strengthenedText = this.scene.add.text(this.sprite.x, this.sprite.y - 100, `DMG +${roundedDamageIncrease}\nMax HP +${roundedHealthIncrease}`, {
+            font: '24px Orbitron',
+            fill: '#0d00ff'
         });
         strengthenedText.setOrigin(0.5, 0.5);
         strengthenedText.setDepth(1);
@@ -100,7 +100,7 @@ class Enemy {
             }
         });
     }
-    
+
     create() {
         const character = characterMap[this.characterCode];
 
@@ -584,7 +584,6 @@ class Enemy {
         });
     }
 
-
     die(causedByBaseDestruction = false) {
         if (this.fireTimerEvent) this.fireTimerEvent.destroy();
         if (this.isDead) return;
@@ -596,12 +595,23 @@ class Enemy {
         this.scene.scene.get('BattleUI').updateScore(scoreAward);
 
         console.log('Enemy died');
-
         // Stop any ongoing movement
         if (this.moveTween) {
             this.moveTween.stop();
         }
         this.isMoving = false;
+
+        const goldPieces = causedByBaseDestruction ? 1 : 2;
+        for (let i = 0; i < goldPieces; i++) {
+            let goldX = this.sprite.x + (i * 20) - (goldPieces * 2.5); // Spread the gold pieces
+            let goldY = this.sprite.y + (i * 20) - (goldPieces * 1);
+            let gold = this.scene.add.sprite(goldX, goldY, 'gold');
+            gold.setScale(0.5);
+            gold.setData('value', 100);
+            this.scene.time.delayedCall(2000, () => {
+                this.scene.collectGold(gold);
+            }, [], this);
+        }
 
         // Stop any ongoing animation and play the death animation
         this.sprite.stop();

@@ -11,7 +11,7 @@ class Base {
         this.totalHealth = 1000;
         this.healthBar = null;
         this.isDestroyed = false;
-        this.rebuildTime = 2000;
+        this.rebuildTime = 12000;
         this.destroyedTime = 0;
         this.customSquare = null;
         this.baseLevel = 1;
@@ -206,7 +206,6 @@ class Base {
                 enemy.sprite.destroy();
             }
         });
-        console.log("Base rebuilt, new sets of enemies created")
         this.scene.createEnemy(this.baseLevel);
     }
     

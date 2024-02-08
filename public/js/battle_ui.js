@@ -13,6 +13,7 @@ class BattleUI extends Phaser.Scene {
         this.baseRebuildBarFill = null;
         this.baseRebuilding = false;
         this.isMultiplierPaused = false;
+        this.gold = 0;
     }
 
     startMultiplierTimer() {
@@ -20,6 +21,15 @@ class BattleUI extends Phaser.Scene {
             this.timerStarted = true;
             this.lastMultiplierUpdate = this.time.now;
         }
+    }
+
+    addGold(value) {
+        this.gold += value;
+        this.updateGoldDisplay();
+    }
+    
+    updateGoldDisplay() {
+        this.goldText.setText(`${this.gold} Shop`);
     }
 
     create() {
@@ -108,7 +118,17 @@ class BattleUI extends Phaser.Scene {
             fill: '#ffffff'
         }).setOrigin(0, 0.5).setScrollFactor(0);
 
+
+        const shopTextY = statsTextY + 120;
+        this.goldText = this.add.text(panelCenterX, shopTextY, "0 Shop", {
+            font: '20px Orbitron',
+            fill: '#ffffff'
+        }).setOrigin(0.5, 0).setScrollFactor(0);
+
+        this.shopIcon = this.add.image(panelCenterX - 140, shopTextY + 15, 'gold').setScrollFactor(0).setOrigin(0, 0.5);
         
+        
+
         const scorePanelX = this.scale.width - 30;
         const scorePanelY = this.scale.height - 120;
         const scorePanelWidth = 350;
@@ -129,6 +149,13 @@ class BattleUI extends Phaser.Scene {
         this.createBaseRebuildTimer();
     }
 
+    getCenter() {
+        // get the center of shop icon
+        return {
+            x: this.goldText.x,
+            y: this.goldText.y
+        };
+    }
 
     updateTimer(currentTime) {
         this.currentTime = currentTime;
@@ -218,8 +245,12 @@ class BattleUI extends Phaser.Scene {
         if (!this.timerStarted || this.isMultiplierPaused) return;
         this.updateMultiplierFill();
         if (this.strengthenedSquareText) {
-            let currentStrengthLevel = this.scene.get('GameScene').enemies[0].strengthenLevel;
-            this.strengthenedSquareText.setText(`${currentStrengthLevel}`);
+            if (this.scene.get('GameScene').enemies.length > 0) {
+                let currentStrengthLevel = this.scene.get('GameScene').enemies[0].strengthenLevel;
+                if (this.strengthenedSquareText.text !== `${currentStrengthLevel}`) {
+                    this.strengthenedSquareText.setText(`${currentStrengthLevel}`);
+                }
+            }
         }
     }
 
@@ -247,7 +278,6 @@ class BattleUI extends Phaser.Scene {
             
             // If the multiplier is at its minimum, reset the fill width to full
             if (this.multiplier === this.multiplierMin) {
-                console.log('resetting multiplier fill');
                 this.multiplierBarFill.width = 300;
             }
         }
@@ -256,6 +286,7 @@ class BattleUI extends Phaser.Scene {
     pauseMultiplier() {
         this.isMultiplierPaused = true;
     }
+
     resetMultiplier() {
         this.multiplier = 5;
         this.multiplierText.setText(`Multiplier: x${this.multiplier}`);
