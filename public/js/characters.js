@@ -88,10 +88,10 @@ const characterMap = {
         name: 'protowinged_mech',
         class: 'player',
         range: 350,
-        speed: 450,
+        speed: 550,
         damage: 100,
-        health: 5000,
-        attackSpeed: 6,
+        health: 500000,
+        attackSpeed: 3,
         attackCount: 1,
         projectile: 'blueBullet'
     },

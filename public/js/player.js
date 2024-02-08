@@ -452,7 +452,7 @@ class Player {
         }
 
         // Check if the player is moving towards the targeted enemy
-        if (!this.isDead && this.targetedEnemy && (this.targetedEnemy.returningToCamp || this.targetedEnemy.reachedCamp || this.targetedEnemy instanceof Base)) {
+        if (!this.isDead && this.targetedEnemy && (this.targetedEnemy.returningToCamp || this.targetedEnemy.inCamp || this.targetedEnemy instanceof Base)) {
             //console.log('Targeted enemy is returning to camp');
             let enemyPosition = this.targetedEnemy.getPosition();
             let distanceToEnemy = Phaser.Math.Distance.Between(this.position.x, this.position.y, enemyPosition.x, enemyPosition.y);
@@ -468,7 +468,7 @@ class Player {
                 this.moveStraight(enemyPosition.x, enemyPosition.y);
             }
 
-        } else if (this.isMovingTowardsEnemy && !this.isDead && this.targetedEnemy && !this.targetedEnemy.returningToCamp && !this.targetedEnemy.reachedCamp) {
+        } else if (this.isMovingTowardsEnemy && !this.isDead && this.targetedEnemy && !this.targetedEnemy.returningToCamp && !this.targetedEnemy.inCamp) {
             let enemyPosition = this.targetedEnemy.getPosition();
             let distanceToEnemy = Phaser.Math.Distance.Between(this.position.x, this.position.y, enemyPosition.x, enemyPosition.y);
             if (distanceToEnemy <= this.range) {

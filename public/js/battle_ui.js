@@ -12,7 +12,7 @@ class BattleUI extends Phaser.Scene {
         this.baseRebuildBarBackground = null;
         this.baseRebuildBarFill = null;
         this.baseRebuilding = false;
-        this.isMultiplierPaused = false; 
+        this.isMultiplierPaused = false;
     }
 
     startMultiplierTimer() {
@@ -48,7 +48,7 @@ class BattleUI extends Phaser.Scene {
         this.timerBarBackground = this.add.rectangle(panelCenterX, approachingTextY + 40, 300, 20, 0xffffff, 0.2).setOrigin(0.5, 0).setScrollFactor(0);
         this.timerBarFill = this.add.rectangle(this.timerBarBackground.x - this.timerBarBackground.width / 2, approachingTextY + 40, 0, 20, 0x00ff00).setOrigin(0, 0).setScrollFactor(0);
 
-        this.maxTime = this.scene.get('GameScene').catastrophe.stormInterval;
+        this.stormMaxTime = this.scene.get('GameScene').catastrophe.stormInterval;
         this.currentTime = 0;
 
         const strengthenTextY = approachingTextY + 80;
@@ -59,8 +59,22 @@ class BattleUI extends Phaser.Scene {
 
         this.strengthenIcon = this.add.image(panelCenterX - 150, strengthenTextY + 15, 'strengthen').setScale(0.5).setScrollFactor(0).setOrigin(0, 0.5);
 
-        const strengthenBarBackground = this.add.rectangle(panelCenterX, strengthenTextY + 40, 300, 20, 0xffffff, 0.2).setOrigin(0.5, 0).setScrollFactor(0);
-        this.strengthenBarFill = this.add.rectangle(strengthenBarBackground.x - strengthenBarBackground.width / 2, strengthenTextY + 40, 0, 20, 0xff0000).setOrigin(0, 0).setScrollFactor(0);
+        this.strengthenBarBackground = this.add.rectangle(panelCenterX, strengthenTextY + 40, 300, 20, 0xffffff, 0.2).setOrigin(0.5, 0).setScrollFactor(0);
+        this.strengthenBarFill = this.add.rectangle(this.strengthenBarBackground.x - this.strengthenBarBackground.width / 2, strengthenTextY + 40, 0, 20, 0xff0000).setOrigin(0, 0).setScrollFactor(0);
+
+        this.strengthenMaxTime = this.scene.get('GameScene').enemies[0].enemyStrengthenInterval;
+        this.strengthenCurrentTime = 0;
+
+        this.strengthenedSquare = this.add.graphics();
+        this.strengthenedSquareContainer = this.add.container(panelCenterX + 130, strengthenTextY + 15);
+        this.drawHexagon();
+        this.strengthenedSquareContainer.add(this.strengthenedSquare);
+        this.strengthenedSquareText = this.add.text(0, 0, '1', {
+            font: '16px Orbitron',
+            fill: '#ffffff',
+        }).setOrigin(0.5, 0.5);
+        this.strengthenedSquareContainer.add(this.strengthenedSquareText);
+        this.strengthenedSquareContainer.setDepth(1);
 
         const multiplierTextY = strengthenTextY + 80;
         this.multiplierText = this.add.text(panelCenterX, multiplierTextY, `Multiplier: x${this.multiplier}`, {
@@ -118,10 +132,10 @@ class BattleUI extends Phaser.Scene {
 
     updateTimer(currentTime) {
         this.currentTime = currentTime;
-        const fillWidth = Math.max(0, (this.currentTime / this.maxTime) * this.timerBarBackground.width);
+        const fillWidth = Math.max(0, (this.currentTime / this.stormMaxTime) * this.timerBarBackground.width);
         this.timerBarFill.width = fillWidth;
 
-        if (this.currentTime / this.maxTime <= 0.5) {
+        if (this.currentTime / this.stormMaxTime <= 0.5) {
             this.timerBarFill.setFillStyle(0xff0000); // red
             if (!this.flashing) {
                 this.flashing = true;
@@ -203,6 +217,10 @@ class BattleUI extends Phaser.Scene {
     update() {
         if (!this.timerStarted || this.isMultiplierPaused) return;
         this.updateMultiplierFill();
+        if (this.strengthenedSquareText) {
+            let currentStrengthLevel = this.scene.get('GameScene').enemies[0].strengthenLevel;
+            this.strengthenedSquareText.setText(`${currentStrengthLevel}`);
+        }
     }
 
     updateMultiplierFill() {
@@ -246,6 +264,35 @@ class BattleUI extends Phaser.Scene {
         this.multiplierBarFill.width = 300;
 
         this.lastMultiplierUpdate = this.time.now;
+    }
+
+    updateStrengthenTimer(currentTime) {
+        this.strengthenCurrentTime = currentTime;
+        const fillWidth = Math.max(0, (this.strengthenCurrentTime / this.strengthenMaxTime) * this.strengthenBarBackground.width);
+        this.strengthenBarFill.width = fillWidth;
+        if (this.strengthenCurrentTime / this.strengthenMaxTime <= 0.5) {
+            this.strengthenBarFill.setFillStyle(0xff0000); // red
+        } else {
+            this.strengthenBarFill.setFillStyle(0x00ff00);
+        }
+    }
+
+    drawHexagon() {
+        this.strengthenedSquare.clear();
+        this.strengthenedSquare.fillStyle('#000', 1); // black, 100% opacity
+
+        // Draw a hexagon
+        const radius = 25;
+        this.strengthenedSquare.beginPath();
+        for (let i = 0; i < 6; i++) {
+            // calculate vertex positions
+            const x = radius * Math.cos(2 * Math.PI * i / 6 - Math.PI / 2);
+            const y = radius * Math.sin(2 * Math.PI * i / 6 - Math.PI / 2);
+            if (i === 0) this.strengthenedSquare.moveTo(x, y);
+            else this.strengthenedSquare.lineTo(x, y);
+        }
+        this.strengthenedSquare.closePath();
+        this.strengthenedSquare.fill();
     }
 
 }

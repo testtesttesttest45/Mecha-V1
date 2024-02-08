@@ -10,12 +10,13 @@ class Enemy {
         this.currentAnimationIndex = 0;
         const character = characterMap[this.characterCode];
         this.level = level;
+        this.strengthenLevel = 1;
         const levelMultiplier = 1 + (this.level - 1) * 0.1; // 10% increase per level
-        this.health = character.health * levelMultiplier;
-        this.totalHealth = this.health; // Store the total health, already adjusted
+        this.health = Math.round(character.health * levelMultiplier);
+        this.maxHealth = this.health;
         this.isDead = false;
         this.healthBar = null;
-        this.speed = character.speed; // Consider if speed should also increase with level
+        this.speed = character.speed;
         this.attackSpeed = character.attackSpeed;
         this.attackRange = character.range;
         this.isMoving = false;
@@ -37,7 +38,7 @@ class Enemy {
         this.projectile = character.projectile;
         this.originalCamp = originalCamp;
         this.returningToCamp = false;
-        this.reachedCamp = false;
+        this.inCamp = true;
         this.lastHealTime = 0;
         this.isEnraged = false;
         this.enrageDuration = 6000;
@@ -50,7 +51,56 @@ class Enemy {
         this.fireTimerEvent = null;
         this.base = base;
         this.idleAnimations = [`character${this.characterCode}Idle1`, `character${this.characterCode}Idle2`, `character${this.characterCode}Idle3`, `character${this.characterCode}Idle4`];
+        this.timerStarted = false;
+        this.enemyStrengthenInterval = 5000;
     }
+
+    startTimer() {
+        if (!this.timerStarted) {
+            this.strengthenTimer = this.scene.time.now + this.enemyStrengthenInterval;
+            this.timerStarted = true;
+        }
+    }
+
+    getTimeUntilNextStrengthen() {
+        return Math.max(0, this.strengthenTimer - this.scene.time.now);
+    }
+
+    
+    strengthenEnemies() {
+        const healthIncrease = this.maxHealth * 0.25;
+        const damageIncrease = this.damage * 0.25;
+    
+        this.strengthenLevel++;
+        this.maxHealth += healthIncrease;
+        this.damage += damageIncrease;
+        this.strengthenTimer = this.scene.time.now + this.enemyStrengthenInterval;
+        
+        this.createStrengthenedText(damageIncrease, healthIncrease);
+    }
+
+    createStrengthenedText(damageIncrease, healthIncrease) {
+        const roundedDamageIncrease = Math.round(damageIncrease);
+        const roundedHealthIncrease = Math.round(healthIncrease);
+    
+        const strengthenedText = this.scene.add.text(this.sprite.x, this.sprite.y - 100, `DMG +${roundedDamageIncrease}\nMax HP +${roundedHealthIncrease}`, { 
+            font: '24px Orbitron', 
+            fill: '#0d00ff' 
+        });
+        strengthenedText.setOrigin(0.5, 0.5);
+        strengthenedText.setDepth(1);
+        this.scene.tweens.add({
+            targets: strengthenedText,
+            y: strengthenedText.y - 30,
+            alpha: 0,
+            duration: 2500,
+            ease: 'Power2',
+            onComplete: () => {
+                strengthenedText.destroy();
+            }
+        });
+    }
+    
     create() {
         const character = characterMap[this.characterCode];
 
@@ -145,7 +195,7 @@ class Enemy {
         if (this.returningToCamp) return;
 
         // Enemy is immune to catastrophe damage if it has reached camp but not to player damage
-        if (this.reachedCamp && source === 'catastrophe') return;
+        if (this.inCamp && source === 'catastrophe') return;
 
         this.health -= damage;
         this.health = Math.max(this.health, 0);
@@ -181,6 +231,7 @@ class Enemy {
 
         this.isMoving = true;
         this.isAttacking = false;
+        this.inCamp = false;
         const updateMovement = () => {
             if (!this.attacker || !this.attacker.getPosition || this.isDead) {
                 console.warn("Attacking player is undefined or getPosition method is not available");
@@ -654,9 +705,9 @@ class Enemy {
 
         this.strengthenedSquare = this.scene.add.graphics();
         this.strengthenedSquareContainer = this.scene.add.container(this.sprite.x + 40, this.sprite.y);
-        this.drawStrengthenedSquare();
+        this.drawHexagon();
         this.strengthenedSquareContainer.add(this.strengthenedSquare);
-        this.strengthenedSquareText = this.scene.add.text(0, 0, 'S', {
+        this.strengthenedSquareText = this.scene.add.text(0, 0, '1', {
             font: '16px Orbitron',
             fill: '#ffffff',
         }).setOrigin(0.5, 0.5);
@@ -666,7 +717,7 @@ class Enemy {
         this.updateHealthBar();
     }
 
-    drawStrengthenedSquare() {
+    drawHexagon() {
         this.strengthenedSquare.clear();
         this.strengthenedSquare.fillStyle('#000', 1); // black, 100% opacity
 
@@ -685,6 +736,7 @@ class Enemy {
     }
 
     updateHealthBar() {
+        if (this.isDead) return;
         const barX = this.sprite.x - 30;
         const barY = this.sprite.y - this.sprite.body.height / 2;
         this.healthBar.clear();
@@ -695,7 +747,7 @@ class Enemy {
         this.healthBar.fillRect(0, 0, 60, 7);
 
         // Health portion (dynamic width based on current health)
-        const healthPercentage = this.health / this.totalHealth;
+        const healthPercentage = this.health / this.maxHealth;
         const healthBarWidth = healthPercentage * 60;
         this.healthBar.fillStyle(0xff0000, 1);
         this.healthBar.fillRect(0, 0, healthBarWidth, 7);
@@ -709,6 +761,9 @@ class Enemy {
             const strengthenedSquareX = this.sprite.x + 42;
             const strengthenedSquareY = this.sprite.y - this.sprite.body.height / 2 + 3;
             this.strengthenedSquareContainer.setPosition(strengthenedSquareX, strengthenedSquareY);
+            // update the text
+            this.strengthenedSquareText.setText(this.strengthenLevel);
+
         }
     }
 
@@ -796,14 +851,14 @@ class Enemy {
             onComplete: () => {
                 this.isMoving = false;
                 this.returningToCamp = false;
-                this.reachedCamp = true
+                this.inCamp = true
                 this.sprite.play(`character${this.characterCode}Idle1`);
             }
         });
     }
 
     heal(amount) {
-        this.health = Math.min(this.health + amount, this.totalHealth);
+        this.health = Math.min(this.health + amount, this.maxHealth);
         this.updateHealthBar();
         this.createHealingText(amount); // Call a method to create healing text
     }
@@ -884,14 +939,14 @@ class Enemy {
         );
 
         if (distanceFromCamp > this.originalCamp.radius) {
-            this.reachedCamp = false;
+            this.inCamp = false;
         } else if (!this.isMoving && !this.isAttacking) {
-            this.reachedCamp = true;
+            this.inCamp = true;
         } else {
-            this.reachedCamp = false;
+            this.inCamp = false;
         }
 
-        if (this.reachedCamp && this.health < this.totalHealth) {
+        if (this.inCamp && this.health < this.maxHealth) {
             if (time - this.lastHealTime > 1000) { // Heal every 1 second
                 this.heal(20); // +20 health per second
                 this.lastHealTime = time;
@@ -900,6 +955,10 @@ class Enemy {
 
         if (this.isEnraged && time - this.enrageStartTime > this.enrageDuration) {
             this.disenrage();
+        }
+
+        if (time > this.strengthenTimer) {
+            this.strengthenEnemies();
         }
 
     }

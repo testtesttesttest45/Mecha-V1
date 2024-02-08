@@ -89,8 +89,8 @@ class Catastrophe {
         this.scene.enemies.forEach(enemy => {
             let enemyPos = enemy.getPosition();
             let distanceToEnemy = Phaser.Math.Distance.Between(x, y, enemyPos.x, enemyPos.y);
-            if (distanceToEnemy <= radius && !enemy.returningToCamp && !enemy.reachedCamp) {
-                enemy.takeDamage(this.damage/4, 'catastrophe');
+            if (distanceToEnemy <= radius && !enemy.returningToCamp && !enemy.inCamp) {
+                enemy.takeDamage(this.damage, 'catastrophe');
             }
         });
     }
@@ -123,8 +123,6 @@ class Catastrophe {
         if (time > this.fireballTimer && !this.isStorming) {
             this.launchStorm();
         }
-
-
     }
 }
 

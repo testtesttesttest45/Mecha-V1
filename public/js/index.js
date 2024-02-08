@@ -360,9 +360,14 @@ class GameScene extends Phaser.Scene {
         }
         this.enemies.forEach(enemy => {
             if (enemy) {
+                if (!enemy.timerStarted) {
+                    enemy.startTimer();
+                }
                 let playerPosition = this.player.getPosition();
                 enemy.updateEnemy(playerPosition.x, playerPosition.y, this.player, delta);
                 enemy.update(time, delta);
+                const timeUntilNextStrengthen = enemy.getTimeUntilNextStrengthen();
+                this.scene.get('BattleUI').updateStrengthenTimer(timeUntilNextStrengthen);
             }
         });
 
