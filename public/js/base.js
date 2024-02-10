@@ -7,11 +7,11 @@ class Base {
         this.safeDistanceFromPlayer = 500; // not too close to player
         this.minX = 1200; this.maxX = 2800;
         this.minY = 700; this.maxY = 1300;
-        this.health = 1000;
-        this.totalHealth = 1000;
+        this.health = 6000;
+        this.totalHealth = 6000;
         this.healthBar = null;
         this.isDestroyed = false;
-        this.rebuildTime = 3000;
+        this.rebuildTime = 8000;
         this.destroyedTime = 0;
         this.customSquare = null;
         this.baseLevel = 1;
