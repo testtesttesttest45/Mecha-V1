@@ -13,11 +13,15 @@ class BattleUI extends Phaser.Scene {
         this.baseRebuildBarFill = null;
         this.baseRebuilding = false;
         this.isMultiplierPaused = false;
-        this.gold = 100;
+        this.gold = 2200220;
         this.cash = 0;
         this.scrollbarTrack = null;
         this.scrollbarHandle = null;
         this.scrollPosition = 0;
+        this.buyButtons = [];
+        this.currentFeedbackText = null;
+        this.playerHealthBaseText = null;
+        this.playerHealthBonusText = null;
     }
 
     startMultiplierTimer() {
@@ -33,7 +37,10 @@ class BattleUI extends Phaser.Scene {
     }
 
     updateGoldDisplay() {
-        this.goldText.setText(`    ${this.gold} Shop`);
+        this.goldText.setText(this.gold);
+        if (this.goldTextShop) {
+            this.goldTextShop.setText(this.gold);
+        }
     }
 
     addCash(value) {
@@ -46,12 +53,12 @@ class BattleUI extends Phaser.Scene {
     }
 
     create() {
-        const panel = this.add.rectangle(this.scale.width - 30, 150, 350, 600, 0x000000, 0.5);
+        const panel = this.add.rectangle(this.scale.width - 30, 120, 350, 700, 0x000000, 0.5);
         panel.setOrigin(1, 0);
         panel.setScrollFactor(0);
 
         const panelCenterX = this.scale.width - 30 - panel.width / 2;
-        const headerTextY = 175;
+        const headerTextY = 150;
         this.add.text(panelCenterX, headerTextY, "Battle Panel", {
             font: '20px Orbitron',
             fill: '#ffffff'
@@ -110,35 +117,21 @@ class BattleUI extends Phaser.Scene {
 
         this.lastMultiplierUpdate = this.scene.get('GameScene').time.now;
 
-        const statsTextY = this.multiplierText.y + 80;
+        const statsTextY = this.multiplierText.y + 90;
         this.add.text(panelCenterX, statsTextY, "Player Stats", {
             font: '20px Orbitron',
             fill: '#ffffff'
         }).setOrigin(0.5, 0).setScrollFactor(0);
 
-        this.playerIcon = this.add.image(panelCenterX - 120, statsTextY + 15, 'player').setScale(0.5).setScrollFactor(0).setOrigin(0, 0.5);
+        this.playerIcon = this.add.image(panelCenterX - 120, statsTextY + 10, 'player').setScale(0.5).setScrollFactor(0).setOrigin(0, 0.5);
 
-        const playerHealth = this.scene.get('GameScene').player.health;
-        const playerDamage = this.scene.get('GameScene').player.damage;
-
-        this.playerHealthText = this.add.text(panelCenterX - 130, statsTextY + 50, `Health: ${playerHealth}`, {
-            font: '16px Orbitron',
-            fill: '#ffffff'
-        }).setOrigin(0, 0.5).setScrollFactor(0);
-
-        this.playerHealthText = this.add.text(panelCenterX - 130, statsTextY + 80, `Damage: ${playerDamage}`, {
-            font: '16px Orbitron',
-            fill: '#ffffff'
-        }).setOrigin(0, 0.5).setScrollFactor(0);
-
-
-        const shopTextY = statsTextY + 120;
+        const shopTextY = statsTextY + 200;
 
         this.shopButtonContainer = this.add.container(panelCenterX, shopTextY).setScrollFactor(0);
 
         this.shopIcon = this.add.image(-140, 0, 'gold').setOrigin(0, 0.5).setScale(0.75);
 
-        this.goldText = this.add.text(0, 0, `Gold: ${this.gold}`, {
+        this.goldText = this.add.text(0, 0, this.gold, {
             font: '20px Orbitron',
             fill: '#ffffff'
         }).setOrigin(0.5, 0);
@@ -148,8 +141,8 @@ class BattleUI extends Phaser.Scene {
         this.shopButtonContainer.setSize(300, 50);
 
         this.shopButtonContainer.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
-            this.createShopModal(); // Create or prepare the modal
-            this.toggleShopModal(true); // Open the modal
+            this.createShopModal();
+            this.toggleShopModal(true);
         });
 
         let outline = this.add.graphics();
@@ -191,6 +184,108 @@ class BattleUI extends Phaser.Scene {
         this.createBaseRebuildTimer();
     }
 
+    displayPlayerStats(x, y) {
+        const { originalHealth, currentHealth, maxHealth, damage, originalDamage, attackSpeed, originalAttackSpeed, speed, originalSpeed } = this.scene.get('GameScene').player;
+        const bonusHealth = maxHealth - originalHealth;
+        const bonusDamage = damage - originalDamage;
+        const bonusAttackSpeed = Math.round((attackSpeed - originalAttackSpeed) * 100) / 100;
+        const bonusSpeed = speed - originalSpeed;
+        const healthDisplayText = bonusHealth > 0 ? `Health: ${currentHealth}/${maxHealth} ` : `Health: ${currentHealth}/${maxHealth}`;
+        const damageDisplayText = bonusDamage > 0 ? `Damage: ${damage} ` : `Damage: ${damage}`;
+        const attackSpeedDisplayText = bonusAttackSpeed > 0 ? `Attack Speed: ${attackSpeed} ` : `Attack Speed: ${attackSpeed}`;
+        const speedDisplayText = bonusSpeed > 0 ? `Speed: ${speed} ` : `Speed: ${speed}`;
+
+        if (!this.playerHealthText) {
+            this.playerHealthText = this.add.text(x, y, healthDisplayText, {
+                font: '16px Orbitron',
+                fill: '#ffffff'
+            });
+        } else {
+            this.playerHealthText.setText(healthDisplayText);
+        }
+
+        if (!this.playerDamageText) {
+            this.playerDamageText = this.add.text(x, y + 20, damageDisplayText, {
+                font: '16px Orbitron',
+                fill: '#ffffff'
+            });
+        } else {
+            this.playerDamageText.setText(damageDisplayText);
+        }
+
+        if (!this.playerAttackSpeedText) {
+            this.playerAttackSpeedText = this.add.text(x, y + 40, attackSpeedDisplayText, {
+                font: '16px Orbitron',
+                fill: '#ffffff'
+            });
+        } else {
+            this.playerAttackSpeedText.setText(attackSpeedDisplayText);
+        }
+
+        if (!this.playerSpeedText) {
+            this.playerSpeedText = this.add.text(x, y + 60, speedDisplayText, {
+                font: '16px Orbitron',
+                fill: '#ffffff'
+            });
+        } else {
+            this.playerSpeedText.setText(speedDisplayText);
+        }
+
+        if (bonusHealth > 0) {
+            if (!this.playerHealthBonusText) {
+                this.playerHealthBonusText = this.add.text(this.playerHealthText.x + 200, y, `(+${bonusHealth})`, {
+                    font: '16px Orbitron',
+                    fill: '#00BFFF' // Blue color for bonus health
+                });
+            } else {
+                this.playerHealthBonusText.setText(`(+${bonusHealth})`);
+            }
+        } else if (this.playerHealthBonusText) {
+            this.playerHealthBonusText.setText('');
+        }
+
+        if (bonusDamage > 0) {
+            if (!this.playerDamageBonusText) {
+                this.playerDamageBonusText = this.add.text(this.playerDamageText.x + 200 , y + 20, `(+${bonusDamage})`, {
+                    font: '16px Orbitron',
+                    fill: '#00BFFF'
+                });
+            } else {
+                this.playerDamageBonusText.setText(`(+${bonusDamage})`);
+            }
+        } else if (this.playerDamageBonusText) {
+            this.playerDamageBonusText.setText('');
+        }
+
+        if (bonusAttackSpeed > 0) {
+            if (!this.playerAttackSpeedBonusText) {
+                this.playerAttackSpeedBonusText = this.add.text(this.playerAttackSpeedText.x + 200, y + 40, `(+${bonusAttackSpeed})`, {
+                    font: '16px Orbitron',
+                    fill: '#00BFFF'
+                });
+            } else {
+                this.playerAttackSpeedBonusText.setText(`(+${bonusAttackSpeed})`);
+            }
+        }
+        else if (this.playerAttackSpeedBonusText) {
+            this.playerAttackSpeedBonusText.setText('');
+        }
+
+        if (bonusSpeed > 0) {
+            if (!this.playerSpeedBonusText) {
+                this.playerSpeedBonusText = this.add.text(this.playerSpeedText.x + 200, y + 60, `(+${bonusSpeed})`, {
+                    font: '16px Orbitron',
+                    fill: '#00BFFF'
+                });
+            } else {
+                this.playerSpeedBonusText.setText(`(+${bonusSpeed})`);
+            }
+        }
+        else if (this.playerSpeedBonusText) {
+            this.playerSpeedBonusText.setText('');
+        }
+    }
+
     createShopModal() {
         const screenWidth = this.scale.width;
         const screenHeight = this.scale.height;
@@ -226,6 +321,15 @@ class BattleUI extends Phaser.Scene {
         this.scrollableContainer.setMask(new Phaser.Display.Masks.GeometryMask(this, this.mask));
 
         this.shopModalContainer.add([this.mask, this.invisibleBackground, this.modalBackground, this.scrollableContainer]);
+        const headerBackgroundHeight = 50;
+        const headerY = modalY;
+
+        this.headerBackground = this.add.graphics()
+            .fillStyle(0xffffff, 0.5)
+            .fillRect(modalX, headerY, modalWidth, headerBackgroundHeight)
+            .setDepth(9);
+
+        this.shopModalContainer.add([this.headerBackground]);
 
         this.closeButtonText = this.add.text(modalX + modalWidth - 40, modalY + 20, 'CLOSE', {
             font: '24px Orbitron',
@@ -233,10 +337,15 @@ class BattleUI extends Phaser.Scene {
         }).setInteractive({ useHandCursor: true }).setOrigin(1, 0)
             .on('pointerdown', () => this.toggleShopModal(false));
 
+        this.goldTextShop = this.add.text(modalX + 20, modalY + 20, this.gold, {
+            font: '24px Orbitron',
+            fill: '#FFA500'
+        }).setOrigin(0, 0);
+
         const sectionWidth = modalWidth / 2 - 60;
         const damageSectionX = modalX + 30;
         const healthSectionX = modalX + sectionWidth + 90;
-        const sectionY = modalY + 70;
+        const sectionY = modalY + 120;
 
         const itemsPerColumn = 2;
         const spacingBetweenItems = 200;
@@ -264,23 +373,23 @@ class BattleUI extends Phaser.Scene {
 
         // Upgrades definition
         const damageUpgrades = [
-            { description: "Enhanced Sword - Increase damage by 10%", cost: 200, icon: 'sword1' },
-            { description: "Sharpened Edge - Increase critical hit chance", cost: 300, icon: 'sword2' },
+            { name: "Penknife", description: "Increase damage by 1", cost: 60, icon: 'sword1'},
+            { name: "Enhanced Sword", description: "Increase damage by 2%", cost: 500, icon: 'sword2' }
         ];
 
         const healthUpgrades = [
-            { description: "Advanced Armor - Increase health by 20%", cost: 300, icon: 'health1' },
-            { description: "Regeneration Boost - Increase health regeneration rate", cost: 400, icon: 'health2' },
+            { name: "Heaven's Rain", description: "Increase max health by 5%", cost: 2000, icon: 'health1' },
+            { name: "Health Potion", description: "Heal back 500 health", cost: 500, icon: 'health2' },
         ];
 
         const attackSpeedUpgrades = [
-            { description: "Swift Strikes - Increase attack speed by 10%", cost: 200, icon: 'attackSpeed1' },
-            { description: "Faster Reload - Increase reload speed", cost: 300, icon: 'attackSpeed2' },
+            { name: "Swift Strikes", description: "Increase attack speed by 5%", cost: 3000, icon: 'attackSpeed1' },
+            { name: "Quickblade", description: "Increase attack speed by 10%", cost: 5700, icon: 'attackSpeed2' },
         ];
 
         const movementSpeedUpgrades = [
-            { description: "Faster Movement - Increase movement speed by 10%", cost: 200, icon: '' },
-            { description: "Agility Training - Increase dodge chance", cost: 300, icon: 'speed2' },
+            { name: "Rapid Slippers", description: "Increase movement speed by 5%", cost: 4000, icon: 'speed1' },
+            { name: "Mecha Sneakers", description: "Increase movement speed by 10%", cost: 7900, icon: 'speed2' },
         ];
 
         this.createItems(damageUpgrades, damageSectionX, sectionY + 60, sectionWidth);
@@ -288,9 +397,8 @@ class BattleUI extends Phaser.Scene {
         this.createItems(attackSpeedUpgrades, damageSectionX, attackSpeedSectionY + 100, sectionWidth);
         this.createItems(movementSpeedUpgrades, healthSectionX, attackSpeedSectionY + 100, sectionWidth);
 
-        this.shopModalContainer.add([this.closeButtonText]);
+        this.shopModalContainer.add([this.closeButtonText, this.goldTextShop]);
         this.scrollableContainer.add([this.damageSectionTitle, this.healthSectionTitle, this.attackSpeedSectionTitle, this.movementSpeedSectionTitle]);
-        this.toggleShopModal(false);
         let lastPointerY = 0;
         let isScrolling = false;
 
@@ -299,9 +407,6 @@ class BattleUI extends Phaser.Scene {
             lastPointerY = pointer.y;
         });
 
-        const totalContentHeight = 1000;
-        const minScrollY = viewportHeight - totalContentHeight;
-        const maxScrollY = 0;
         const handleHeight = 300;
         const scrollbarTrackHeight = viewportHeight;
         const scrollbarTrackWidth = 20;
@@ -330,10 +435,10 @@ class BattleUI extends Phaser.Scene {
         });
         this.input.on('pointermove', (pointer) => {
             const handleRange = 550 - 140;
-            const contentRange = -136 - 0;
+            const contentRange = -200 - 0;
             const handleMinY = 140;
             const handleMaxY = 550;
-            const contentMinY = -136;
+            const contentMinY = -200;
             const contentMaxY = 0;
             if (isScrolling) {
                 const deltaY = pointer.y - lastPointerY;
@@ -341,7 +446,7 @@ class BattleUI extends Phaser.Scene {
                 let newY = this.scrollableContainer.y + deltaY;
                 newY = Phaser.Math.Clamp(newY, contentMinY, contentMaxY);
                 this.scrollableContainer.y = newY;
-            
+
                 const contentScrollRatio = (newY - contentMaxY) / (contentMinY - contentMaxY);
                 const handleNewY = handleMinY + (contentScrollRatio * handleRange);
                 this.scrollbarHandle.y = handleNewY;
@@ -351,11 +456,11 @@ class BattleUI extends Phaser.Scene {
             else if (isScrollbarHandleDragging) {
                 const deltaY = pointer.y - initialPointerY;
                 initialPointerY = pointer.y;
-            
+
                 let handleNewY = this.scrollbarHandle.y + deltaY;
                 handleNewY = Phaser.Math.Clamp(handleNewY, handleMinY, handleMaxY);
                 this.scrollbarHandle.y = handleNewY;
-            
+
                 const handlePositionRatio = (handleNewY - handleMinY) / handleRange;
                 const contentNewY = contentMaxY + (handlePositionRatio * contentRange);
                 this.scrollableContainer.y = contentNewY;
@@ -386,8 +491,13 @@ class BattleUI extends Phaser.Scene {
 
             const icon = this.add.image(startX + 40, itemY + 40, upgrade.icon).setScale(0.5);
 
-            const descText = this.add.text(startX + 80, itemY + 10, upgrade.description, {
+            const nameText = this.add.text(startX + 80, itemY + 10, upgrade.name, {
                 font: '18px Orbitron',
+                fill: '#00d4FF',
+            });
+
+            const descText = this.add.text(startX + 80, itemY + 40, upgrade.description, {
+                font: '16px Orbitron',
                 fill: '#FFFFFF',
                 wordWrap: { width: itemWidth - 140 },
                 wordWrapWidth: itemWidth - 140
@@ -401,24 +511,86 @@ class BattleUI extends Phaser.Scene {
             const buyButton = this.add.text(startX + itemWidth - 100, itemY + itemHeight - 40, 'BUY', {
                 font: '20px Orbitron',
                 fill: '#4CAF50'
-            }).setInteractive({ useHandCursor: true })
-                .on('pointerdown', () => this.purchaseUpgrade(upgrade.description));
+            }).setInteractive({ useHandCursor: true }).setOrigin(1, 0)
+                .on('pointerdown', () => this.purchaseUpgrade(upgrade.name, upgrade.cost));
+            this.buyButtons.push({ button: buyButton, cost: upgrade.cost });
 
-            this.scrollableContainer.add([itemBg, icon, descText, costText, buyButton]);
+            this.scrollableContainer.add([itemBg, icon, nameText, descText, costText, buyButton]);
         });
     }
 
 
-
-
     toggleShopModal(visible) {
-        // Set the container (and all its children) visibility
-        this.shopModalContainer.setVisible(visible);
-
+        if (visible === false) {
+            this.buyButtons = [];
+        }
+        this.shopModalContainer.setVisible(visible); // include all children
     }
 
-    purchaseUpgrade(upgradeDescription) {
-        console.log(`Purchasing Upgrade: ${upgradeDescription}`);
+    purchaseUpgrade(upgradeName, cost) {
+        // if player is dead, don't allow purchase
+        if (this.scene.get('GameScene').player.currentHealth <= 0) {
+            this.showPurchaseFeedback("You are dead! You cannot purchase upgrades", '#ff0000');
+            return;
+        }
+        if (this.gold >= cost) {
+            this.gold -= cost;
+            console.log(`Purchased Upgrade: ${upgradeName}`);
+            this.updateGoldDisplay();
+            this.showPurchaseFeedback(`${upgradeName} Purchased! \n -${cost} Gold`, '#00ff00');
+            if (upgradeName === "Penknife") {
+                this.scene.get('GameScene').player.damage += 1;
+            }
+            if (upgradeName === "Enhanced Sword") {
+                this.scene.get('GameScene').player.damage = Math.round(this.scene.get('GameScene').player.damage * 1.02);
+            }
+            if (upgradeName === "Heaven's Rain") {
+                this.scene.get('GameScene').player.maxHealth = Math.round(this.scene.get('GameScene').player.maxHealth * 1.05);
+            }
+            if (upgradeName === "Health Potion") {
+                this.scene.get('GameScene').player.currentHealth = Math.min(this.scene.get('GameScene').player.maxHealth, this.scene.get('GameScene').player.currentHealth + 500);
+            }
+            if (upgradeName === "Swift Strikes") {
+                this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.05 * 100) / 100;
+            }
+            if (upgradeName === "Quickblade") {
+                this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.1 * 100) / 100;
+            }
+            if (upgradeName === "Rapid Slippers") {
+                this.scene.get('GameScene').player.speed = Math.round(this.scene.get('GameScene').player.speed * 1.05);
+            }
+            if (upgradeName === "Mecha Sneakers") {
+                this.scene.get('GameScene').player.speed = Math.round(this.scene.get('GameScene').player.speed * 1.1);
+            }
+            
+        } else {
+            this.showPurchaseFeedback(`You need ${cost - this.gold} more gold`, '#ff0000');
+        }
+    }
+
+    showPurchaseFeedback(message, color = '#ffffff') {
+        if (this.currentFeedbackText) {
+            this.currentFeedbackText.destroy();
+            this.currentFeedbackText = null;
+        }
+        this.currentFeedbackText = this.add.text(this.scale.width / 2, this.scale.height / 2 - 375, message, {
+            font: '22px Orbitron',
+            fill: color,
+            padding: {
+                left: 10,
+                right: 10,
+                top: 5,
+                bottom: 5
+            }
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(20);
+
+        // Animation: fade out
+        this.tweens.add({
+            targets: this.currentFeedbackText,
+            alpha: { from: 1, to: 0 },
+            ease: 'Linear',
+            duration: 2000,
+        });
     }
 
     updateTimer(currentTime) {
@@ -508,6 +680,7 @@ class BattleUI extends Phaser.Scene {
     update() {
         if (!this.timerStarted || this.isMultiplierPaused) return;
         this.updateMultiplierFill();
+        this.displayPlayerStats(this.scale.width - 350, 500);
         if (this.strengthenedSquareText) {
             if (this.scene.get('GameScene').enemies.length > 0) {
                 let currentStrengthLevel = this.scene.get('GameScene').enemies[0].strengthenLevel;
@@ -516,6 +689,13 @@ class BattleUI extends Phaser.Scene {
                 }
             }
         }
+        this.buyButtons.forEach((item) => {
+            if (this.gold >= item.cost) {
+                item.button.setText('BUY').setStyle({ fill: '#4CAF50' });
+            } else {
+                item.button.setText('Not enough gold').setStyle({ fill: '#FF0000' });
+            }
+        });
     }
 
     updateMultiplierFill() {

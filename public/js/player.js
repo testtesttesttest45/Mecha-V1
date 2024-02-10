@@ -16,13 +16,17 @@ class Player {
         const character = characterMap[this.characterCode];
         this.range = character.range;
         this.speed = character.speed;
+        this.originalSpeed = character.speed;
+        this.originalDamage = character.damage;
         this.damage = character.damage;
         this.attackSpeed = character.attackSpeed;
+        this.originalAttackSpeed = character.attackSpeed;
         this.spritesheetKey = character.spritesheetKey;
         this.isAttacking = false;
         this.attackEvent = null;
-        this.health = character.health;
-        this.totalHealth = character.health; // Store the total health
+        this.originalHealth = character.health;
+        this.maxHealth = character.health;
+        this.currentHealth = character.health;
         this.healthBar = null;
         this.isDead = false;
         this.idleAnimations = ['idle1', 'idle2', 'idle3', 'idle4'];
@@ -67,7 +71,7 @@ class Player {
             this.scene.anims.create({
                 key: `attack${dir}`,
                 frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 60 + (index * 5), end: 60 + (index * 5) + 4 }),
-                frameRate: 6 * this.attackSpeed,
+                frameRate: 6 * this.originalAttackSpeed,
                 repeat: 0
             });
         });
@@ -170,14 +174,17 @@ class Player {
     playAttackAnimation(targetEnemy) {
         const direction = this.determineDirectionToEnemy(targetEnemy);
         const attackAnimationKey = `attack${direction}`;
-        
         if (this.isAttacking && !this.attackAnimationComplete && this.targetedEnemy === targetEnemy) {
             return;
         }
         this.isAttacking = true;
         this.attackAnimationComplete = false;
         this.attackingWho = targetEnemy;
-        this.robotSprite.play(attackAnimationKey);
+        const frameRateRatio = this.attackSpeed / this.originalAttackSpeed;
+
+        this.robotSprite.anims.play(attackAnimationKey);
+        this.robotSprite.anims.msPerFrame = this.robotSprite.anims.msPerFrame / frameRateRatio;
+
         this.robotSprite.off('animationupdate');
         this.robotSprite.off('animationcomplete');
 
@@ -364,7 +371,7 @@ class Player {
         this.healthBar.fillRect(0, 0, 150, 10);
 
         // Health portion
-        const healthPercentage = this.health / this.totalHealth;
+        const healthPercentage = this.currentHealth / this.maxHealth;
         const healthBarWidth = healthPercentage * 150;
         // fill style dark green
         this.healthBar.fillStyle(0x00ff00, 1);
@@ -373,17 +380,17 @@ class Player {
 
     takeDamage(damage, source) {
         if (this.isDead) return;
-    
-        this.health -= damage;
-        this.health = Math.max(this.health, 0);
-    
+
+        this.currentHealth -= damage;
+        this.currentHealth = Math.max(this.currentHealth, 0);
+
         const color = source === 'catastrophe' ? '#ff0' : '#000'; // Yellow for catastrophe, black for others
         this.createDamageText(damage, color);
-    
-        if (this.health <= 0 && !this.isDead) {
+
+        if (this.currentHealth <= 0 && !this.isDead) {
             this.die();
         }
-    
+
         this.updateHealthBar();
     }
 
@@ -419,7 +426,7 @@ class Player {
         // Stop any ongoing animation and play the death animation
         this.robotSprite.stop();
         this.robotSprite.play(`death`);
-        
+
         if (this.attacker && !this.attacker.isDead && this.isDead) {
             this.attacker.stopAttackingPlayer();
         }
