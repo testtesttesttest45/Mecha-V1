@@ -88,6 +88,38 @@ class Player {
         this.detectionField = this.scene.add.circle(this.x, this.y, this.range);
         this.detectionField.setStrokeStyle(4, 0xff0000);
 
+        this.healTimer = this.scene.time.addEvent({
+            delay: 5000,
+            callback: this.autoHeal,
+            callbackScope: this,
+            loop: true
+        });
+
+    }
+
+    autoHeal() {
+        if (this.currentHealth < this.maxHealth) {
+            const healAmount = Math.min(100, this.maxHealth - this.currentHealth);
+            this.currentHealth += healAmount;
+            this.updateHealthBar();
+            this.createHealingText(healAmount);
+        }
+    }
+
+    createHealingText(amount) {
+        const healingText = this.scene.add.text(this.robotSprite.x, this.robotSprite.y - 100, `+${amount}`, { font: '36px Orbitron', fill: '#00ff00' });
+        healingText.setOrigin(0.5, 0.5);
+        healingText.setDepth(1);
+        this.scene.tweens.add({
+            targets: healingText,
+            y: healingText.y - 30,
+            alpha: 0,
+            duration: 800,
+            ease: 'Power2',
+            onComplete: () => {
+                healingText.destroy();
+            }
+        });
     }
 
     moveStraight(newX, newY, onCompleteCallback = null) {
