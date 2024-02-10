@@ -217,7 +217,7 @@ class Player {
     }
 
     launchProjectile(enemy) {
-        if (enemy.isDead) return;
+        if (!enemy) return;
         let projectile = this.scene.add.sprite(this.robotSprite.x + 10, this.robotSprite.y - 80, this.projectile);
         projectile.setOrigin(0.5, 0.5);
         projectile.setScale(0.5);

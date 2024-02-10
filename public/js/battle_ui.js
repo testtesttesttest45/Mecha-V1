@@ -13,8 +13,11 @@ class BattleUI extends Phaser.Scene {
         this.baseRebuildBarFill = null;
         this.baseRebuilding = false;
         this.isMultiplierPaused = false;
-        this.gold = 0;
+        this.gold = 100;
         this.cash = 0;
+        this.scrollbarTrack = null;
+        this.scrollbarHandle = null;
+        this.scrollPosition = 0;
     }
 
     startMultiplierTimer() {
@@ -135,7 +138,7 @@ class BattleUI extends Phaser.Scene {
 
         this.shopIcon = this.add.image(-140, 0, 'gold').setOrigin(0, 0.5).setScale(0.75);
 
-        this.goldText = this.add.text(0, 0, "Gold: 0", {
+        this.goldText = this.add.text(0, 0, `Gold: ${this.gold}`, {
             font: '20px Orbitron',
             fill: '#ffffff'
         }).setOrigin(0.5, 0);
@@ -202,13 +205,27 @@ class BattleUI extends Phaser.Scene {
         this.invisibleBackground = this.add.rectangle(0, 0, screenWidth, screenHeight, 0x000000, 0.5)
             .setOrigin(0, 0)
             .setInteractive()
-            .on('pointerdown', () => { }); // This captures clicks without doing anything
+            .setDepth(-1)
+            .on('pointerdown', () => { });
 
         this.modalBackground = this.add.graphics()
             .fillStyle(0x222222, 0.95)
             .fillRoundedRect(modalX, modalY, modalWidth, modalHeight, 20);
 
-        this.shopModalContainer.add([this.invisibleBackground, this.modalBackground]);
+        const viewportWidth = modalWidth;
+        const viewportHeight = modalHeight;
+        const viewportX = modalX;
+        const viewportY = modalY;
+
+        this.mask = this.add.graphics({ fillStyle: { color: 0xffffff } });
+        this.mask.beginPath();
+        this.mask.fillRoundedRect(viewportX, viewportY, viewportWidth, viewportHeight, 20);
+        this.mask.closePath();
+
+        this.scrollableContainer = this.add.container(0, 0);
+        this.scrollableContainer.setMask(new Phaser.Display.Masks.GeometryMask(this, this.mask));
+
+        this.shopModalContainer.add([this.mask, this.invisibleBackground, this.modalBackground, this.scrollableContainer]);
 
         this.closeButtonText = this.add.text(modalX + modalWidth - 40, modalY + 20, 'CLOSE', {
             font: '24px Orbitron',
@@ -216,73 +233,192 @@ class BattleUI extends Phaser.Scene {
         }).setInteractive({ useHandCursor: true }).setOrigin(1, 0)
             .on('pointerdown', () => this.toggleShopModal(false));
 
-        // Damage Section Title
-        const damageSectionX = modalX + 50;
-        const damageSectionY = modalY + 40;
-        this.damageSectionTitle = this.add.text(damageSectionX, damageSectionY, "Damage Upgrades", {
+        const sectionWidth = modalWidth / 2 - 60;
+        const damageSectionX = modalX + 30;
+        const healthSectionX = modalX + sectionWidth + 90;
+        const sectionY = modalY + 70;
+
+        const itemsPerColumn = 2;
+        const spacingBetweenItems = 200;
+        const attackSpeedSectionY = sectionY + (itemsPerColumn * spacingBetweenItems);
+
+        this.damageSectionTitle = this.add.text(damageSectionX, sectionY, "Damage Upgrades", {
             font: '28px Orbitron',
             fill: '#FFD700'
         });
 
-        // Upgrades array
-        const upgrades = [
-            { description: "Enhanced Sword - Increase damage by 10%", cost: "200 Gold" },
-            { description: "Sharpened Edge - Increase critical hit chance", cost: "300 Gold" },
-            // Additional upgrades can be added here
+        this.healthSectionTitle = this.add.text(healthSectionX, sectionY, "Health Upgrades", {
+            font: '28px Orbitron',
+            fill: '#FFD700'
+        });
+
+        this.attackSpeedSectionTitle = this.add.text(damageSectionX, attackSpeedSectionY + 50, "Attack Speed Upgrades", {
+            font: '28px Orbitron',
+            fill: '#FFD700'
+        });
+
+        this.movementSpeedSectionTitle = this.add.text(healthSectionX, attackSpeedSectionY + 50, "Movement Speed Upgrades", {
+            font: '28px Orbitron',
+            fill: '#FFD700'
+        });
+
+        // Upgrades definition
+        const damageUpgrades = [
+            { description: "Enhanced Sword - Increase damage by 10%", cost: 200, icon: 'sword1' },
+            { description: "Sharpened Edge - Increase critical hit chance", cost: 300, icon: 'sword2' },
         ];
 
-        // Dynamically create upgrade items
-        this.createUpgradeItems(upgrades, damageSectionX, damageSectionY + 60);
+        const healthUpgrades = [
+            { description: "Advanced Armor - Increase health by 20%", cost: 300, icon: 'health1' },
+            { description: "Regeneration Boost - Increase health regeneration rate", cost: 400, icon: 'health2' },
+        ];
 
-        // Add the close button and section title after the background to ensure they appear on top
-        this.shopModalContainer.add([this.closeButtonText, this.damageSectionTitle]);
+        const attackSpeedUpgrades = [
+            { description: "Swift Strikes - Increase attack speed by 10%", cost: 200, icon: 'attackSpeed1' },
+            { description: "Faster Reload - Increase reload speed", cost: 300, icon: 'attackSpeed2' },
+        ];
 
-        // Initially, the modal is not visible
+        const movementSpeedUpgrades = [
+            { description: "Faster Movement - Increase movement speed by 10%", cost: 200, icon: '' },
+            { description: "Agility Training - Increase dodge chance", cost: 300, icon: 'speed2' },
+        ];
+
+        this.createItems(damageUpgrades, damageSectionX, sectionY + 60, sectionWidth);
+        this.createItems(healthUpgrades, healthSectionX, sectionY + 60, sectionWidth);
+        this.createItems(attackSpeedUpgrades, damageSectionX, attackSpeedSectionY + 100, sectionWidth);
+        this.createItems(movementSpeedUpgrades, healthSectionX, attackSpeedSectionY + 100, sectionWidth);
+
+        this.shopModalContainer.add([this.closeButtonText]);
+        this.scrollableContainer.add([this.damageSectionTitle, this.healthSectionTitle, this.attackSpeedSectionTitle, this.movementSpeedSectionTitle]);
         this.toggleShopModal(false);
+        let lastPointerY = 0;
+        let isScrolling = false;
+
+        this.invisibleBackground.setInteractive().on('pointerdown', function (pointer) {
+            isScrolling = true;
+            lastPointerY = pointer.y;
+        });
+
+        const totalContentHeight = 1000;
+        const minScrollY = viewportHeight - totalContentHeight;
+        const maxScrollY = 0;
+        const handleHeight = 300;
+        const scrollbarTrackHeight = viewportHeight;
+        const scrollbarTrackWidth = 20;
+        const scrollbarMargin = 0;
+
+        this.scrollbarTrack = this.add.graphics({ fillStyle: { color: 0x888888 } })
+        this.scrollbarTrack.fillRect(viewportX + viewportWidth, viewportY + 150, scrollbarTrackWidth, scrollbarTrackHeight - 200);
+
+        const scrollbarHandleWidth = scrollbarTrackWidth;
+        const scrollbarHandleHeight = handleHeight - 100;
+
+        this.scrollbarHandle = this.add.graphics({ fillStyle: { color: 0xff0000 } })
+            .fillRect(viewportX + viewportWidth, viewportY, scrollbarTrackWidth, scrollbarHandleHeight);
+
+        this.scrollbarHandle.setInteractive(new Phaser.Geom.Rectangle(viewportX + viewportWidth + scrollbarMargin, viewportY, scrollbarTrackWidth, scrollbarTrackHeight), Phaser.Geom.Rectangle.Contains);
+        this.scrollbarHandle.setDepth(10)
+        this.shopModalContainer.add([this.scrollbarTrack, this.scrollbarHandle]);
+        const initialHandleY = 140;
+        this.scrollbarHandle.y = initialHandleY;
+        let isScrollbarHandleDragging = false;
+        let initialPointerY = 0;
+
+        this.scrollbarHandle.on('pointerdown', (pointer) => {
+            isScrollbarHandleDragging = true;
+            initialPointerY = pointer.y;
+        });
+        this.input.on('pointermove', (pointer) => {
+            const handleRange = 550 - 140;
+            const contentRange = -136 - 0;
+            const handleMinY = 140;
+            const handleMaxY = 550;
+            const contentMinY = -136;
+            const contentMaxY = 0;
+            if (isScrolling) {
+                const deltaY = pointer.y - lastPointerY;
+                lastPointerY = pointer.y;
+                let newY = this.scrollableContainer.y + deltaY;
+                newY = Phaser.Math.Clamp(newY, contentMinY, contentMaxY);
+                this.scrollableContainer.y = newY;
+            
+                const contentScrollRatio = (newY - contentMaxY) / (contentMinY - contentMaxY);
+                const handleNewY = handleMinY + (contentScrollRatio * handleRange);
+                this.scrollbarHandle.y = handleNewY;
+                // console.log(`Scrolling Content: newY=${newY} HandleY=${this.scrollbarHandle.y}`);
+            }
+
+            else if (isScrollbarHandleDragging) {
+                const deltaY = pointer.y - initialPointerY;
+                initialPointerY = pointer.y;
+            
+                let handleNewY = this.scrollbarHandle.y + deltaY;
+                handleNewY = Phaser.Math.Clamp(handleNewY, handleMinY, handleMaxY);
+                this.scrollbarHandle.y = handleNewY;
+            
+                const handlePositionRatio = (handleNewY - handleMinY) / handleRange;
+                const contentNewY = contentMaxY + (handlePositionRatio * contentRange);
+                this.scrollableContainer.y = contentNewY;
+                // console.log(`Dragging Handle: handleNewY=${handleNewY}, ContentY=${this.scrollableContainer.y}`);
+            }
+        });
+
+        this.input.on('pointerup', (pointer) => {
+            if (isScrollbarHandleDragging) {
+                isScrollbarHandleDragging = false;
+            }
+            if (isScrolling) {
+                isScrolling = false;
+            }
+        });
     }
 
-    createUpgradeItems(upgrades, startX, startY) {
-        upgrades.forEach((upgrade, index) => {
-            const itemY = startY + (index * 100); // Vertical spacing between items
 
-            // Background for each upgrade item for better visibility
+    createItems(upgrades, startX, startY, sectionWidth) {
+        upgrades.forEach((upgrade, index) => {
+            const itemY = startY + (index * 200);
+            const itemWidth = sectionWidth - 20;
+            const itemHeight = 150;
+
             const itemBg = this.add.graphics()
                 .fillStyle(0x333333, 0.8)
-                .fillRoundedRect(startX, itemY, 880, 80, 10);
+                .fillRoundedRect(startX, itemY, itemWidth, itemHeight, 10);
 
-            // Description text
-            const descText = this.add.text(startX + 10, itemY + 10, upgrade.description, {
+            const icon = this.add.image(startX + 40, itemY + 40, upgrade.icon).setScale(0.5);
+
+            const descText = this.add.text(startX + 80, itemY + 10, upgrade.description, {
                 font: '18px Orbitron',
-                fill: '#FFFFFF'
+                fill: '#FFFFFF',
+                wordWrap: { width: itemWidth - 140 },
+                wordWrapWidth: itemWidth - 140
             });
 
-            // Cost text
-            const costText = this.add.text(startX + 10, itemY + 50, upgrade.cost, {
+            const costText = this.add.text(startX + 60, itemY + itemHeight - 40, upgrade.cost, {
                 font: '16px Orbitron',
                 fill: '#FFD700'
             });
 
-            // Buy button with dynamic interaction
-            const buyButton = this.add.text(startX + 760, itemY + 25, 'BUY', {
+            const buyButton = this.add.text(startX + itemWidth - 100, itemY + itemHeight - 40, 'BUY', {
                 font: '20px Orbitron',
                 fill: '#4CAF50'
             }).setInteractive({ useHandCursor: true })
                 .on('pointerdown', () => this.purchaseUpgrade(upgrade.description));
 
-            // Adding the item's elements to the modal container
-            this.shopModalContainer.add([itemBg, descText, costText, buyButton]);
+            this.scrollableContainer.add([itemBg, icon, descText, costText, buyButton]);
         });
     }
 
-    purchaseUpgrade(upgradeDescription) {
-        console.log(`Purchasing Upgrade: ${upgradeDescription}`);
-        // Implement purchase logic here
-    }
+
 
 
     toggleShopModal(visible) {
         // Set the container (and all its children) visibility
         this.shopModalContainer.setVisible(visible);
+
+    }
+
+    purchaseUpgrade(upgradeDescription) {
+        console.log(`Purchasing Upgrade: ${upgradeDescription}`);
     }
 
     updateTimer(currentTime) {

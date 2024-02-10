@@ -519,6 +519,13 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('player', 'assets/images/player.png');
         this.load.image('gold', 'assets/images/gold.png');
         this.load.image('cash', 'assets/images/cash.png');
+
+        this.load.image('sword1', 'assets/images/sword1.png');
+        this.load.image('sword2', 'assets/images/sword2.png');
+        this.load.image('health1', 'assets/images/health1.png');
+        this.load.image('health2', 'assets/images/health2.png');
+        this.load.image('attackSpeed1', 'assets/images/attackSpeed1.png');
+        this.load.image('attackSpeed2', 'assets/images/attackSpeed2.png');
     }
 
 
