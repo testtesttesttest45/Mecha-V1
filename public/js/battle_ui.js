@@ -549,6 +549,7 @@ class BattleUI extends Phaser.Scene {
             }
             if (upgradeName === "Health Potion") {
                 this.scene.get('GameScene').player.currentHealth = Math.min(this.scene.get('GameScene').player.maxHealth, this.scene.get('GameScene').player.currentHealth + 500);
+                this.scene.get('GameScene').player.createHealingText(500);
             }
             if (upgradeName === "Swift Strikes") {
                 this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.05 * 100) / 100;

@@ -98,7 +98,7 @@ class Player {
     }
 
     autoHeal() {
-        if (this.currentHealth < this.maxHealth) {
+        if (this.currentHealth < this.maxHealth && !this.isDead) {
             const healAmount = Math.min(100, this.maxHealth - this.currentHealth);
             this.currentHealth += healAmount;
             this.updateHealthBar();
@@ -114,7 +114,7 @@ class Player {
             targets: healingText,
             y: healingText.y - 30,
             alpha: 0,
-            duration: 800,
+            duration: 4000,
             ease: 'Power2',
             onComplete: () => {
                 healingText.destroy();

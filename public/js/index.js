@@ -4,6 +4,7 @@ import Camp from './camp.js';
 import Base from './base.js';
 import Catastrophe from './catastrophe.js';
 import BattleUI from './battle_ui.js';
+import characterMap from './characters.js';
 import { rgbToHex, resize, loadDynamicSpriteSheet, setAttackCursor, setDefaultCursor } from './utilities.js';
 
 class GameScene extends Phaser.Scene {
@@ -215,7 +216,8 @@ class GameScene extends Phaser.Scene {
         camps.forEach(camp => {
             for (let i = 0; i < 3; i++) {
                 const randomPosition = camp.getRandomPositionInRadius();
-                const enemy = new Enemy(this, randomPosition.x, randomPosition.y, 2, camp, this.player, this.base.baseLevel, this.base);
+                const characterCode = this.selectEnemyCharacterCode();
+                const enemy = new Enemy(this, randomPosition.x, randomPosition.y, characterCode, camp, this.player, this.base.baseLevel, this.base);
                 enemy.create();
                 this.enemies.push(enemy);
 
@@ -256,6 +258,23 @@ class GameScene extends Phaser.Scene {
         this.base.enemies = this.enemies;
     }
 
+    selectEnemyCharacterCode() {
+        // filter characterMap by 'easy' tier
+        let easyEnemies = Object.entries(characterMap).filter(([key, value]) => value.tier === 'easy').map(([key]) => key);
+    
+        // ff base level is 5 or higher, might have 'hard' tier enemies
+        if (this.base.baseLevel >= 5) {
+            let hardEnemies = Object.entries(characterMap).filter(([key, value]) => value.tier === 'hard').map(([key]) => key);
+    
+            // 50% chance to choose from 'hard' tier if base level >= 5
+            if (Math.random() < 0.5) {
+                return hardEnemies[Math.floor(Math.random() * hardEnemies.length)];
+            }
+        }
+    
+        // default to choose from 'easy' tier
+        return easyEnemies[Math.floor(Math.random() * easyEnemies.length)];
+    }
 
     createCamps() {
         this.camp1 = new Camp(this, 1240, 1250);
@@ -502,13 +521,13 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('enemy_camp', 'assets/images/enemy_camp1.png');
         this.load.image('enemy_base', 'assets/images/enemy_base1.png');
 
-        //loadDynamicSpriteSheet.call(this, 'character1', 'assets/sprites/character_1.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character1', 'assets/sprites/character_1.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character2', 'assets/sprites/character_2.png', 4000, 4400);
-        // loadDynamicSpriteSheet.call(this, 'character3', 'assets/sprites/character_3.png', 4000, 3520);
-        // loadDynamicSpriteSheet.call(this, 'character4', 'assets/sprites/character_4.png', 4000, 4400);
-        // loadDynamicSpriteSheet.call(this, 'character5', 'assets/sprites/character_5.png', 4000, 2640);
-        // loadDynamicSpriteSheet.call(this, 'character6', 'assets/sprites/character_6.png', 4000, 4400);
-        // loadDynamicSpriteSheet.call(this, 'character7', 'assets/sprites/character_7.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character3', 'assets/sprites/character_3.png', 4000, 3520);
+        loadDynamicSpriteSheet.call(this, 'character4', 'assets/sprites/character_4.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character5', 'assets/sprites/character_5.png', 4000, 2640);
+        loadDynamicSpriteSheet.call(this, 'character6', 'assets/sprites/character_6.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character7', 'assets/sprites/character_7.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character8', 'assets/sprites/character_8.png', 4000, 4400);
 
         this.load.image('blueBullet', 'assets/projectiles/blue_bullet.png');
