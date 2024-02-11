@@ -20,6 +20,7 @@ class GameScene extends Phaser.Scene {
         this.cancelClick = false;
         this.catastrophe = null;
         this.base = null;
+        this.allowInput = false;
     }
     
     create() {
@@ -39,6 +40,7 @@ class GameScene extends Phaser.Scene {
         this.catastrophe = new Catastrophe(this);
 
         this.scene.launch('BattleUI');
+        this.enableInputAfterDelay();
     }
 
     createStaticBackground() {
@@ -154,6 +156,7 @@ class GameScene extends Phaser.Scene {
     }
 
     handlePlayerClick(pointer) {
+        if (!this.allowInput) return;
         if (this.enemyClicked) {
             this.enemyClicked = false; // Reset the flag
             return; // Click was on the enemy, skip the general click logic
@@ -173,6 +176,7 @@ class GameScene extends Phaser.Scene {
             this.player.targetedEnemy = null;
             this.cancelClick = true;
             this.player.moveStraight(worldPoint.x, worldPoint.y);
+            console.log(`Player moving to: ${worldPoint.x}, ${worldPoint.y}`);
         } else {
             this.showOutOfBoundsMessage(worldPoint);
         }
@@ -206,11 +210,13 @@ class GameScene extends Phaser.Scene {
 
 
     createPlayer() {
+        this.player = null;
         this.player = new Player(this, 1500, 800, 8, this.enemies);
         this.player.create();
     }
 
     createEnemy() {
+        this.enemies = [];
         const camps = [this.camp1, this.camp2, this.camp3];
 
         camps.forEach(camp => {
@@ -353,6 +359,12 @@ class GameScene extends Phaser.Scene {
         });
     }
 
+    enableInputAfterDelay() {
+        this.time.delayedCall(100, () => {
+            this.allowInput = true;
+        });
+    }
+
     update(time, delta) {
         if (this.player) {
             this.player.update(time, delta, this.enemies);
@@ -491,6 +503,8 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('health2', 'assets/images/health2.png');
         this.load.image('attackSpeed1', 'assets/images/attackSpeed1.png');
         this.load.image('attackSpeed2', 'assets/images/attackSpeed2.png');
+        this.load.image('moveSpeed1', 'assets/images/moveSpeed1.png');
+        this.load.image('moveSpeed2', 'assets/images/moveSpeed2.png');
     }
 
 

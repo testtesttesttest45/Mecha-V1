@@ -24,14 +24,46 @@ class BattleUI extends Phaser.Scene {
         this.playerHealthBonusText = null;
         this.itemPurchaseLimit = 5;
         this.purchaseCounts = {
-            "Swift Strikes": 0,
+            "Energy Gun": 0,
             "Quickblade": 0,
-            "Rapid Slippers": 0,
+            "Lightning Core": 0,
             "Mecha Sneakers": 0,
         };
         this.purchaseCountText = null;
     }
 
+    resetState() {
+        console.log('State resetted');
+        this.score = 0;
+        this.scoreText = null;
+        this.multiplier = 5;
+        this.multiplierMin = 0.5;
+        this.multiplierDuration = 3000;
+        this.lastMultiplierUpdate = 0;
+        this.timerStarted = false;
+        this.baseRebuildText = null;
+        this.baseRebuildBarBackground = null;
+        this.baseRebuildBarFill = null;
+        this.baseRebuilding = false;
+        this.isMultiplierPaused = false;
+        this.gold = 2200220;
+        this.cash = 0;
+        this.scrollbarTrack = null;
+        this.scrollbarHandle = null;
+        this.scrollPosition = 0;
+        this.buyButtons = [];
+        this.currentFeedbackText = null;
+        this.playerHealthBaseText = null;
+        this.playerHealthBonusText = null;
+        this.itemPurchaseLimit = 5;
+        this.purchaseCounts = {
+            "Energy Gun": 0,
+            "Quickblade": 0,
+            "Lightning Core": 0,
+            "Mecha Sneakers": 0,
+        };
+        this.purchaseCountText = null;
+    }
     startMultiplierTimer() {
         if (!this.timerStarted) {
             this.timerStarted = true;
@@ -45,7 +77,9 @@ class BattleUI extends Phaser.Scene {
     }
 
     updateGoldDisplay() {
-        this.goldText.setText(this.gold);
+        if (this.goldText) {
+            this.goldText.setText(this.gold);
+        }
         if (this.goldTextShop) {
             this.goldTextShop.setText(this.gold);
         }
@@ -61,6 +95,7 @@ class BattleUI extends Phaser.Scene {
     }
 
     create() {
+        // this.resetState();
         const panel = this.add.rectangle(this.scale.width - 30, 120, 350, 700, 0x000000, 0.5);
         panel.setOrigin(1, 0);
         panel.setScrollFactor(0);
@@ -133,6 +168,19 @@ class BattleUI extends Phaser.Scene {
 
         this.playerIcon = this.add.image(panelCenterX - 120, statsTextY + 10, 'player').setScale(0.5).setScrollFactor(0).setOrigin(0, 0.5);
 
+        let partTimeX = this.scale.width - 350;
+        let partTimeY = 500;
+        this.playerHealthText = this.add.text(partTimeX, partTimeY, 'Health: --/--', { font: '16px Orbitron', fill: '#ffffff' });
+        this.playerDamageText = this.add.text(partTimeX, partTimeY + 20, 'Damage: --', { font: '16px Orbitron', fill: '#ffffff' });
+        this.playerAttackSpeedText = this.add.text(partTimeX, partTimeY + 40, 'Attack Speed: --', { font: '16px Orbitron', fill: '#ffffff' });
+        this.playerSpeedText = this.add.text(partTimeX, partTimeY + 60, 'Speed: --', { font: '16px Orbitron', fill: '#ffffff' });
+
+        // Optional: Initialize bonus texts if you have them
+        this.playerHealthBonusText = this.add.text(this.playerHealthText.x + 200, partTimeY, '', { font: '16px Orbitron', fill: '#00BFFF' });
+        this.playerDamageBonusText = this.add.text(this.playerDamageText.x + 200, partTimeY + 20, '', { font: '16px Orbitron', fill: '#00BFFF' });
+        this.playerAttackSpeedBonusText = this.add.text(this.playerAttackSpeedText.x + 200, partTimeY + 40, '', { font: '16px Orbitron', fill: '#00BFFF' });
+        this.playerSpeedBonusText = this.add.text(this.playerSpeedText.x + 200, partTimeY + 60, '', { font: '16px Orbitron', fill: '#00BFFF' });
+
         const shopTextY = statsTextY + 200;
 
         this.shopButtonContainer = this.add.container(panelCenterX, shopTextY).setScrollFactor(0);
@@ -198,100 +246,16 @@ class BattleUI extends Phaser.Scene {
         const bonusDamage = damage - originalDamage;
         const bonusAttackSpeed = Math.round((attackSpeed - originalAttackSpeed) * 100) / 100;
         const bonusSpeed = speed - originalSpeed;
-        const healthDisplayText = bonusHealth > 0 ? `Health: ${currentHealth}/${maxHealth} ` : `Health: ${currentHealth}/${maxHealth}`;
-        const damageDisplayText = bonusDamage > 0 ? `Damage: ${damage} ` : `Damage: ${damage}`;
-        const attackSpeedDisplayText = bonusAttackSpeed > 0 ? `Attack Speed: ${attackSpeed} ` : `Attack Speed: ${attackSpeed}`;
-        const speedDisplayText = bonusSpeed > 0 ? `Speed: ${speed} ` : `Speed: ${speed}`;
 
-        if (!this.playerHealthText) {
-            this.playerHealthText = this.add.text(x, y, healthDisplayText, {
-                font: '16px Orbitron',
-                fill: '#ffffff'
-            });
-        } else {
-            this.playerHealthText.setText(healthDisplayText);
-        }
+        this.playerHealthText.setText(`Health: ${currentHealth}/${maxHealth}`);
+        this.playerDamageText.setText(`Damage: ${damage}`);
+        this.playerAttackSpeedText.setText(`Attack Speed: ${attackSpeed}`);
+        this.playerSpeedText.setText(`Speed: ${speed}`);
 
-        if (!this.playerDamageText) {
-            this.playerDamageText = this.add.text(x, y + 20, damageDisplayText, {
-                font: '16px Orbitron',
-                fill: '#ffffff'
-            });
-        } else {
-            this.playerDamageText.setText(damageDisplayText);
-        }
-
-        if (!this.playerAttackSpeedText) {
-            this.playerAttackSpeedText = this.add.text(x, y + 40, attackSpeedDisplayText, {
-                font: '16px Orbitron',
-                fill: '#ffffff'
-            });
-        } else {
-            this.playerAttackSpeedText.setText(attackSpeedDisplayText);
-        }
-
-        if (!this.playerSpeedText) {
-            this.playerSpeedText = this.add.text(x, y + 60, speedDisplayText, {
-                font: '16px Orbitron',
-                fill: '#ffffff'
-            });
-        } else {
-            this.playerSpeedText.setText(speedDisplayText);
-        }
-
-        if (bonusHealth > 0) {
-            if (!this.playerHealthBonusText) {
-                this.playerHealthBonusText = this.add.text(this.playerHealthText.x + 200, y, `(+${bonusHealth})`, {
-                    font: '16px Orbitron',
-                    fill: '#00BFFF' // Blue color for bonus health
-                });
-            } else {
-                this.playerHealthBonusText.setText(`(+${bonusHealth})`);
-            }
-        } else if (this.playerHealthBonusText) {
-            this.playerHealthBonusText.setText('');
-        }
-
-        if (bonusDamage > 0) {
-            if (!this.playerDamageBonusText) {
-                this.playerDamageBonusText = this.add.text(this.playerDamageText.x + 200, y + 20, `(+${bonusDamage})`, {
-                    font: '16px Orbitron',
-                    fill: '#00BFFF'
-                });
-            } else {
-                this.playerDamageBonusText.setText(`(+${bonusDamage})`);
-            }
-        } else if (this.playerDamageBonusText) {
-            this.playerDamageBonusText.setText('');
-        }
-
-        if (bonusAttackSpeed > 0) {
-            if (!this.playerAttackSpeedBonusText) {
-                this.playerAttackSpeedBonusText = this.add.text(this.playerAttackSpeedText.x + 200, y + 40, `(+${bonusAttackSpeed})`, {
-                    font: '16px Orbitron',
-                    fill: '#00BFFF'
-                });
-            } else {
-                this.playerAttackSpeedBonusText.setText(`(+${bonusAttackSpeed})`);
-            }
-        }
-        else if (this.playerAttackSpeedBonusText) {
-            this.playerAttackSpeedBonusText.setText('');
-        }
-
-        if (bonusSpeed > 0) {
-            if (!this.playerSpeedBonusText) {
-                this.playerSpeedBonusText = this.add.text(this.playerSpeedText.x + 200, y + 60, `(+${bonusSpeed})`, {
-                    font: '16px Orbitron',
-                    fill: '#00BFFF'
-                });
-            } else {
-                this.playerSpeedBonusText.setText(`(+${bonusSpeed})`);
-            }
-        }
-        else if (this.playerSpeedBonusText) {
-            this.playerSpeedBonusText.setText('');
-        }
+        this.playerHealthBonusText.setText(bonusHealth > 0 ? `(+${bonusHealth})` : '');
+        this.playerDamageBonusText.setText(bonusDamage > 0 ? `(+${bonusDamage})` : '');
+        this.playerAttackSpeedBonusText.setText(bonusAttackSpeed > 0 ? `(+${bonusAttackSpeed})` : '');
+        this.playerSpeedBonusText.setText(bonusSpeed > 0 ? `(+${bonusSpeed})` : '');
     }
 
     createShopModal() {
@@ -382,7 +346,7 @@ class BattleUI extends Phaser.Scene {
         // Upgrades definition
         const damageUpgrades = [
             { name: "Penknife", description: "Increase damage by 1", cost: 60, icon: 'sword1' },
-            { name: "Enhanced Sword", description: "Increase damage by 2%", cost: 500, icon: 'sword2' }
+            { name: "Hunter Blade", description: "Increase damage by 2%", cost: 500, icon: 'sword2' }
         ];
 
         const healthUpgrades = [
@@ -391,13 +355,13 @@ class BattleUI extends Phaser.Scene {
         ];
 
         const attackSpeedUpgrades = [
-            { name: "Swift Strikes", description: "Increase attack speed by 5%", cost: 3000, icon: 'attackSpeed1' },
+            { name: "Energy Gun", description: "Increase attack speed by 5%", cost: 3000, icon: 'attackSpeed1' },
             { name: "Quickblade", description: "Increase attack speed by 10%", cost: 5700, icon: 'attackSpeed2' },
         ];
 
         const movementSpeedUpgrades = [
-            { name: "Rapid Slippers", description: "Increase movement speed by 5%", cost: 4000, icon: 'speed1' },
-            { name: "Mecha Sneakers", description: "Increase movement speed by 10%", cost: 7900, icon: 'speed2' },
+            { name: "Lightning Core", description: "Increase movement speed by 5%", cost: 4000, icon: 'moveSpeed1' },
+            { name: "Mecha Sneakers", description: "Increase movement speed by 10%", cost: 7900, icon: 'moveSpeed2' },
         ];
 
         this.createItems(damageUpgrades, damageSectionX, sectionY + 60, sectionWidth);
@@ -547,10 +511,9 @@ class BattleUI extends Phaser.Scene {
                 });
             }
 
-            
+
         });
     }
-
 
     toggleShopModal(visible) {
         if (visible === false) {
@@ -587,7 +550,7 @@ class BattleUI extends Phaser.Scene {
             if (upgradeName === "Penknife") {
                 this.scene.get('GameScene').player.damage += 1;
             }
-            if (upgradeName === "Enhanced Sword") {
+            if (upgradeName === "Hunter Blade") {
                 this.scene.get('GameScene').player.damage = Math.round(this.scene.get('GameScene').player.damage * 1.02);
             }
             if (upgradeName === "Heaven's Rain") {
@@ -597,13 +560,13 @@ class BattleUI extends Phaser.Scene {
                 this.scene.get('GameScene').player.currentHealth = Math.min(this.scene.get('GameScene').player.maxHealth, this.scene.get('GameScene').player.currentHealth + 500);
                 this.scene.get('GameScene').player.createHealingText(500);
             }
-            if (upgradeName === "Swift Strikes") {
+            if (upgradeName === "Energy Gun") {
                 this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.05 * 100) / 100;
             }
             if (upgradeName === "Quickblade") {
                 this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.1 * 100) / 100;
             }
-            if (upgradeName === "Rapid Slippers") {
+            if (upgradeName === "Lightning Core") {
                 this.scene.get('GameScene').player.speed = Math.round(this.scene.get('GameScene').player.speed * 1.05);
             }
             if (upgradeName === "Mecha Sneakers") {
@@ -688,6 +651,7 @@ class BattleUI extends Phaser.Scene {
     }
 
     updateScore(amount) {
+        if (this.scene.get('GameScene').player.isDead) return;
         this.score += amount * this.multiplier;
         this.scoreText.setText(`Score: ${this.score}`);
     }
@@ -816,6 +780,53 @@ class BattleUI extends Phaser.Scene {
         this.strengthenedSquare.fill();
     }
 
+    createGameOverScreen() {
+        this.inputBlocker = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.5)
+            .setOrigin(0, 0)
+            .setInteractive(); // This makes the rectangle capture all clicks
+    
+        this.gameOverContainer = this.add.container(0, 0);
+    
+        this.gameOverContainer.add(this.inputBlocker);
+    
+        let gameOverText = this.add.text(this.scale.width / 2, this.scale.height / 2 - 100, 'GAME OVER', {
+            font: '48px Orbitron',
+            fill: '#ff0000'
+        }).setOrigin(0.5);
+    
+        let retryButton = this.add.text(this.scale.width / 2, this.scale.height / 2, 'Retry', {
+            font: '32px Orbitron',
+            fill: '#ffffff',
+            backgroundColor: '#ff0000',
+            padding: { x: 20, y: 10 },
+            borderRadius: 5
+        })
+            .setOrigin(0.5)
+            .setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => this.restartGameScene());
+    
+        let mainMenuButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 100, 'Main Menu', {
+            font: '32px Orbitron',
+            fill: '#ffffff',
+            backgroundColor: '#007bff', // Use a different color to distinguish from the retry button
+            padding: { x: 20, y: 10 },
+            borderRadius: 5
+        })
+            .setOrigin(0.5)
+            .setInteractive({ useHandCursor: true })
+            .on('pointerdown', () => window.location.reload()); // Reload the page to return to main menu
+    
+        this.gameOverContainer.add([gameOverText, retryButton, mainMenuButton]);
+    
+        this.gameOverContainer.setDepth(100);
+    }
+
+    restartGameScene() {
+        this.resetState();
+        let gameScene = this.scene.get('GameScene');
+        gameScene.scene.restart();
+        gameScene.allowInput = false;
+    }
 }
 
 

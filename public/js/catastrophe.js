@@ -5,7 +5,7 @@ class Catastrophe {
         this.maxX = 2800;
         this.minY = 700;
         this.maxY = 1300;
-        this.stormInterval = 15000;
+        this.stormInterval = 4000;
         this.indicatorDuration = 1000;
         this.fireballPositions = [];
         this.minDistance = 350;

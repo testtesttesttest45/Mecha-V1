@@ -43,13 +43,15 @@ class Player {
         this.robotSprite = this.scene.add.sprite(this.position.x, this.position.y);
         this.robotSprite.setOrigin(0.5, 0.7);
         this.robotSprite.setDepth(1);
-        for (let i = 0; i < 4; i++) {
-            this.scene.anims.create({
-                key: `idle${i + 1}`,
-                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: i * 5, end: i * 5 + 4 }),
-                frameRate: 6,
-                repeat: -1,
-            }); // the above code looops through the idle animation and creates a new animation for each of the 4 directions
+        if (!this.scene.anims.exists('idle1')) {
+            for (let i = 0; i < 4; i++) {
+                this.scene.anims.create({
+                    key: `idle${i + 1}`,
+                    frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: i * 5, end: i * 5 + 4 }),
+                    frameRate: 6,
+                    repeat: -1,
+                }); // the above code looops through the idle animation and creates a new animation for each of the 4 directions
+            }
         }
         const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
         this.robotSprite.play(randomIdleAnimation);
@@ -57,32 +59,38 @@ class Player {
 
 
         const directions = ['southeast', 'southwest', 'south', 'east', 'west', 'northeast', 'northwest', 'north'];
-        directions.forEach((dir, index) => {
-            this.scene.anims.create({
-                key: `move${dir}`,
-                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 20 + (index * 5), end: 20 + (index * 5) + 4 }),
-                frameRate: 6,
-                repeat: -1
+        if (!this.scene.anims.exists('moveeast')) {
+            directions.forEach((dir, index) => {
+                this.scene.anims.create({
+                    key: `move${dir}`,
+                    frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 20 + (index * 5), end: 20 + (index * 5) + 4 }),
+                    frameRate: 6,
+                    repeat: -1
+                });
             });
-        });
+        }
 
         // Create attacking animations
-        directions.forEach((dir, index) => {
-            this.scene.anims.create({
-                key: `attack${dir}`,
-                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 60 + (index * 5), end: 60 + (index * 5) + 4 }),
-                frameRate: 6 * this.originalAttackSpeed,
-                repeat: 0
+        if (!this.scene.anims.exists('attackeast')) {
+            directions.forEach((dir, index) => {
+                this.scene.anims.create({
+                    key: `attack${dir}`,
+                    frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 60 + (index * 5), end: 60 + (index * 5) + 4 }),
+                    frameRate: 6 * this.originalAttackSpeed,
+                    repeat: 0
+                });
             });
-        });
+        }
 
         // Create death animation
-        this.scene.anims.create({
-            key: 'death',
-            frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 100, end: 105 }), // 105 does not exist. i use it to hide the final frame
-            frameRate: 6,
-            repeat: 0
-        });
+        if (!this.scene.anims.exists('death')) {
+            this.scene.anims.create({
+                key: 'death',
+                frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 100, end: 105 }), // 105 does not exist. i use it to hide the final frame
+                frameRate: 6,
+                repeat: 0
+            });
+        }
 
         this.createHealthBar();
         this.detectionField = this.scene.add.circle(this.x, this.y, this.range);
@@ -461,6 +469,8 @@ class Player {
         }
 
         this.healthBar.destroy();
+
+        this.scene.scene.get('BattleUI').createGameOverScreen();
     }
 
     update(time, delta) {
@@ -525,7 +535,6 @@ class Player {
 
         this.updateHealthBar();
     }
-
 }
 
 

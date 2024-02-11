@@ -52,7 +52,7 @@ class Enemy {
         this.base = base;
         this.idleAnimations = [`character${this.characterCode}Idle1`, `character${this.characterCode}Idle2`, `character${this.characterCode}Idle3`, `character${this.characterCode}Idle4`];
         this.timerStarted = false;
-        this.enemyStrengthenInterval = 20000;
+        this.enemyStrengthenInterval = 7000;
     }
 
     startTimer() {
@@ -70,7 +70,6 @@ class Enemy {
     strengthenEnemies() {
         const healthIncrease = Math.round(this.maxHealth * 0.25);
         const damageIncrease = Math.round(this.damage * 0.25);
-
         this.strengthenLevel++;
         this.maxHealth += healthIncrease;
         this.damage += damageIncrease;
@@ -107,7 +106,7 @@ class Enemy {
         this.sprite = this.scene.add.sprite(this.x, this.y, character.idle);
         this.sprite.setOrigin(0.5, 0.5);
         this.sprite.setScale(0.75);
-
+        
         // Check and create idle animations
         for (let i = 0; i < 4; i++) {
             let idleKey = `character${this.characterCode}Idle${i + 1}`;
@@ -923,8 +922,8 @@ class Enemy {
 
     disenrage() {
         this.isEnraged = false;
-        this.damage = this.damage / 2;
-        this.speed = this.speed / 2;
+        this.damage = Math.round(this.damage / 2);
+        this.speed = Math.round(this.speed / 2);
 
         this.isAlert = true;
         this.timeInAlert = 0;
