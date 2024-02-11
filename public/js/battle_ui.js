@@ -22,6 +22,14 @@ class BattleUI extends Phaser.Scene {
         this.currentFeedbackText = null;
         this.playerHealthBaseText = null;
         this.playerHealthBonusText = null;
+        this.itemPurchaseLimit = 5;
+        this.purchaseCounts = {
+            "Swift Strikes": 0,
+            "Quickblade": 0,
+            "Rapid Slippers": 0,
+            "Mecha Sneakers": 0,
+        };
+        this.purchaseCountText = null;
     }
 
     startMultiplierTimer() {
@@ -246,7 +254,7 @@ class BattleUI extends Phaser.Scene {
 
         if (bonusDamage > 0) {
             if (!this.playerDamageBonusText) {
-                this.playerDamageBonusText = this.add.text(this.playerDamageText.x + 200 , y + 20, `(+${bonusDamage})`, {
+                this.playerDamageBonusText = this.add.text(this.playerDamageText.x + 200, y + 20, `(+${bonusDamage})`, {
                     font: '16px Orbitron',
                     fill: '#00BFFF'
                 });
@@ -373,7 +381,7 @@ class BattleUI extends Phaser.Scene {
 
         // Upgrades definition
         const damageUpgrades = [
-            { name: "Penknife", description: "Increase damage by 1", cost: 60, icon: 'sword1'},
+            { name: "Penknife", description: "Increase damage by 1", cost: 60, icon: 'sword1' },
             { name: "Enhanced Sword", description: "Increase damage by 2%", cost: 500, icon: 'sword2' }
         ];
 
@@ -516,6 +524,30 @@ class BattleUI extends Phaser.Scene {
             this.buyButtons.push({ button: buyButton, cost: upgrade.cost });
 
             this.scrollableContainer.add([itemBg, icon, nameText, descText, costText, buyButton]);
+            if (this.purchaseCounts.hasOwnProperty(upgrade.name)) {
+                // Create purchase count text for special items
+                const purchaseCountText = this.add.text(startX + itemWidth - 20, itemY + 10, `(${this.purchaseCounts[upgrade.name] || 0}/${this.itemPurchaseLimit})`, {
+                    font: '16px Orbitron',
+                    fill: '#FFD700'
+                }).setOrigin(1, 0);
+
+                this.scrollableContainer.add(purchaseCountText);
+
+                this.buyButtons.push({
+                    button: buyButton,
+                    cost: upgrade.cost,
+                    upgradeName: upgrade.name,
+                    purchaseCountText: purchaseCountText
+                });
+            } else { // non special items
+                this.buyButtons.push({
+                    button: buyButton,
+                    cost: upgrade.cost,
+                    upgradeName: upgrade.name,
+                });
+            }
+
+            
         });
     }
 
@@ -534,6 +566,20 @@ class BattleUI extends Phaser.Scene {
             return;
         }
         if (this.gold >= cost) {
+
+            if (this.purchaseCounts.hasOwnProperty(upgradeName)) {
+                if (this.purchaseCounts[upgradeName] < this.itemPurchaseLimit) {
+                    this.purchaseCounts[upgradeName]++;
+                    const item = this.buyButtons.find(item => item.upgradeName === upgradeName);
+                    if (item && item.purchaseCountText) {
+                        item.purchaseCountText.setText(`(${this.purchaseCounts[upgradeName]}/${this.itemPurchaseLimit})`);
+                    }
+                } else {
+                    this.showPurchaseFeedback(`Limit reached for ${upgradeName}`, '#ff0000');
+                    return;
+                }
+            }
+
             this.gold -= cost;
             console.log(`Purchased Upgrade: ${upgradeName}`);
             this.updateGoldDisplay();
@@ -563,7 +609,7 @@ class BattleUI extends Phaser.Scene {
             if (upgradeName === "Mecha Sneakers") {
                 this.scene.get('GameScene').player.speed = Math.round(this.scene.get('GameScene').player.speed * 1.1);
             }
-            
+
         } else {
             this.showPurchaseFeedback(`You need ${cost - this.gold} more gold`, '#ff0000');
         }
@@ -585,7 +631,6 @@ class BattleUI extends Phaser.Scene {
             }
         }).setOrigin(0.5).setScrollFactor(0).setDepth(20);
 
-        // Animation: fade out
         this.tweens.add({
             targets: this.currentFeedbackText,
             alpha: { from: 1, to: 0 },
