@@ -155,7 +155,7 @@ class GameScene extends Phaser.Scene {
 
     handlePlayerClick(pointer) {
         if (this.enemyClicked) {
-            this.enemyClicked = false;
+            this.enemyClicked = false; // Reset the flag
             return; // Click was on the enemy, skip the general click logic
         }
 
@@ -317,60 +317,6 @@ class GameScene extends Phaser.Scene {
                 this.player.continueAttacking = true;
             });
         });
-    }
-
-    setupInputHandlers() {
-        const originalWidth = this.land.texture.source[0].width;
-        const originalHeight = this.land.texture.source[0].height;
-
-        this.input.on('pointerdown', function (pointer) {
-            if (pointer.leftButtonDown()) {
-                if (this.enemyClicked) {
-                    this.enemyClicked = false; // Reset the flag
-                    return; // Click was on the enemy, so skip the general click logic/no callback
-                }
-
-                // Convert screen coordinates to world coordinates
-                const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-
-                // Check if the clicked point is within the bounds of the island
-                if (worldPoint.x >= this.land.x - originalWidth / 2 &&
-                    worldPoint.x <= this.land.x + originalWidth / 2 &&
-                    worldPoint.y >= this.land.y - originalHeight / 2 &&
-                    worldPoint.y <= this.land.y + originalHeight / 2) {
-                    // If within bounds, move the player
-                    this.player.moveStraight(worldPoint.x, worldPoint.y);
-                } else {
-                    this.messageText.setText("Can't go there!");
-                    this.messageText.setOrigin(0.5, 0.5);
-                    this.messageText.setVisible(true);
-
-                    // this.messageText.setPosition(worldPoint.x, worldPoint.y);
-                    // ensure the text is seen fully within this.sys.game.config.width
-                    if (worldPoint.x < this.sys.game.config.width / 2) {
-                        this.messageText.setPosition(worldPoint.x + 100, worldPoint.y);
-                    } else {
-                        this.messageText.setPosition(worldPoint.x - 50, worldPoint.y);
-                    }
-                    this.tweens.add({
-                        targets: this.messageText,
-                        alpha: { start: 0, to: 1 },
-                        duration: 1000,
-                        ease: 'Linear',
-                        yoyo: true,
-                        repeat: 0,
-                        onComplete: () => {
-                            this.messageText.setVisible(false);
-                            this.messageText.setAlpha(1); // Reset alpha value for the next use
-                        }
-                    });
-                }
-            }
-        }, this);
-
-        this.input.enabled = true;
-
-        this.sceneName = "battle-scene";
     }
 
     collectGold(goldSprite) {

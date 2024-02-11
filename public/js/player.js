@@ -184,10 +184,7 @@ class Player {
             onComplete: () => {
                 if (this.isDead) return;
 
-                if (this.scene.enemyClicked) {
-                    this.scene.enemyClicked = false;
-                } else {
-                    // Check if the sprite has reached the target
+                if (!this.scene.enemyClicked) {
                     if (Math.round(this.robotSprite.x) === Math.round(newX) && Math.round(this.robotSprite.y) === Math.round(newY)) {
                         // Play a random idle animation
                         const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];

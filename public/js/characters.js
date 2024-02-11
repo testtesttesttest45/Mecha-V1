@@ -86,12 +86,12 @@ const characterMap = {
     8: {
         spritesheetKey: 'character8',
         name: 'protowinged_mech',
-        tier: 'easy',
+        tier: 'godly',
         range: 350,
-        speed: 350,
+        speed: 500,
         damage: 150,
-        health: 7000,
-        attackSpeed: 3.31,
+        health: 70000,
+        attackSpeed: 2,
         attackCount: 1,
         projectile: 'blueBullet'
     },
