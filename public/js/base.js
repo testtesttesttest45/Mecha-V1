@@ -193,7 +193,7 @@ class Base {
             let goldY = this.sprite.y + (Math.random() * 100) - 50;
             let gold = this.scene.add.sprite(goldX, goldY, 'gold');
             gold.setScale(0.5);
-            gold.setData('value', 100);
+            gold.setData('value', 500);
             this.scene.time.delayedCall(2000, () => {
                 this.scene.collectGold(gold);
             }, [], this);

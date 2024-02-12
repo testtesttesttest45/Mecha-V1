@@ -37,11 +37,12 @@ class Player {
         this.attackCount = character.attackCount;
         this.enemies = enemies;
         this.targetedEnemy = null;
+        this.name = character.name;
     }
 
     create() {
         this.robotSprite = this.scene.add.sprite(this.position.x, this.position.y);
-        this.robotSprite.setOrigin(0.5, 0.7);
+        this.robotSprite.setOrigin(0.5, 0.5);
         this.robotSprite.setDepth(1);
         if (!this.scene.anims.exists('idle1')) {
             for (let i = 0; i < 4; i++) {
@@ -404,7 +405,7 @@ class Player {
     updateHealthBar() {
         // Calculate the position of the health bar above the player
         const barX = this.robotSprite.x - 70;
-        const barY = this.robotSprite.y - this.robotSprite.displayHeight + 120;
+        const barY = this.robotSprite.y - this.robotSprite.displayHeight / 2;
 
         this.healthBar.clear();
         this.healthBar.setPosition(barX, barY);

@@ -172,16 +172,18 @@ class BattleUI extends Phaser.Scene {
 
         let partTimeX = this.scale.width - 350;
         let partTimeY = 500;
-        this.playerHealthText = this.add.text(partTimeX, partTimeY, 'Health: --/--', { font: '16px Orbitron', fill: '#ffffff' });
-        this.playerDamageText = this.add.text(partTimeX, partTimeY + 20, 'Damage: --', { font: '16px Orbitron', fill: '#ffffff' });
-        this.playerAttackSpeedText = this.add.text(partTimeX, partTimeY + 40, 'Attack Speed: --', { font: '16px Orbitron', fill: '#ffffff' });
-        this.playerSpeedText = this.add.text(partTimeX, partTimeY + 60, 'Speed: --', { font: '16px Orbitron', fill: '#ffffff' });
+        const playerName = this.scene.get('GameScene').player.name;
+        this.playerNameText = this.add.text(partTimeX, partTimeY, playerName, { font: '18px Orbitron', fill: '#ffffff' });
+        this.playerHealthText = this.add.text(partTimeX, partTimeY + 20, 'Health: --/--', { font: '16px Orbitron', fill: '#ffffff' });
+        this.playerDamageText = this.add.text(partTimeX, partTimeY + 40, 'Damage: --', { font: '16px Orbitron', fill: '#ffffff' });
+        this.playerAttackSpeedText = this.add.text(partTimeX, partTimeY + 60, 'Attack Speed: --', { font: '16px Orbitron', fill: '#ffffff' });
+        this.playerSpeedText = this.add.text(partTimeX, partTimeY + 80, 'Speed: --', { font: '16px Orbitron', fill: '#ffffff' });
 
         // Optional: Initialize bonus texts if you have them
-        this.playerHealthBonusText = this.add.text(this.playerHealthText.x + 200, partTimeY, '', { font: '16px Orbitron', fill: '#00BFFF' });
-        this.playerDamageBonusText = this.add.text(this.playerDamageText.x + 200, partTimeY + 20, '', { font: '16px Orbitron', fill: '#00BFFF' });
-        this.playerAttackSpeedBonusText = this.add.text(this.playerAttackSpeedText.x + 200, partTimeY + 40, '', { font: '16px Orbitron', fill: '#00BFFF' });
-        this.playerSpeedBonusText = this.add.text(this.playerSpeedText.x + 200, partTimeY + 60, '', { font: '16px Orbitron', fill: '#00BFFF' });
+        this.playerHealthBonusText = this.add.text(this.playerHealthText.x + 200, partTimeY + 20, '', { font: '16px Orbitron', fill: '#00BFFF' });
+        this.playerDamageBonusText = this.add.text(this.playerDamageText.x + 200, partTimeY + 40, '', { font: '16px Orbitron', fill: '#00BFFF' });
+        this.playerAttackSpeedBonusText = this.add.text(this.playerAttackSpeedText.x + 200, partTimeY + 60, '', { font: '16px Orbitron', fill: '#00BFFF' });
+        this.playerSpeedBonusText = this.add.text(this.playerSpeedText.x + 200, partTimeY + 80, '', { font: '16px Orbitron', fill: '#00BFFF' });
 
         const shopTextY = statsTextY + 200;
 
@@ -315,7 +317,6 @@ class BattleUI extends Phaser.Scene {
             font: '24px Orbitron',
             fill: '#FFA500'
         }).setOrigin(0, 0);
-        console.log(modalX + 20, modalY + 20)
         const sectionWidth = modalWidth / 2 - 60;
         const damageSectionX = modalX + 30;
         const healthSectionX = modalX + sectionWidth + 90;
@@ -348,12 +349,12 @@ class BattleUI extends Phaser.Scene {
         // Upgrades definition
         const damageUpgrades = [
             { name: "Penknife", description: "Increase damage by 1", cost: 60, icon: 'sword1' },
-            { name: "Hunter Blade", description: "Increase damage by 2%", cost: 500, icon: 'sword2' }
+            { name: "Hunter's Blade", description: "Increase damage by 2%", cost: 500, icon: 'sword2' }
         ];
 
         const healthUpgrades = [
             { name: "Heaven's Rain", description: "Increase max health by 5%", cost: 2000, icon: 'health1' },
-            { name: "Health Potion", description: "Heal back 500 health", cost: 500, icon: 'health2' },
+            { name: "Health Potion", description: "Heal back 1000 health", cost: 500, icon: 'health2' },
         ];
 
         const attackSpeedUpgrades = [
@@ -552,15 +553,15 @@ class BattleUI extends Phaser.Scene {
             if (upgradeName === "Penknife") {
                 this.scene.get('GameScene').player.damage += 1;
             }
-            if (upgradeName === "Hunter Blade") {
+            if (upgradeName === "Hunter's Blade") {
                 this.scene.get('GameScene').player.damage = Math.round(this.scene.get('GameScene').player.damage * 1.02);
             }
             if (upgradeName === "Heaven's Rain") {
                 this.scene.get('GameScene').player.maxHealth = Math.round(this.scene.get('GameScene').player.maxHealth * 1.05);
             }
             if (upgradeName === "Health Potion") {
-                this.scene.get('GameScene').player.currentHealth = Math.min(this.scene.get('GameScene').player.maxHealth, this.scene.get('GameScene').player.currentHealth + 500);
-                this.scene.get('GameScene').player.createHealingText(500);
+                this.scene.get('GameScene').player.currentHealth = Math.min(this.scene.get('GameScene').player.maxHealth, this.scene.get('GameScene').player.currentHealth + 1000);
+                this.scene.get('GameScene').player.createHealingText(1000);
             }
             if (upgradeName === "Energy Gun") {
                 this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.05 * 100) / 100;
@@ -690,7 +691,7 @@ class BattleUI extends Phaser.Scene {
     }
 
     update() {
-        if (!this.timerStarted || this.isMultiplierPaused) return;
+        if (!this.timerStarted) return;
         this.updateMultiplierFill();
         this.displayPlayerStats(this.scale.width - 350, 500);
         if (this.strengthenedSquareText) {

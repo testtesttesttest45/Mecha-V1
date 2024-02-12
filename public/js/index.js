@@ -210,7 +210,7 @@ class GameScene extends Phaser.Scene {
 
     createPlayer() {
         this.player = null;
-        this.player = new Player(this, 1500, 800, 8, this.enemies);
+        this.player = new Player(this, 1500, 800, 10, this.enemies);
         this.player.create();
     }
 
@@ -441,10 +441,11 @@ class LoadingScene extends Phaser.Scene {
             "When enemies die, they drop gold. Destruction of the base drops extra gold. Gold drops are reduced if enemies died as a result of the base being destroyed.",
             "Spend the gold you earned in the Battle Shop to purchase items that make you stronger!",
             "The blue square on the left of the health bar of enemies represents the stats they inherit from the current base level. The black hexagon on the right of the health bar of enemies represents additional stats they gain after periodic Enemy Strengthenings. Don't take too long to kill them, or they become too strong to kill!",
-            "Every few seconds, the player heals back some amount of health based on his Max Health."
+            "Every few seconds, the player heals back some amount of health based on his Max Health.",
+            "Stronger enemies appear on Base level 5 onwards. Beware!"
         ];
-        this.background = null; // For dynamic background
-        this.progressBar = null; // For visual progress indication
+        this.background = null;
+        this.progressBar = null;
         this.progressBox = null;
     }
 
@@ -586,6 +587,8 @@ class LoadingScene extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'character6', 'assets/sprites/character_6.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character7', 'assets/sprites/character_7.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character8', 'assets/sprites/character_8.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character9', 'assets/sprites/character_9.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character10', 'assets/sprites/character_10.png', 4000, 4400);
 
         this.load.image('blueBullet', 'assets/projectiles/blue_bullet.png');
         this.load.image('fireball', 'assets/projectiles/fireball.png');
