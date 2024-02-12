@@ -13,7 +13,7 @@ class BattleUI extends Phaser.Scene {
         this.baseRebuildBarFill = null;
         this.baseRebuilding = false;
         this.isMultiplierPaused = false;
-        this.gold = 2200220;
+        this.gold = 10000;
         this.cash = 0;
         this.scrollbarTrack = null;
         this.scrollbarHandle = null;
@@ -47,7 +47,7 @@ class BattleUI extends Phaser.Scene {
         this.baseRebuildBarFill = null;
         this.baseRebuilding = false;
         this.isMultiplierPaused = false;
-        this.gold = 2200220;
+        this.gold = 10000;
         this.cash = 0;
         this.scrollbarTrack = null;
         this.scrollbarHandle = null;
