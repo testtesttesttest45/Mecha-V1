@@ -327,7 +327,7 @@ class LoadingScene extends Phaser.Scene {
 }
 
 document.addEventListener('DOMContentLoaded', (event) => {
-    const gameScreen = document.getElementById('game-screen');
+    const gameScreen = document.getElementById('main-menu');
     const battleScene = document.getElementById('battle-scene');
     const playButton = document.querySelector('.play-button');
 

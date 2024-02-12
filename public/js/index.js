@@ -22,7 +22,7 @@ class GameScene extends Phaser.Scene {
         this.base = null;
         this.allowInput = false;
     }
-    
+
     create() {
         this.gameScreenWidth = this.sys.game.config.width;
         this.gameScreenHeight = this.sys.game.config.height;
@@ -176,7 +176,6 @@ class GameScene extends Phaser.Scene {
             this.player.targetedEnemy = null;
             this.cancelClick = true;
             this.player.moveStraight(worldPoint.x, worldPoint.y);
-            console.log(`Player moving to: ${worldPoint.x}, ${worldPoint.y}`);
         } else {
             this.showOutOfBoundsMessage(worldPoint);
         }
@@ -267,17 +266,17 @@ class GameScene extends Phaser.Scene {
     selectEnemyCharacterCode() {
         // filter characterMap by 'easy' tier
         let easyEnemies = Object.entries(characterMap).filter(([key, value]) => value.tier === 'easy').map(([key]) => key);
-    
+
         // ff base level is 5 or higher, might have 'hard' tier enemies
         if (this.base.baseLevel >= 5) {
             let hardEnemies = Object.entries(characterMap).filter(([key, value]) => value.tier === 'hard').map(([key]) => key);
-    
+
             // 50% chance to choose from 'hard' tier if base level >= 5
             if (Math.random() < 0.5) {
                 return hardEnemies[Math.floor(Math.random() * hardEnemies.length)];
             }
         }
-    
+
         // default to choose from 'easy' tier
         return easyEnemies[Math.floor(Math.random() * easyEnemies.length)];
     }
@@ -326,7 +325,7 @@ class GameScene extends Phaser.Scene {
     }
 
     collectGold(goldSprite) {
-        const targetPosition = { x: 3000, y: 1000}
+        const targetPosition = { x: 3000, y: 1000 }
         this.tweens.add({
             targets: goldSprite,
             x: targetPosition.x,
@@ -343,7 +342,7 @@ class GameScene extends Phaser.Scene {
     }
 
     collectCash(cashSprite) {
-        const targetPosition = { x: 3000, y: 1600}
+        const targetPosition = { x: 3000, y: 1600 }
         this.tweens.add({
             targets: cashSprite,
             x: targetPosition.x,
@@ -509,13 +508,19 @@ class LoadingScene extends Phaser.Scene {
 
 
 }
-
 document.addEventListener('DOMContentLoaded', (event) => {
-    const gameScreen = document.getElementById('game-screen');
+    const gameScreen = document.getElementById('main-menu');
     const battleScene = document.getElementById('battle-scene');
     const playButton = document.querySelector('.play-button');
 
+    let game; // Keep game instance in a higher scope
+
     function startGame() {
+        // Check if a game instance already exists
+        if (game) {
+            game.destroy(true); // Destroy the game and all objects, true for removing the canvas as well
+        }
+
         const config = {
             type: Phaser.AUTO,
             width: 1920,
@@ -533,14 +538,16 @@ document.addEventListener('DOMContentLoaded', (event) => {
             },
         };
 
-        const game = new Phaser.Game(config);
-        game.canvas.id = 'battle-canvas';
+        // Create a new game instance
+        game = new Phaser.Game(config);
+        game.canvas.id = 'battle-canvas'; // Ensure this ID is unique or simply don't set it if unnecessary
         resize(game);
 
         window.addEventListener('resize', () => {
             resize(game);
         });
     }
+
 
     playButton.addEventListener('click', () => {
         gameScreen.style.display = 'none';

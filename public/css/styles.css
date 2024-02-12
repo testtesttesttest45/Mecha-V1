@@ -19,7 +19,7 @@ html {
     height: 56.25vw;
 }
 
-.game-screen,
+.main-menu,
 .battle-scene {
     position: relative;
     height: 100%;
@@ -32,7 +32,7 @@ html {
     border-radius: 2vw;
 }
 
-.game-screen {
+.main-menu {
     background: url('../assets/images/background.png') no-repeat center center fixed;
     background-size: 100vw;
 }

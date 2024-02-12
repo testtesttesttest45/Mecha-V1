@@ -90,7 +90,7 @@ const characterMap = {
         range: 350,
         speed: 500,
         damage: 150,
-        health: 70000,
+        health: 7000,
         attackSpeed: 2,
         attackCount: 1,
         projectile: 'blueBullet'

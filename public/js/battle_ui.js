@@ -313,7 +313,7 @@ class BattleUI extends Phaser.Scene {
             font: '24px Orbitron',
             fill: '#FFA500'
         }).setOrigin(0, 0);
-
+        console.log(modalX + 20, modalY + 20)
         const sectionWidth = modalWidth / 2 - 60;
         const damageSectionX = modalX + 30;
         const healthSectionX = modalX + sectionWidth + 90;
@@ -814,7 +814,7 @@ class BattleUI extends Phaser.Scene {
         })
             .setOrigin(0.5)
             .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => window.location.reload()); // Reload the page to return to main menu
+            .on('pointerdown', () => this.exitToMainMenu());
     
         this.gameOverContainer.add([gameOverText, retryButton, mainMenuButton]);
     
@@ -826,6 +826,13 @@ class BattleUI extends Phaser.Scene {
         let gameScene = this.scene.get('GameScene');
         gameScene.scene.restart();
         gameScene.allowInput = false;
+    }
+
+    exitToMainMenu() {
+        this.scene.get('GameScene').scene.stop();
+        this.scene.stop();
+        document.getElementById('battle-scene').style.display = 'none';
+        document.getElementById('game-screen').style.display = 'flex';
     }
 }
 
