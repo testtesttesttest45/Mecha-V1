@@ -52,7 +52,7 @@ class Enemy {
         this.base = base;
         this.idleAnimations = [`character${this.characterCode}Idle1`, `character${this.characterCode}Idle2`, `character${this.characterCode}Idle3`, `character${this.characterCode}Idle4`];
         this.timerStarted = false;
-        this.enemyStrengthenInterval = 12000;
+        this.enemyStrengthenInterval = 18000;
         this.attackCount = character.attackCount;
     }
 
@@ -647,7 +647,7 @@ class Enemy {
             let goldY = this.sprite.y + (Math.random() * 100) - 50;
             let gold = this.scene.add.sprite(goldX, goldY, 'gold');
             gold.setScale(0.5);
-            gold.setData('value', 100);
+            gold.setData('value', 300);
             this.scene.time.delayedCall(2000, () => {
                 this.scene.collectGold(gold);
             }, [], this);
