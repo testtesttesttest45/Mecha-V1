@@ -53,6 +53,7 @@ class Enemy {
         this.idleAnimations = [`character${this.characterCode}Idle1`, `character${this.characterCode}Idle2`, `character${this.characterCode}Idle3`, `character${this.characterCode}Idle4`];
         this.timerStarted = false;
         this.enemyStrengthenInterval = 7000;
+        this.attackCount = character.attackCount;
     }
 
     startTimer() {
@@ -415,17 +416,27 @@ class Enemy {
         }
 
         this.sprite.off('animationupdate');
+        this.sprite.off('animationcomplete');
+
+        let damageFrames = [];
+        if (this.attackCount > 1 && !hasProjectile) {
+            for (let i = 1; i <= this.attackCount; i++) {
+                damageFrames.push(Math.ceil((5 / this.attackCount) * i));
+            }
+        } else if (!hasProjectile) {
+            damageFrames.push(5);
+        }
+
         this.sprite.on('animationupdate', (anim, frame) => {
             if (anim.key === attackAnimationKey) {
                 if (frame.index === 4 && hasProjectile) {
                     this.launchProjectile(player, angleToPlayer);
-                } else if (frame.index === 5 && !hasProjectile) {
+                } else if (damageFrames.includes(frame.index) && !hasProjectile) {
                     const playerPos = player.getPosition();
                     if (this.isPlayerInArc(playerPos, this.sprite, this.attackRange, angleToPlayer - Math.PI / 6, angleToPlayer + Math.PI / 6)) {
                         player.takeDamage(this.damage, this);
                     } else {
                         this.createDodgeText(player);
-
                     }
                 }
             }

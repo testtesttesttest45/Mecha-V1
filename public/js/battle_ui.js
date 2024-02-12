@@ -30,6 +30,7 @@ class BattleUI extends Phaser.Scene {
             "Mecha Sneakers": 0,
         };
         this.purchaseCountText = null;
+        this.goldTextShop = null;
     }
 
     resetState() {
@@ -63,6 +64,7 @@ class BattleUI extends Phaser.Scene {
             "Mecha Sneakers": 0,
         };
         this.purchaseCountText = null;
+        this.goldTextShop = null;
     }
     startMultiplierTimer() {
         if (!this.timerStarted) {
