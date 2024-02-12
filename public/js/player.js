@@ -107,12 +107,18 @@ class Player {
 
     autoHeal() {
         if (this.currentHealth < this.maxHealth && !this.isDead) {
-            const healAmount = Math.min(100, this.maxHealth - this.currentHealth);
+            // calc heal amount as 5% of max health
+            const healPercentage = 0.05;
+            let healAmount = Math.floor(this.maxHealth * healPercentage);
+    
+            healAmount = Math.min(healAmount, this.maxHealth - this.currentHealth);
+    
             this.currentHealth += healAmount;
             this.updateHealthBar();
             this.createHealingText(healAmount);
         }
     }
+    
 
     createHealingText(amount) {
         const healingText = this.scene.add.text(this.robotSprite.x, this.robotSprite.y - 100, `+${amount}`, { font: '36px Orbitron', fill: '#00ff00' });

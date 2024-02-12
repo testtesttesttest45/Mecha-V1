@@ -712,7 +712,7 @@ class Enemy {
                 },
                 callbackScope: this,
                 loop: true,
-                delay: 50
+                delay: 75
             });
         }
 
@@ -894,7 +894,7 @@ class Enemy {
     heal(amount) {
         this.health = Math.min(this.health + amount, this.maxHealth);
         this.updateHealthBar();
-        this.createHealingText(amount); // Call a method to create healing text
+        this.createHealingText(amount);
     }
 
     createHealingText(amount) {
@@ -982,7 +982,11 @@ class Enemy {
 
         if (this.inCamp && this.health < this.maxHealth) {
             if (time - this.lastHealTime > 1000) { // Heal every 1 second
-                this.heal(20); // +20 health per second
+                const healPercentage = 0.05; // 5% of max health per second
+                let healAmount = Math.round(this.maxHealth * healPercentage);
+
+                healAmount = Math.min(healAmount, this.maxHealth - this.health);
+                this.heal(healAmount);
                 this.lastHealTime = time;
             }
         }

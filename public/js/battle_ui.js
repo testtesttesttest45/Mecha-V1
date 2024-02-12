@@ -5,7 +5,7 @@ class BattleUI extends Phaser.Scene {
         this.scoreText = null;
         this.multiplier = 5;
         this.multiplierMin = 0.5;
-        this.multiplierDuration = 3000;
+        this.multiplierDuration = 10000;
         this.lastMultiplierUpdate = 0;
         this.timerStarted = false;
         this.baseRebuildText = null;
