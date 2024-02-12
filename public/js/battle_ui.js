@@ -783,44 +783,45 @@ class BattleUI extends Phaser.Scene {
     }
 
     createGameOverScreen() {
-        this.inputBlocker = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.5)
+        this.inputBlocker = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.75)
             .setOrigin(0, 0)
-            .setInteractive(); // This makes the rectangle capture all clicks
+            .setInteractive();
     
         this.gameOverContainer = this.add.container(0, 0);
     
         this.gameOverContainer.add(this.inputBlocker);
     
-        let gameOverText = this.add.text(this.scale.width / 2, this.scale.height / 2 - 100, 'GAME OVER', {
-            font: '48px Orbitron',
-            fill: '#ff0000'
+        let gameOverText = this.add.text(this.scale.width / 2, this.scale.height / 2 - 200, 'GAME OVER', {
+            font: '64px Orbitron',
+            fill: '#FF6347', // tomato red
+            stroke: '#000000',
+            strokeThickness: 6
         }).setOrigin(0.5);
     
-        let retryButton = this.add.text(this.scale.width / 2, this.scale.height / 2, 'Retry', {
-            font: '32px Orbitron',
-            fill: '#ffffff',
-            backgroundColor: '#ff0000',
-            padding: { x: 20, y: 10 },
-            borderRadius: 5
-        })
-            .setOrigin(0.5)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => this.restartGameScene());
+        let retryButton = this.createStyledButton(this.scale.width / 2, this.scale.height / 2, 'Retry', '#ff0000', () => this.restartGameScene());
     
-        let mainMenuButton = this.add.text(this.scale.width / 2, this.scale.height / 2 + 100, 'Main Menu', {
-            font: '32px Orbitron',
-            fill: '#ffffff',
-            backgroundColor: '#007bff', // Use a different color to distinguish from the retry button
-            padding: { x: 20, y: 10 },
-            borderRadius: 5
-        })
-            .setOrigin(0.5)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => this.exitToMainMenu());
+        let mainMenuButton = this.createStyledButton(this.scale.width / 2, this.scale.height / 2 + 100, 'Main Menu', '#007bff', () => this.exitToMainMenu());
     
         this.gameOverContainer.add([gameOverText, retryButton, mainMenuButton]);
     
         this.gameOverContainer.setDepth(100);
+    }
+    
+    createStyledButton(x, y, text, backgroundColor, callback) {
+        let button = this.add.text(x, y, text, {
+            font: '28px Orbitron',
+            fill: '#ffffff',
+            padding: { x: 20, y: 10 },
+            backgroundColor: backgroundColor
+        })
+        .setOrigin(0.5)
+        .setInteractive({ useHandCursor: true })
+        .on('pointerdown', callback);
+    
+        button.setStroke('#000000', 4);
+        button.setShadow(2, 2, 'rgba(0,0,0,0.5)', 2, true, true);
+    
+        return button;
     }
 
     restartGameScene() {
@@ -834,7 +835,7 @@ class BattleUI extends Phaser.Scene {
         this.scene.get('GameScene').scene.stop();
         this.scene.stop();
         document.getElementById('battle-scene').style.display = 'none';
-        document.getElementById('game-screen').style.display = 'flex';
+        document.getElementById('main-menu').style.display = 'flex';
     }
 }
 
