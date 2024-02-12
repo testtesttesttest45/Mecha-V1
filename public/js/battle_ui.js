@@ -152,7 +152,7 @@ class BattleUI extends Phaser.Scene {
         this.strengthenedSquareContainer.setDepth(1);
 
         const multiplierTextY = strengthenTextY + 80;
-        this.multiplierText = this.add.text(panelCenterX, multiplierTextY, `Multiplier: x${this.multiplier}`, {
+        this.multiplierText = this.add.text(panelCenterX, multiplierTextY, `Score Multiplier: x${this.multiplier}`, {
             font: '16px Orbitron',
             fill: '#ffffff'
         }).setOrigin(0.5, 0).setScrollFactor(0);
@@ -728,7 +728,7 @@ class BattleUI extends Phaser.Scene {
             if (this.multiplier > this.multiplierMin) {
                 this.multiplier -= 0.5; // Decrement by 0.5
                 this.multiplier = Math.max(this.multiplier, this.multiplierMin); // Ensure it doesn't go below 0.5
-                this.multiplierText.setText(`Multiplier: x${this.multiplier}`);
+                this.multiplierText.setText(`Score Multiplier: x${this.multiplier}`);
                 this.lastMultiplierUpdate = currentTime;
             }
 

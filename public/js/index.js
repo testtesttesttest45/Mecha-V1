@@ -431,43 +431,143 @@ class LoadingScene extends Phaser.Scene {
         this.gridCreated = false;
         this.assetProgress = 0;
         this.gridProgress = 0;
+        this.tooltips = [
+            "Periodic Catastrophe storms do massive damage to all characters! Lure enemies into a storm to greatly reduce their health!",
+            "Enemies are immune to Catastrophe if they are in camps. They are also immune to all forms of damage when returning to camps.",
+            "The white bar below the enemies' health bar represents Interest. When the player stays out of range long enough, enemies' Interest bar drops and eventually gives up chasing the player.",
+            "Destroying the base can kill all enemies alive. However, while the base is still standing, any enemies alive will be enraged, gaining increased movement speed and double damage. Take them out first!",
+            "Enemies will lose their Enraged state after a while, but attacking their base again will reset their Enraged timer.",
+            "Sometimes enemies can drop Cash. New characters can be purchased with Cash in the main menu. (Not available yet)",
+            "When enemies die, they drop gold. Destruction of the base drops extra gold. Gold drops are reduced if enemies died as a result of the base being destroyed.",
+            "Spend the gold you earned in the Battle Shop to purchase items that make you stronger!",
+            "The blue square on the left of the health bar of enemies represents the stats they inherit from the current base level. The black hexagon on the right of the health bar of enemies represents additional stats they gain after periodic Enemy Strengthenings. Don't take too long to kill them, or they become too strong to kill!",
+            "Every few seconds, the player heals back some amount of health based on his Max Health."
+        ];
+        this.background = null; // For dynamic background
+        this.progressBar = null; // For visual progress indication
+        this.progressBox = null;
     }
 
     preload() {
         this.loadingStartTime = Date.now();
+
+        // Create a dynamic or static background
+        this.createBackground();
         this.createLoadingText();
+        this.createProgressBar();
+        this.createTooltipText();
+
         this.loadAssets();
 
-        this.load.on('progress', (value) => {
-            this.assetProgress = value * 100; // Convert to percentage
-            this.loadingText.setText(`Loading... ${Math.round(this.assetProgress)}%`);
-        });
+        this.load.on('progress', this.updateProgressBar, this);
+        this.load.on('complete', this.onLoadComplete, this);
 
-        this.load.on('complete', () => {
-            // All assets are loaded
-            console.log('All assets loaded, switching to GameScene');
-            let loadingEndTime = Date.now();
-            let loadingDuration = (loadingEndTime - this.loadingStartTime) / 1000;
-            console.log(`Loading completed in ${loadingDuration.toFixed(2)} seconds`);
-            this.loadingText.setVisible(false);
-            this.scene.start('GameScene');
-        });
+        this.input.on('pointerdown', this.updateTooltipText, this);
+    }
+    create() {
+        // Set default cursor
+        this.input.setDefaultCursor(`url('assets/images/mouse_cursor.png') 15 10, pointer`);
     }
 
-    create() {
-        // set default cursor
-        this.input.setDefaultCursor(`url('assets/images/mouse_cursor.png') 15 10, pointer`);
+    createBackground() {
+        this.cameras.main.setBackgroundColor('#000');
     }
 
     createLoadingText() {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
-        this.loadingText = this.add.text(width / 2, height / 2, 'Loading...', {
-            font: '74px Orbitron',
-            fill: '#fff',
-            align: 'center'
+        this.loadingText = this.add.text(width / 2, height / 2 - 50, 'Loading...', {
+            font: '48px Orbitron',
+            fill: '#ffffff'
         }).setOrigin(0.5, 0.5);
     }
+
+    createProgressBar() {
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height;
+        this.progressBox = this.add.graphics();
+        this.progressBar = this.add.graphics();
+
+        // Progress box (border)
+        this.progressBox.fillStyle(0x222222, 0.8);
+        this.progressBox.fillRect(width / 2 - 160, height / 2 + 30, 320, 50);
+
+        // Initial call to update the progress bar
+        this.updateProgressBar(0);
+    }
+
+    updateProgressBar(progress) {
+        this.progressBar.clear();
+        this.progressBar.fillStyle(0xffffff, 1);
+        this.progressBar.fillRect(this.cameras.main.width / 2 - 150, this.cameras.main.height / 2 + 40, 300 * progress, 30);
+
+        this.loadingText.setText(`Loading... ${Math.round(progress * 100)}%`);
+    }
+
+    onLoadComplete() {
+        console.log('All assets loaded, switching to GameScene');
+        let loadingEndTime = Date.now();
+        let loadingDuration = (loadingEndTime - this.loadingStartTime) / 1000;
+        console.log(`Loading completed in ${loadingDuration.toFixed(2)} seconds`);
+        this.progressBar.destroy();
+        this.progressBox.destroy();
+        this.createStartButton();
+    }
+
+    createTooltipText() {
+        const width = this.cameras.main.width;
+        const tooltipY = this.loadingText.y + this.loadingText.height + 100;
+        this.tooltipText = this.add.text(width / 2, tooltipY, '', {
+            font: '24px Orbitron',
+            fill: '#fff',
+            align: 'center',
+            wordWrap: { width: width - 100, useAdvancedWrap: true }
+        }).setOrigin(0.5, 0);
+
+        this.updateTooltipText();
+    }
+
+    updateTooltipText() {
+        const randomIndex = Phaser.Math.Between(0, this.tooltips.length - 1);
+        this.tooltipText.setText(this.tooltips[randomIndex]);
+    }
+
+    createStartButton() {
+        const padding = 10;
+        const buttonWidth = 150;
+        const buttonHeight = 50;
+        const width = this.cameras.main.width;
+        const height = this.cameras.main.height / 2;
+    
+        let startX = width - buttonWidth - padding;
+        let startY = height - buttonHeight - padding;
+    
+        let startButton = this.add.text(startX, startY, 'Start', {
+            font: '20px Orbitron',
+            fill: '#FFFFFF',
+            backgroundColor: '#5cb85c',
+            padding: { x: 10, y: 5 }
+        })
+        .setInteractive({ useHandCursor: true })
+        .setOrigin(0.5, 0.5)
+        .on('pointerover', () => startButton.setStyle({ fill: '#4cae4c'}))
+        .on('pointerout', () => startButton.setStyle({ fill: '#FFFFFF'}))
+        .on('pointerdown', () => {
+            this.scene.start('GameScene');
+        });
+    
+        startButton.setStroke('#4cae4c', 4);
+        startButton.setShadow(2, 2, 'rgba(0,0,0,0.5)', 2, true, true);
+    
+        let background = this.add.graphics();
+        background.fillStyle(0x5cb85c, 1);
+        background.fillRoundedRect(startX - buttonWidth, startY - buttonHeight, buttonWidth, buttonHeight, 5);
+        background.setDepth(-1)
+    
+        startButton.setX(startX - buttonWidth / 2);
+        startButton.setY(startY - buttonHeight / 2);
+    }
+    
 
     loadAssets() {
         this.load.image('ocean', 'assets/images/ocean.png');
@@ -505,20 +605,17 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('moveSpeed1', 'assets/images/moveSpeed1.png');
         this.load.image('moveSpeed2', 'assets/images/moveSpeed2.png');
     }
-
-
 }
 document.addEventListener('DOMContentLoaded', (event) => {
     const gameScreen = document.getElementById('main-menu');
     const battleScene = document.getElementById('battle-scene');
     const playButton = document.querySelector('.play-button');
 
-    let game; // Keep game instance in a higher scope
+    let game;
 
     function startGame() {
-        // Check if a game instance already exists
         if (game) {
-            game.destroy(true); // Destroy the game and all objects, true for removing the canvas as well
+            game.destroy(true);
         }
 
         const config = {
@@ -538,9 +635,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
             },
         };
 
-        // Create a new game instance
         game = new Phaser.Game(config);
-        game.canvas.id = 'battle-canvas'; // Ensure this ID is unique or simply don't set it if unnecessary
+        game.canvas.id = 'battle-canvas';
         resize(game);
 
         window.addEventListener('resize', () => {

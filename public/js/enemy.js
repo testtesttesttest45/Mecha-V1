@@ -11,7 +11,7 @@ class Enemy {
         const character = characterMap[this.characterCode];
         this.level = level;
         this.strengthenLevel = 1;
-        const levelMultiplier = 1 + (this.level - 1) * 0.1; // 10% increase per level
+        const levelMultiplier = 1 + (this.level - 1) * 0.2; // 20% increase per level
         this.health = Math.round(character.health * levelMultiplier);
         this.maxHealth = this.health;
         this.isDead = false;
@@ -52,7 +52,7 @@ class Enemy {
         this.base = base;
         this.idleAnimations = [`character${this.characterCode}Idle1`, `character${this.characterCode}Idle2`, `character${this.characterCode}Idle3`, `character${this.characterCode}Idle4`];
         this.timerStarted = false;
-        this.enemyStrengthenInterval = 7000;
+        this.enemyStrengthenInterval = 12000;
         this.attackCount = character.attackCount;
     }
 
