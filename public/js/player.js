@@ -101,7 +101,8 @@ class Player {
             delay: 5000,
             callback: this.autoHeal,
             callbackScope: this,
-            loop: true
+            loop: true,
+            paused: true // start at paused
         });
 
     }
@@ -118,6 +119,16 @@ class Player {
             this.updateHealthBar();
             this.createHealingText(healAmount);
         }
+    }
+
+    resetHealTimer() {
+        this.healTimer.reset({
+            delay: 5000,
+            callback: this.autoHeal,
+            callbackScope: this,
+            loop: true
+        });
+        this.healTimer.paused = false;
     }
     
 
@@ -424,6 +435,7 @@ class Player {
 
     takeDamage(damage, source) {
         if (this.isDead) return;
+        let wasAtFullHealth = this.currentHealth === this.maxHealth;
 
         this.currentHealth -= damage;
         this.currentHealth = Math.max(this.currentHealth, 0);
@@ -431,6 +443,9 @@ class Player {
         const color = source === 'catastrophe' ? '#ff0' : '#000'; // Yellow for catastrophe, black for others
         this.createDamageText(damage, color);
 
+        if (wasAtFullHealth) {
+            this.resetHealTimer(); // to prevent instantly healing after taking damage from full health
+        }
         if (this.currentHealth <= 0 && !this.isDead) {
             this.die();
         }
