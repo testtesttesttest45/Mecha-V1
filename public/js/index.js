@@ -222,8 +222,8 @@ class GameScene extends Phaser.Scene {
         camps.forEach(camp => {
             for (let i = 0; i < 3; i++) {
                 const randomPosition = camp.getRandomPositionInRadius();
-                // const characterCode = this.selectEnemyCharacterCode();
-                const enemy = new Enemy(this, randomPosition.x, randomPosition.y, 12, camp, this.player, this.base.baseLevel, this.base);
+                const characterCode = this.selectEnemyCharacterCode();
+                const enemy = new Enemy(this, randomPosition.x, randomPosition.y, characterCode, camp, this.player, this.base.baseLevel, this.base);
                 enemy.create();
                 this.enemies.push(enemy);
 
