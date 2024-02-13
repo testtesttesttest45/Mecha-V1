@@ -21,6 +21,8 @@ class GameScene extends Phaser.Scene {
         this.catastrophe = null;
         this.base = null;
         this.allowInput = false;
+        this.activeGameTime = 0;
+        this.isGamePaused = false;
     }
 
     create() {
@@ -211,7 +213,7 @@ class GameScene extends Phaser.Scene {
 
     createPlayer() {
         this.player = null;
-        this.player = new Player(this, 1500, 800, 10, this.enemies);
+        this.player = new Player(this, 1500, 800, 3, this.enemies);
         this.player.create();
     }
 
@@ -366,8 +368,11 @@ class GameScene extends Phaser.Scene {
     }
 
     update(time, delta) {
+        if (!this.isGamePaused) {
+            this.activeGameTime += delta;
+        }
         if (this.player) {
-            this.player.update(time, delta, this.enemies);
+            this.player.update(this.activeGameTime, delta, this.enemies);
         }
         this.enemies.forEach(enemy => {
             if (enemy) {
@@ -376,7 +381,7 @@ class GameScene extends Phaser.Scene {
                 }
                 let playerPosition = this.player.getPosition();
                 enemy.updateEnemy(playerPosition.x, playerPosition.y, this.player, delta);
-                enemy.update(time, delta);
+                enemy.update(this.activeGameTime, delta);
                 const timeUntilNextStrengthen = enemy.getTimeUntilNextStrengthen();
                 this.scene.get('BattleUI').updateStrengthenTimer(timeUntilNextStrengthen);
             }
@@ -389,15 +394,14 @@ class GameScene extends Phaser.Scene {
 
         if (this.base) {
             // console.log(this.base.health)
-            this.base.update(time, delta);
-        }
-
-        if (this.catastrophe && !this.catastrophe.timerStarted) {
-            this.catastrophe.startStormTimer();
+            this.base.update(this.activeGameTime, delta);
         }
 
         if (this.catastrophe) {
-            this.catastrophe.update(time, delta);
+            if (!this.catastrophe.timerStarted) {
+                this.catastrophe.startStormTimer();
+            }
+            this.catastrophe.update(this.activeGameTime, delta);
             const timeUntilNextStorm = this.catastrophe.getTimeUntilNextStorm();
             this.scene.get('BattleUI').updateTimer(timeUntilNextStorm);
         }
@@ -414,13 +418,17 @@ class GameScene extends Phaser.Scene {
         }
 
         if (this.base.isDestroyed) {
-            const timeElapsedSinceDestruction = this.time.now - this.base.destroyedTime;
+            const timeElapsedSinceDestruction = this.activeGameTime - this.base.destroyedTime;
             const rebuildProgress = Math.min(timeElapsedSinceDestruction / this.base.rebuildTime, 1);
 
             if (rebuildProgress < 1) {
                 this.scene.get('BattleUI').updateBaseRebuildUI(rebuildProgress);
             }
         }
+    }
+
+    togglePause() {
+        this.isGamePaused = !this.isGamePaused;
     }
 }
 
@@ -614,6 +622,11 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('attackSpeed2', 'assets/images/attackSpeed2.png');
         this.load.image('moveSpeed1', 'assets/images/moveSpeed1.png');
         this.load.image('moveSpeed2', 'assets/images/moveSpeed2.png');
+
+        this.load.image('ravenMech', 'assets/images/characterIcons/ravenMech.png');
+        this.load.image('darkEtherMessiah', 'assets/images/characterIcons/darkEtherMessiah.png');
+        this.load.image('metalTrex', 'assets/images/characterIcons/metalTrex.png');
+        this.load.image('brutusMech', 'assets/images/characterIcons/brutusMech.png');
     }
 }
 document.addEventListener('DOMContentLoaded', (event) => {

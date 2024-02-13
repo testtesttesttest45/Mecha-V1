@@ -58,13 +58,13 @@ class Enemy {
 
     startTimer() {
         if (!this.timerStarted) {
-            this.strengthenTimer = this.scene.time.now + this.enemyStrengthenInterval;
+            this.strengthenTimer = this.scene.activeGameTime + this.enemyStrengthenInterval;
             this.timerStarted = true;
         }
     }
 
     getTimeUntilNextStrengthen() {
-        return Math.max(0, this.strengthenTimer - this.scene.time.now);
+        return Math.max(0, this.strengthenTimer - this.scene.activeGameTime);
     }
 
 
@@ -74,7 +74,7 @@ class Enemy {
         this.strengthenLevel++;
         this.maxHealth += healthIncrease;
         this.damage += damageIncrease;
-        this.strengthenTimer = this.scene.time.now + this.enemyStrengthenInterval;
+        this.strengthenTimer = this.scene.activeGameTime + this.enemyStrengthenInterval;
 
         this.createStrengthenedText(damageIncrease, healthIncrease);
     }
@@ -322,7 +322,7 @@ class Enemy {
             this.timeInAlert = this.alertTime;
 
             // Check if the enrage duration has elapsed
-            if (this.scene.time.now - this.enrageStartTime > this.enrageDuration) {
+            if (this.scene.activeGameTime - this.enrageStartTime > this.enrageDuration) {
                 this.disenrage();
             }
         } else {
@@ -920,14 +920,14 @@ class Enemy {
             this.isEnraged = true;
             this.damage = this.damage * 2;
             this.speed = this.speed * 2;
-            this.enrageStartTime = this.scene.time.now;
+            this.enrageStartTime = this.scene.activeGameTime;
 
             this.customSquareContainer.remove(this.customSquare, false);
             this.customSquare = this.fireEffect();
             this.customSquareContainer.addAt(this.customSquare, 0);
         } else {
             // Reset enrage timer
-            this.enrageStartTime = this.scene.time.now;
+            this.enrageStartTime = this.scene.activeGameTime;
         }
     }
 

@@ -1,11 +1,12 @@
 class BattleUI extends Phaser.Scene {
     constructor() {
         super({ key: 'BattleUI', active: false });
+        this.gold = 10000;
         this.score = 0;
         this.scoreText = null;
         this.multiplier = 5;
         this.multiplierMin = 0.5;
-        this.multiplierDuration = 10000;
+        this.multiplierDuration = 12000;
         this.lastMultiplierUpdate = 0;
         this.timerStarted = false;
         this.baseRebuildText = null;
@@ -13,7 +14,6 @@ class BattleUI extends Phaser.Scene {
         this.baseRebuildBarFill = null;
         this.baseRebuilding = false;
         this.isMultiplierPaused = false;
-        this.gold = 10000;
         this.cash = 0;
         this.scrollbarTrack = null;
         this.scrollbarHandle = null;
@@ -39,7 +39,7 @@ class BattleUI extends Phaser.Scene {
         this.scoreText = null;
         this.multiplier = 5;
         this.multiplierMin = 0.5;
-        this.multiplierDuration = 3000;
+        this.multiplierDuration = 12000;
         this.lastMultiplierUpdate = 0;
         this.timerStarted = false;
         this.baseRebuildText = null;
@@ -69,7 +69,7 @@ class BattleUI extends Phaser.Scene {
     startMultiplierTimer() {
         if (!this.timerStarted) {
             this.timerStarted = true;
-            this.lastMultiplierUpdate = this.time.now;
+            this.lastMultiplierUpdate = this.scene.get('GameScene').activeGameTime;
         }
     }
 
@@ -108,6 +108,23 @@ class BattleUI extends Phaser.Scene {
             font: '20px Orbitron',
             fill: '#ffffff'
         }).setOrigin(0.5, 0).setScrollFactor(0);
+
+        const pauseButtonX = panelCenterX + 150;
+        const pauseButtonY = headerTextY;
+        const pauseButtonRadius = 20;
+
+        const pauseButtonBackground = this.add.graphics();
+        pauseButtonBackground.fillStyle(0xff0000, 1);
+        pauseButtonBackground.fillCircle(pauseButtonX, pauseButtonY, pauseButtonRadius);
+
+        const pauseButtonText = this.add.text(pauseButtonX, pauseButtonY, '||', {
+            font: '24px Orbitron',
+            fill: '#ffffff'
+        }).setOrigin(0.5, 0.5);
+
+        pauseButtonBackground.setInteractive(new Phaser.Geom.Circle(pauseButtonX, pauseButtonY, pauseButtonRadius), Phaser.Geom.Circle.Contains).on('pointerdown', () => {
+            this.pauseGame();
+        });
 
         const approachingTextY = headerTextY + 50;
         this.approachingText = this.add.text(panelCenterX + 10, approachingTextY, "Catastrophe approaches", {
@@ -160,7 +177,7 @@ class BattleUI extends Phaser.Scene {
         const multiplierBarBackground = this.add.rectangle(panelCenterX, multiplierTextY + 30, 300, 20, 0x000000, 0.5).setOrigin(0.5, 0);
         this.multiplierBarFill = this.add.rectangle(multiplierBarBackground.x - multiplierBarBackground.width / 2, multiplierTextY + 30, 300, 20, 0x00ff00).setOrigin(0, 0).setScrollFactor(0);
 
-        this.lastMultiplierUpdate = this.scene.get('GameScene').time.now;
+        this.lastMultiplierUpdate = this.scene.get('GameScene').activeGameTime;
 
         const statsTextY = this.multiplierText.y + 90;
         this.add.text(panelCenterX, statsTextY, "Player Stats", {
@@ -168,22 +185,22 @@ class BattleUI extends Phaser.Scene {
             fill: '#ffffff'
         }).setOrigin(0.5, 0).setScrollFactor(0);
 
-        this.playerIcon = this.add.image(panelCenterX - 120, statsTextY + 10, 'player').setScale(0.5).setScrollFactor(0).setOrigin(0, 0.5);
 
         let partTimeX = this.scale.width - 350;
         let partTimeY = 500;
         const playerName = this.scene.get('GameScene').player.name;
+        const playerIcon = this.scene.get('GameScene').player.icon;
+        this.playerIcon = this.add.image(panelCenterX - 140, statsTextY + 10, playerIcon).setScale(0.75).setScrollFactor(0).setOrigin(0, 0.5);
         this.playerNameText = this.add.text(partTimeX + 50, partTimeY, playerName, { font: '18px Orbitron', fill: '#ffffff' });
-        this.playerHealthText = this.add.text(partTimeX, partTimeY + 20, 'Health: --/--', { font: '16px Orbitron', fill: '#ffffff' });
-        this.playerDamageText = this.add.text(partTimeX, partTimeY + 40, 'Damage: --', { font: '16px Orbitron', fill: '#ffffff' });
-        this.playerAttackSpeedText = this.add.text(partTimeX, partTimeY + 60, 'Attack Speed: --', { font: '16px Orbitron', fill: '#ffffff' });
-        this.playerSpeedText = this.add.text(partTimeX, partTimeY + 80, 'Speed: --', { font: '16px Orbitron', fill: '#ffffff' });
+        this.playerHealthText = this.add.text(partTimeX, partTimeY + 30, 'Health: --/--', { font: '16px Orbitron', fill: '#ffffff' });
+        this.playerDamageText = this.add.text(partTimeX, partTimeY + 50, 'Damage: --', { font: '16px Orbitron', fill: '#ffffff' });
+        this.playerAttackSpeedText = this.add.text(partTimeX, partTimeY + 70, 'Attack Speed: --', { font: '16px Orbitron', fill: '#ffffff' });
+        this.playerSpeedText = this.add.text(partTimeX, partTimeY + 90, 'Speed: --', { font: '16px Orbitron', fill: '#ffffff' });
 
-        // Optional: Initialize bonus texts if you have them
-        this.playerHealthBonusText = this.add.text(this.playerHealthText.x + 200, partTimeY + 20, '', { font: '16px Orbitron', fill: '#00BFFF' });
-        this.playerDamageBonusText = this.add.text(this.playerDamageText.x + 200, partTimeY + 40, '', { font: '16px Orbitron', fill: '#00BFFF' });
-        this.playerAttackSpeedBonusText = this.add.text(this.playerAttackSpeedText.x + 200, partTimeY + 60, '', { font: '16px Orbitron', fill: '#00BFFF' });
-        this.playerSpeedBonusText = this.add.text(this.playerSpeedText.x + 200, partTimeY + 80, '', { font: '16px Orbitron', fill: '#00BFFF' });
+        this.playerHealthBonusText = this.add.text(this.playerHealthText.x + 200, partTimeY + 30, '', { font: '16px Orbitron', fill: '#00BFFF' });
+        this.playerDamageBonusText = this.add.text(this.playerDamageText.x + 200, partTimeY + 50, '', { font: '16px Orbitron', fill: '#00BFFF' });
+        this.playerAttackSpeedBonusText = this.add.text(this.playerAttackSpeedText.x + 200, partTimeY + 70, '', { font: '16px Orbitron', fill: '#00BFFF' });
+        this.playerSpeedBonusText = this.add.text(this.playerSpeedText.x + 200, partTimeY + 90, '', { font: '16px Orbitron', fill: '#00BFFF' });
 
         const shopTextY = statsTextY + 200;
 
@@ -717,7 +734,7 @@ class BattleUI extends Phaser.Scene {
             this.multiplierBarFill.width = 300; // Keep the bar full
             return; // Stop further processing
         }
-        const currentTime = this.scene.get('GameScene').time.now;
+        const currentTime = this.scene.get('GameScene').activeGameTime;
         const elapsedTime = currentTime - this.lastMultiplierUpdate;
         const remainingTime = this.multiplierDuration - elapsedTime;
         const fillPercentage = remainingTime / this.multiplierDuration;
@@ -741,17 +758,17 @@ class BattleUI extends Phaser.Scene {
     }
 
     pauseMultiplier() {
-        this.isMultiplierPaused = true;
+
     }
 
     resetMultiplier() {
         this.multiplier = 5;
-        this.multiplierText.setText(`Multiplier: x${this.multiplier}`);
+        this.multiplierText.setText(`Score Multiplier: x${this.multiplier}`);
         this.isMultiplierPaused = false;
 
         this.multiplierBarFill.width = 300;
 
-        this.lastMultiplierUpdate = this.time.now;
+        this.lastMultiplierUpdate = this.scene.get('GameScene').activeGameTime;
     }
 
     updateStrengthenTimer(currentTime) {
@@ -787,27 +804,27 @@ class BattleUI extends Phaser.Scene {
         this.inputBlocker = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.75)
             .setOrigin(0, 0)
             .setInteractive();
-    
+
         this.gameOverContainer = this.add.container(0, 0);
-    
+
         this.gameOverContainer.add(this.inputBlocker);
-    
+
         let gameOverText = this.add.text(this.scale.width / 2, this.scale.height / 2 - 200, 'GAME OVER', {
             font: '64px Orbitron',
             fill: '#FF6347', // tomato red
             stroke: '#000000',
             strokeThickness: 6
         }).setOrigin(0.5);
-    
+
         let retryButton = this.createStyledButton(this.scale.width / 2, this.scale.height / 2, 'Retry', '#ff0000', () => this.restartGameScene());
-    
+
         let mainMenuButton = this.createStyledButton(this.scale.width / 2, this.scale.height / 2 + 100, 'Main Menu', '#007bff', () => this.exitToMainMenu());
-    
+
         this.gameOverContainer.add([gameOverText, retryButton, mainMenuButton]);
-    
+
         this.gameOverContainer.setDepth(100);
     }
-    
+
     createStyledButton(x, y, text, backgroundColor, callback) {
         let button = this.add.text(x, y, text, {
             font: '28px Orbitron',
@@ -815,13 +832,13 @@ class BattleUI extends Phaser.Scene {
             padding: { x: 20, y: 10 },
             backgroundColor: backgroundColor
         })
-        .setOrigin(0.5)
-        .setInteractive({ useHandCursor: true })
-        .on('pointerdown', callback);
-    
+            .setOrigin(0.5)
+            .setInteractive()
+            .on('pointerdown', callback);
+
         button.setStroke('#000000', 4);
         button.setShadow(2, 2, 'rgba(0,0,0,0.5)', 2, true, true);
-    
+
         return button;
     }
 
@@ -838,6 +855,46 @@ class BattleUI extends Phaser.Scene {
         document.getElementById('battle-scene').style.display = 'none';
         document.getElementById('main-menu').style.display = 'flex';
     }
+
+    pauseGame() {
+        console.log('pausing game');
+        this.createPauseScreen();
+        this.pauseTimers();
+        this.scene.pause('GameScene');
+        this.scene.get('GameScene').isGamePaused = true;
+    }
+
+    pauseTimers() {
+    }
+
+    createPauseScreen() {
+        this.inputBlocker = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.75)
+            .setOrigin(0, 0)
+            .setInteractive();
+
+        this.pauseContainer = this.add.container(0, 0);
+        this.pauseContainer.add(this.inputBlocker);
+
+        let pauseText = this.add.text(this.scale.width / 2, this.scale.height / 2 - 200, 'Game Paused', {
+            font: '64px Orbitron',
+            fill: '#007bff',
+            stroke: '#000000',
+            strokeThickness: 6
+        }).setOrigin(0.5);
+
+        let resumeButton = this.createStyledButton(this.scale.width / 2, this.scale.height / 2, 'Resume', '#4CAF50', () => this.resumeGame());
+        let retryButton = this.createStyledButton(this.scale.width / 2, this.scale.height / 2 + 100, 'Retry', '#ff0000', () => this.restartGameScene());
+        let mainMenuButton = this.createStyledButton(this.scale.width / 2, this.scale.height / 2 + 200, 'Main Menu', '#007bff', () => this.exitToMainMenu());
+        this.pauseContainer.add([pauseText, resumeButton, retryButton, mainMenuButton]);
+        this.pauseContainer.setDepth(100);
+    }
+
+    resumeGame() {
+        this.pauseContainer.setVisible(false);
+        this.scene.resume('GameScene');
+        this.scene.get('GameScene').isGamePaused = false;
+    }
+
 }
 
 

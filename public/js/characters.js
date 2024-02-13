@@ -9,7 +9,8 @@ const characterMap = {
         health: 4000,
         attackSpeed: 1,
         attackCount: 1,
-        projectile: ''
+        projectile: '',
+        icon: 'darkEtherMessiah'
     },
     2: {
         spritesheetKey: 'character2',
@@ -26,9 +27,10 @@ const characterMap = {
     3: {
         spritesheetKey: 'character3',
         name: 'Metal T-Rex',
+        icon: 'metalTrex',
         tier: 'easy',
         health: 15000,
-        damage: 300,
+        damage: 4000,
         range: 150,
         speed: 292,
         attackSpeed: 2.7,
@@ -105,7 +107,8 @@ const characterMap = {
         health: 12000,
         attackSpeed: 2.2,
         attackCount: 1,
-        projectile: ''
+        projectile: '',
+        icon: 'brutusMech'
     },
     10: {
         spritesheetKey: 'character10',
@@ -117,7 +120,8 @@ const characterMap = {
         health: 28000,
         attackSpeed: 1.3,
         attackCount: 1,
-        projectile: ''
+        projectile: '',
+        icon: 'ravenMech'
     },
     11: {
         spritesheetKey: 'character11',

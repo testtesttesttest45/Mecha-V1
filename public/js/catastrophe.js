@@ -1,25 +1,25 @@
 class Catastrophe {
     constructor(scene, baseLevel) {
+        this.stormInterval = 10000;
+        this.baseDamage = 5000;
         this.baseLevel = baseLevel;
         this.scene = scene;
         this.minX = 1200;
         this.maxX = 2800;
         this.minY = 700;
         this.maxY = 1300;
-        this.stormInterval = 12000;
         this.indicatorDuration = 1000;
         this.fireballPositions = [];
         this.minDistance = 350;
         this.indicators = [];
-        this.baseDamage = 5000;
         this.damage = Math.round(this.baseDamage * Math.pow(1.2, this.baseLevel - 1));
         this.activeStormEffects = 0;
         this.timerStarted = false;
     }
-
+    
     startStormTimer() {
         if (!this.timerStarted) {
-            this.fireballTimer = this.scene.time.now + this.stormInterval;
+            this.fireballTimer = this.stormInterval;
             this.isStorming = false;
             this.timerStarted = true;
         }
@@ -76,7 +76,7 @@ class Catastrophe {
 
     endStorm() {
         this.isStorming = false;
-        this.fireballTimer = this.scene.time.now + this.stormInterval;
+        this.fireballTimer = this.scene.activeGameTime + this.stormInterval;
     }
 
     checkDamage(x, y, radius) {
@@ -117,7 +117,7 @@ class Catastrophe {
     }
 
     getTimeUntilNextStorm() {
-        return Math.max(0, this.fireballTimer - this.scene.time.now);
+        return Math.max(0, this.fireballTimer - this.scene.activeGameTime);
     }
 
     updateDamage(newBaseLevel) {

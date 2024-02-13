@@ -8,7 +8,7 @@ class Base {
         this.safeDistanceFromPlayer = 500; // not too close to player
         this.minX = 1200; this.maxX = 2800;
         this.minY = 700; this.maxY = 1300;
-        this.originalHealth = 10000; // 6000 at level 1
+        this.originalHealth = 6000; // 6000 at level 1
         this.totalHealth = Math.round(this.originalHealth * Math.pow(1.2, this.baseLevel - 1));
         this.health = this.totalHealth;
         this.healthBar = null;
@@ -181,7 +181,7 @@ class Base {
 
         this.healthBar.destroy();
         this.customSquareContainer.destroy();
-        this.destroyedTime = this.scene.time.now;
+        this.destroyedTime = this.scene.activeGameTime;
         
         this.isRebuilding = true; // Indicate that the base is now rebuilding.
         this.scene.scene.get('BattleUI').pauseMultiplier();

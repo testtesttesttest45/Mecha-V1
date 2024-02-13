@@ -7,8 +7,8 @@ class Player {
         this.position = { x: initialX, y: initialY };
         this.currentTween = null;
         this.idleAnimationIndex = 0;
-        this.lastAnimationChange = this.scene.time.now;
-        this.lastActionTime = this.scene.time.now;
+        this.lastAnimationChange = this.scene.activeGameTime;
+        this.lastActionTime = this.scene.activeGameTime;
         this.lastDirection = null;
         this.directions = [];
         this.directionAveragingSteps = 10;
@@ -38,6 +38,7 @@ class Player {
         this.enemies = enemies;
         this.targetedEnemy = null;
         this.name = character.name;
+        this.icon = character.icon;
     }
 
     create() {
@@ -56,7 +57,7 @@ class Player {
         }
         const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
         this.robotSprite.play(randomIdleAnimation);
-        this.lastAnimationChange = this.scene.time.now;
+        this.lastAnimationChange = this.scene.activeGameTime;
 
 
         const directions = ['southeast', 'southwest', 'south', 'east', 'west', 'northeast', 'northwest', 'north'];
@@ -223,7 +224,7 @@ class Player {
             }
         });
 
-        this.lastActionTime = this.scene.time.now; // Reset last action time on movement
+        this.lastActionTime = this.scene.activeGameTime; // Reset last action time on movement
     }
 
     playAttackAnimation(targetEnemy) {
