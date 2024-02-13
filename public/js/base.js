@@ -11,7 +11,7 @@ class Base {
         this.totalHealth = 6000;
         this.healthBar = null;
         this.isDestroyed = false;
-        this.rebuildTime = 8000;
+        this.rebuildTime = 3000;
         this.destroyedTime = 0;
         this.customSquare = null;
         this.baseLevel = 1;
@@ -233,6 +233,7 @@ class Base {
             }
         });
         this.scene.createEnemy(this.baseLevel);
+        this.scene.catastrophe.updateDamage(this.baseLevel);
     }
     
     update(time, delta) {

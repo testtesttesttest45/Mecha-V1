@@ -37,7 +37,7 @@ class GameScene extends Phaser.Scene {
         this.messageText = this.add.text(0, 0, '', { font: '24px Orbitron', fill: '#ff0000', align: 'center' });
         this.messageText.setVisible(false);
 
-        this.catastrophe = new Catastrophe(this);
+        this.catastrophe = new Catastrophe(this, this.base.baseLevel);
 
         this.scene.launch('BattleUI');
         this.enableInputAfterDelay();
@@ -442,7 +442,10 @@ class LoadingScene extends Phaser.Scene {
             "Spend the gold you earned in the Battle Shop to purchase items that make you stronger!",
             "The blue square on the left of the health bar of enemies represents the stats they inherit from the current base level. The black hexagon on the right of the health bar of enemies represents additional stats they gain after periodic Enemy Strengthenings. Don't take too long to kill them, or they become too strong to kill!",
             "Every few seconds, the player heals back some amount of health based on his Max Health.",
-            "Stronger enemies appear on Base level 5 onwards. Beware!"
+            "Stronger enemies appear on Base level 5 onwards. Beware!",
+            "Pay attention to the Catastrophe timer, avoid shopping when the Catastrophe is approaching!",
+            "Every increase in the Base level amplifies the health and damage of all enemies.",
+            "Each time the Base level increases, the damage from Catastrophe grows by an additional 20% from the last level!",
         ];
         this.background = null;
         this.progressBar = null;
@@ -452,7 +455,6 @@ class LoadingScene extends Phaser.Scene {
     preload() {
         this.loadingStartTime = Date.now();
 
-        // Create a dynamic or static background
         this.createBackground();
         this.createLoadingText();
         this.createProgressBar();
@@ -493,7 +495,6 @@ class LoadingScene extends Phaser.Scene {
         this.progressBox.fillStyle(0x222222, 0.8);
         this.progressBox.fillRect(width / 2 - 160, height / 2 + 30, 320, 50);
 
-        // Initial call to update the progress bar
         this.updateProgressBar(0);
     }
 

@@ -42,7 +42,7 @@ const characterMap = {
         range: 200,
         speed: 220,
         damage: 100,
-        health: 900,
+        health: 1200,
         attackSpeed: 2,
         attackCount: 1,
         projectile: ''
@@ -54,7 +54,7 @@ const characterMap = {
         range: 520,
         speed: 250,
         damage: 5,
-        health: 1200,
+        health: 7000,
         attackSpeed: 4,
         attackCount: 1,
         projectile: 'blueBullet'
@@ -66,7 +66,7 @@ const characterMap = {
         range: 250,
         speed: 270,
         damage: 200,
-        health: 3000,
+        health: 4700,
         attackSpeed: 1,
         attackCount: 2,
         projectile: ''
@@ -78,7 +78,7 @@ const characterMap = {
         range: 200,
         speed: 220,
         damage: 200,
-        health: 500,
+        health: 5000,
         attackSpeed: 1.1,
         attackCount: 1,
         projectile: 'blueBullet'
