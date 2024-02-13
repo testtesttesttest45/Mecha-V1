@@ -156,7 +156,8 @@ class GameScene extends Phaser.Scene {
     }
 
     handlePlayerClick(pointer) {
-        if (!this.allowInput) return;
+        if (!this.allowInput || pointer.button !== 0) return;
+
         if (this.enemyClicked) {
             this.enemyClicked = false; // Reset the flag
             return; // Click was on the enemy, skip the general click logic
@@ -210,7 +211,7 @@ class GameScene extends Phaser.Scene {
 
     createPlayer() {
         this.player = null;
-        this.player = new Player(this, 1500, 800, 3, this.enemies);
+        this.player = new Player(this, 1500, 800, 10, this.enemies);
         this.player.create();
     }
 
@@ -221,8 +222,8 @@ class GameScene extends Phaser.Scene {
         camps.forEach(camp => {
             for (let i = 0; i < 3; i++) {
                 const randomPosition = camp.getRandomPositionInRadius();
-                const characterCode = this.selectEnemyCharacterCode();
-                const enemy = new Enemy(this, randomPosition.x, randomPosition.y, characterCode, camp, this.player, this.base.baseLevel, this.base);
+                // const characterCode = this.selectEnemyCharacterCode();
+                const enemy = new Enemy(this, randomPosition.x, randomPosition.y, 12, camp, this.player, this.base.baseLevel, this.base);
                 enemy.create();
                 this.enemies.push(enemy);
 
@@ -447,6 +448,8 @@ class LoadingScene extends Phaser.Scene {
             "Pay attention to the Catastrophe timer, avoid shopping when the Catastrophe is approaching!",
             "Every increase in the Base level amplifies the health and damage of all enemies.",
             "Each time the Base level increases, the damage from Catastrophe grows by an additional 20% from the last level!",
+            "Press L to lock/unlock the camera. Press Space to toggle camera follow mode.",
+            "The strongest character is the Thunder Epic Dragon! If you see him, RUN!!!"
         ];
         this.background = null;
         this.progressBar = null;
@@ -591,6 +594,8 @@ class LoadingScene extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'character8', 'assets/sprites/character_8.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character9', 'assets/sprites/character_9.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character10', 'assets/sprites/character_10.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character11', 'assets/sprites/character_11.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character12', 'assets/sprites/character_12.png', 4000, 4400);
 
         this.load.image('blueBullet', 'assets/projectiles/blue_bullet.png');
         this.load.image('fireball', 'assets/projectiles/fireball.png');
