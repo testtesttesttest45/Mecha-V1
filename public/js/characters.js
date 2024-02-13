@@ -27,15 +27,15 @@ const characterMap = {
     3: {
         spritesheetKey: 'character3',
         name: 'Metal T-Rex',
-        icon: 'metalTrex',
         tier: 'easy',
-        health: 15000,
-        damage: 4000,
+        health: 1200,
+        damage: 140,
         range: 150,
-        speed: 292,
-        attackSpeed: 2.7,
+        speed: 150,
+        attackSpeed: 1.7,
         attackCount: 1,
-        projectile: ''
+        projectile: '',
+        icon: 'metalTrex'
     },
     4: {
         spritesheetKey: 'character4',
@@ -115,8 +115,8 @@ const characterMap = {
         name: 'Raven Mech',
         tier: 'godly',
         range: 250,
-        speed: 200,
-        damage: 700,
+        speed: 220,
+        damage: 858,
         health: 28000,
         attackSpeed: 1.3,
         attackCount: 1,

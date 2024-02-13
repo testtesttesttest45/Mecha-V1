@@ -667,7 +667,12 @@ class BattleUI extends Phaser.Scene {
     }
 
     updateCatastropheText(isStormLaunching) {
-        this.approachingText.setText(isStormLaunching ? "Storm launching!" : "Catastrophe approaches");
+        if (isStormLaunching) {
+            const stormDamage = this.scene.get('GameScene').catastrophe.damage;
+            this.approachingText.setText(`Storm launching!\nIncoming Damage: ${stormDamage}`);
+        } else {
+            this.approachingText.setText("Catastrophe approaches");
+        }
     }
 
     updateScore(amount) {

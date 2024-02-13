@@ -18,6 +18,7 @@ class Base {
         this.customSquare = null;
         this.enemies = enemies;
         this.isRebuilding = false;
+        this.healthText = null; 
     }
 
     create() {
@@ -62,7 +63,6 @@ class Base {
     createHealthBar() {
         this.healthBar = this.scene.add.graphics();
         this.healthBar.setDepth(1);
-        this.updateHealthBar();
 
         this.customSquare = this.scene.add.graphics();
         this.customSquare.fillStyle(0x0000ff, 1);
@@ -77,6 +77,15 @@ class Base {
         this.customSquareContainer.add(this.customSquareText);
         this.customSquareContainer.setDepth(1);
 
+        if (!this.healthText) {
+            const barX = this.sprite.x - this.sprite.width / 2;
+            const barY = this.sprite.y - 150 + 10;
+            this.healthText = this.scene.add.text(barX, barY, '', {
+                font: '16px Orbitron',
+                fill: '#ffffff'
+            }).setOrigin(0, 0.5).setDepth(11);
+        }
+
         this.updateHealthBar();
     }
 
@@ -87,20 +96,27 @@ class Base {
         this.healthBar.setPosition(barX, barY);
         // Background of health bar (transparent part)
         this.healthBar.fillStyle(0x000000, 0.5);
-        this.healthBar.fillRect(0, 0, this.sprite.width, 10);
+        this.healthBar.fillRect(-40, 0, this.sprite.width + 100, 20);
         this.healthBar.setDepth(11);
     
         const healthPercentage = this.health / this.totalHealth;
-        const healthBarWidth = healthPercentage * this.sprite.width;
+        const healthBarWidth = healthPercentage * this.sprite.width + 100;
         this.healthBar.fillStyle(0xff0000, 1);
-        this.healthBar.fillRect(0, 0, healthBarWidth, 10);
+        this.healthBar.fillRect(-40, 0, healthBarWidth, 20);
     
         const squareSize = 20;
-        const containerX = barX - squareSize / 2;
-        const containerY = barY + 5;
+        const containerX = barX - squareSize / 2 - 40;
+        const containerY = barY + 10;
     
         if (this.customSquareContainer) {
             this.customSquareContainer.setPosition(containerX, containerY);
+        }
+
+        if (this.healthText) {
+            this.healthText.setText(`${this.health}/${this.totalHealth}`);
+            const barX = this.sprite.x - this.sprite.width / 2 + 10;
+            const barY = this.sprite.y - 150 + 10;
+            this.healthText.setPosition(barX, barY);
         }
     }
 
@@ -181,6 +197,10 @@ class Base {
 
         this.healthBar.destroy();
         this.customSquareContainer.destroy();
+        if (this.healthText) {
+            this.healthText.destroy();
+            this.healthText = null;
+        }
         this.destroyedTime = this.scene.activeGameTime;
         
         this.isRebuilding = true; // Indicate that the base is now rebuilding.
