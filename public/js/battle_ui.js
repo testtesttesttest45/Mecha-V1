@@ -358,13 +358,13 @@ class BattleUI extends Phaser.Scene {
         ];
 
         const attackSpeedUpgrades = [
-            { name: "Energy Gun", description: "Increase attack speed by 5%", cost: 3000, icon: 'attackSpeed1' },
-            { name: "Quickblade", description: "Increase attack speed by 10%", cost: 5700, icon: 'attackSpeed2' },
+            { name: "Energy Gun", description: "Increase attack speed by 8%", cost: 3000, icon: 'attackSpeed1' },
+            { name: "Quickblade", description: "Increase attack speed by 16%", cost: 5700, icon: 'attackSpeed2' },
         ];
 
         const movementSpeedUpgrades = [
-            { name: "Lightning Core", description: "Increase movement speed by 5%", cost: 4000, icon: 'moveSpeed1' },
-            { name: "Mecha Sneakers", description: "Increase movement speed by 10%", cost: 7900, icon: 'moveSpeed2' },
+            { name: "Lightning Core", description: "Increase movement speed by 8%", cost: 4000, icon: 'moveSpeed1' },
+            { name: "Mecha Sneakers", description: "Increase movement speed by 16%", cost: 7900, icon: 'moveSpeed2' },
         ];
 
         this.createItems(damageUpgrades, damageSectionX, sectionY + 60, sectionWidth);
@@ -564,16 +564,16 @@ class BattleUI extends Phaser.Scene {
                 this.scene.get('GameScene').player.createHealingText(1000);
             }
             if (upgradeName === "Energy Gun") {
-                this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.05 * 100) / 100;
+                this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.08 * 100) / 100;
             }
             if (upgradeName === "Quickblade") {
-                this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.1 * 100) / 100;
+                this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.16 * 100) / 100;
             }
             if (upgradeName === "Lightning Core") {
-                this.scene.get('GameScene').player.speed = Math.round(this.scene.get('GameScene').player.speed * 1.05);
+                this.scene.get('GameScene').player.speed = Math.round(this.scene.get('GameScene').player.speed * 1.08);
             }
             if (upgradeName === "Mecha Sneakers") {
-                this.scene.get('GameScene').player.speed = Math.round(this.scene.get('GameScene').player.speed * 1.1);
+                this.scene.get('GameScene').player.speed = Math.round(this.scene.get('GameScene').player.speed * 1.16);
             }
 
         } else {

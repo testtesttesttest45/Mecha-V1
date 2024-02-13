@@ -7,11 +7,12 @@ class Base {
         this.safeDistanceFromPlayer = 500; // not too close to player
         this.minX = 1200; this.maxX = 2800;
         this.minY = 700; this.maxY = 1300;
+        this.originalHealth = 6000;
         this.health = 6000;
         this.totalHealth = 6000;
         this.healthBar = null;
         this.isDestroyed = false;
-        this.rebuildTime = 3000;
+        this.rebuildTime = 10000;
         this.destroyedTime = 0;
         this.customSquare = null;
         this.baseLevel = 1;
@@ -219,6 +220,9 @@ class Base {
     }
 
     recreateBaseAndEnemies() {
+        this.baseLevel++;
+        this.totalHealth = Math.round(this.originalHealth * Math.pow(1.2, this.baseLevel - 1));
+
         this.scene.scene.get('BattleUI').resetBaseRebuildUI();
         const newBaseLocation = this.findSuitableBaseLocation();
         this.sprite.setPosition(newBaseLocation.x, newBaseLocation.y);
@@ -239,7 +243,6 @@ class Base {
     update(time, delta) {
         if (this.isDestroyed && this.isRebuilding) {
             if (time - this.destroyedTime > this.rebuildTime) {
-                this.baseLevel++;
                 this.isRebuilding = false;
                 this.recreateBaseAndEnemies();
                 this.scene.scene.get('BattleUI').resetMultiplier(); // Call a method in BattleUI to reset the multiplier.

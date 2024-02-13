@@ -12,7 +12,7 @@ class Enemy {
         this.level = level;
         this.strengthenLevel = 1;
         const levelMultiplier = 1 + (this.level - 1) * 0.2; // 20% increase per level
-        this.health = Math.round(character.health * levelMultiplier);
+        this.health = Math.round((character.health * levelMultiplier) * 0.5); // player character and enemy character same, the enemy should be weaker
         this.maxHealth = this.health;
         this.isDead = false;
         this.healthBar = null;
@@ -32,7 +32,7 @@ class Enemy {
         this.lastActionTime = 0;
         this.isAttacking = false;
         this.attackEvent = null;
-        this.damage = Math.round(character.damage * levelMultiplier);
+        this.damage = Math.round((character.damage * levelMultiplier) * 0.5);
         this.attackRangeRect = null;
         this.attackRangeArc = null;
         this.projectile = character.projectile;
