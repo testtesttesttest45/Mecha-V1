@@ -1,5 +1,6 @@
 class Catastrophe {
-    constructor(scene) {
+    constructor(scene, baseLevel) {
+        this.baseLevel = baseLevel;
         this.scene = scene;
         this.minX = 1200;
         this.maxX = 2800;
@@ -10,8 +11,8 @@ class Catastrophe {
         this.fireballPositions = [];
         this.minDistance = 350;
         this.indicators = [];
-        this.damage = 5000;
         this.baseDamage = 5000;
+        this.damage = Math.round(this.baseDamage * Math.pow(1.2, this.baseLevel - 1));
         this.activeStormEffects = 0;
         this.timerStarted = false;
     }
@@ -119,9 +120,9 @@ class Catastrophe {
         return Math.max(0, this.fireballTimer - this.scene.time.now);
     }
 
-    updateDamage(baseLevel) {
-        this.damage = Math.round(this.baseDamage * (1 + (baseLevel - 1) * 0.2)); // linear increase approach
-        this.damage = Math.round(this.baseDamage * Math.pow(1.2, baseLevel - 1)); // compounded increase approach using exponential function
+    updateDamage(newBaseLevel) {
+        this.damage = Math.round(this.baseDamage * (1 + (newBaseLevel - 1) * 0.2)); // linear increase approach
+        this.damage = Math.round(this.baseDamage * Math.pow(1.2, newBaseLevel - 1)); // compounded increase approach using exponential function
     }
 
     update(time, delta) {

@@ -387,6 +387,7 @@ class GameScene extends Phaser.Scene {
         }
 
         if (this.base) {
+            // console.log(this.base.health)
             this.base.update(time, delta);
         }
 

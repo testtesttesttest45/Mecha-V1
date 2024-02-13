@@ -1,5 +1,6 @@
 class Base {
-    constructor(scene, player, camps, enemies) {
+    constructor(scene, player, camps, enemies, baseLevel = 3) {
+        this.baseLevel = baseLevel;
         this.scene = scene;
         this.player = player;
         this.camps = camps;
@@ -7,15 +8,14 @@ class Base {
         this.safeDistanceFromPlayer = 500; // not too close to player
         this.minX = 1200; this.maxX = 2800;
         this.minY = 700; this.maxY = 1300;
-        this.originalHealth = 6000;
-        this.health = 6000;
-        this.totalHealth = 6000;
+        this.originalHealth = 6000; // 6000 at level 1
+        this.totalHealth = Math.round(this.originalHealth * Math.pow(1.2, this.baseLevel - 1));
+        this.health = this.totalHealth;
         this.healthBar = null;
         this.isDestroyed = false;
         this.rebuildTime = 10000;
         this.destroyedTime = 0;
         this.customSquare = null;
-        this.baseLevel = 1;
         this.enemies = enemies;
         this.isRebuilding = false;
     }
