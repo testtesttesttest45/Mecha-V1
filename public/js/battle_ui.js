@@ -850,6 +850,8 @@ class BattleUI extends Phaser.Scene {
     restartGameScene() {
         this.resetState();
         let gameScene = this.scene.get('GameScene');
+        gameScene.isGamePaused = false;
+
         gameScene.scene.restart();
         gameScene.allowInput = false;
     }

@@ -19,7 +19,7 @@ class Catastrophe {
     
     startStormTimer() {
         if (!this.timerStarted) {
-            this.fireballTimer = this.stormInterval;
+            this.fireballTimer = this.stormInterval + this.scene.activeGameTime;
             this.isStorming = false;
             this.timerStarted = true;
         }
