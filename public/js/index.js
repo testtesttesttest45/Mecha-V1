@@ -691,7 +691,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
     }
 
     window.fetchHighestScore = function() {
-        fetch('/get-game-data')
+        fetch('/.netlify/functions/get-game-data')
             .then(response => response.json())
             .then(data => {
                 const highestScore = data.highestScore;
