@@ -11,7 +11,7 @@ const handler = async (event) => {
 
   const data = JSON.parse(event.body);
   const { cash, baseLevel, score } = data;
-  const saveFilePath = path.join(process.env.LAMBDA_TASK_ROOT, '..', '..', 'src', 'save_file.json');
+  const saveFilePath = path.join('/tmp', 'save_file.json');
 
   try {
     let saveData = { cash, baseLevel, highestScore: 0, newHighest: false, latestScore: score };
