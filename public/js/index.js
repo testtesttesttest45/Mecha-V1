@@ -219,7 +219,7 @@ class GameScene extends Phaser.Scene {
 
     createEnemy() {
         this.enemies = [];
-        const camps = [this.camp1, this.camp2, this.camp3];
+        const camps = [this.camp1];
 
         camps.forEach(camp => {
             for (let i = 0; i < 3; i++) {
@@ -682,4 +682,24 @@ document.addEventListener('DOMContentLoaded', (event) => {
         battleScene.style.display = 'flex';
         startGame();
     });
+
+    function displayHighestScore(score) {
+        const highestScoreElement = document.getElementById('highest-score');
+        if (highestScoreElement) {
+            highestScoreElement.textContent = `Highest Score: ${score}`;
+        }
+    }
+
+    window.fetchHighestScore = function() {
+        fetch('/get-game-data')
+            .then(response => response.json())
+            .then(data => {
+                const highestScore = data.highestScore;
+                displayHighestScore(highestScore);
+            })
+            .catch(error => console.error('Error fetching highest score:', error));
+    };
+
+    window.fetchHighestScore();
+    
 });

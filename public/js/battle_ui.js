@@ -861,17 +861,19 @@ class BattleUI extends Phaser.Scene {
         this.scene.stop();
         document.getElementById('battle-scene').style.display = 'none';
         document.getElementById('main-menu').style.display = 'flex';
+        this.saveGameData().then(() => {
+            // Fetch the latest highest score and update the display
+            if (window.fetchHighestScore) {
+                window.fetchHighestScore();
+            }
+        }).catch(error => console.error('Error saving game data:', error));
     }
 
     pauseGame() {
         console.log('pausing game');
         this.createPauseScreen();
-        this.pauseTimers();
         this.scene.pause('GameScene');
         this.scene.get('GameScene').isGamePaused = true;
-    }
-
-    pauseTimers() {
     }
 
     createPauseScreen() {
@@ -902,8 +904,32 @@ class BattleUI extends Phaser.Scene {
         this.scene.get('GameScene').isGamePaused = false;
     }
 
-}
+    async saveGameData() { // got await, so i use async
+        const gameData = {
+            cash: this.cash,
+            score: this.score,
+            baseLevel: this.scene.get('GameScene').base.baseLevel
+        };
+        try {
+            const response = await fetch('/save-game', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(gameData),
+            });
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            return console.log('Success:', data);
+        } catch (error) {
+            return console.error('Error:', error);
+        }
+    }
+    
 
+}
 
 export default BattleUI;
 

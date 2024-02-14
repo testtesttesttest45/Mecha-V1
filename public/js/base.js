@@ -129,11 +129,10 @@ class Base {
         }
         this.enrageEnemies();
         this.health -= damage;
-        this.health = Math.max(this.health, 0);
         this.hasPlayerBeenDetected = true;
 
         // every 10% health of the base, award 50 points
-        if (this.health % (this.totalHealth / 10) === 0) {
+        if (this.health % (this.totalHealth / 10) > 0) {
             console.log('Awarding 50 points');
             this.scene.scene.get('BattleUI').updateScore(50);
         }
@@ -265,7 +264,7 @@ class Base {
             if (time - this.destroyedTime > this.rebuildTime) {
                 this.isRebuilding = false;
                 this.recreateBaseAndEnemies();
-                this.scene.scene.get('BattleUI').resetMultiplier(); // Call a method in BattleUI to reset the multiplier.
+                this.scene.scene.get('BattleUI').resetMultiplier();
             }
         }
     }
