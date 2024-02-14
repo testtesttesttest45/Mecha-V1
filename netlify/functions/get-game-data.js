@@ -9,8 +9,8 @@ const handler = async (event) => {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
-  const saveFilePath = path.join('/tmp', 'save_file.json');
-
+  const saveFilePath = path.join('save_file.json');
+  
   try {
     const data = await readFile(saveFilePath, 'utf8');
     return { statusCode: 200, body: data };
