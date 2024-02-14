@@ -219,7 +219,7 @@ class GameScene extends Phaser.Scene {
 
     createEnemy() {
         this.enemies = [];
-        const camps = [this.camp1];
+        const camps = [this.camp1, this.camp2, this.camp3];
 
         camps.forEach(camp => {
             for (let i = 0; i < 3; i++) {
