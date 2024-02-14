@@ -1,7 +1,7 @@
 class BattleUI extends Phaser.Scene {
     constructor() {
         super({ key: 'BattleUI', active: false });
-        this.gold = 10000;
+        this.gold = 1000;
         this.score = 0;
         this.scoreText = null;
         this.multiplier = 5;
@@ -47,7 +47,7 @@ class BattleUI extends Phaser.Scene {
         this.baseRebuildBarFill = null;
         this.baseRebuilding = false;
         this.isMultiplierPaused = false;
-        this.gold = 10000;
+        this.gold = 1000;
         this.cash = 0;
         this.scrollbarTrack = null;
         this.scrollbarHandle = null;
@@ -365,23 +365,23 @@ class BattleUI extends Phaser.Scene {
 
         // Upgrades definition
         const damageUpgrades = [
-            { name: "Penknife", description: "Increase damage by 1", cost: 60, icon: 'sword1' },
-            { name: "Hunter's Blade", description: "Increase damage by 2%", cost: 500, icon: 'sword2' }
+            { name: "Penknife", description: "Increase damage by 1", cost: 55, icon: 'sword1' },
+            { name: "Hunter's Blade", description: "Increase damage by 2%", cost: 200, icon: 'sword2' }
         ];
 
         const healthUpgrades = [
-            { name: "Heaven's Rain", description: "Increase max health by 5%", cost: 2000, icon: 'health1' },
-            { name: "Health Potion", description: "Heal back 1000 health", cost: 500, icon: 'health2' },
+            { name: "Heaven's Rain", description: "Increase max health by 5%", cost: 750, icon: 'health1' },
+            { name: "Health Potion", description: "Instantly heal back 1000 health", cost: 300, icon: 'health2' },
         ];
 
         const attackSpeedUpgrades = [
-            { name: "Energy Gun", description: "Increase attack speed by 8%", cost: 3000, icon: 'attackSpeed1' },
-            { name: "Quickblade", description: "Increase attack speed by 16%", cost: 5700, icon: 'attackSpeed2' },
+            { name: "Energy Gun", description: "Increase attack speed by 8%", cost: 660, icon: 'attackSpeed1' },
+            { name: "Quickblade", description: "Increase attack speed by 16%", cost: 1250, icon: 'attackSpeed2' },
         ];
 
         const movementSpeedUpgrades = [
-            { name: "Lightning Core", description: "Increase movement speed by 8%", cost: 4000, icon: 'moveSpeed1' },
-            { name: "Mecha Sneakers", description: "Increase movement speed by 16%", cost: 7900, icon: 'moveSpeed2' },
+            { name: "Lightning Core", description: "Increase movement speed by 8%", cost: 700, icon: 'moveSpeed1' },
+            { name: "Mecha Sneakers", description: "Increase movement speed by 16%", cost: 1300, icon: 'moveSpeed2' },
         ];
 
         this.createItems(damageUpgrades, damageSectionX, sectionY + 60, sectionWidth);

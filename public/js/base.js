@@ -214,7 +214,7 @@ class Base {
             let goldY = this.sprite.y + (Math.random() * 100) - 50;
             let gold = this.scene.add.sprite(goldX, goldY, 'gold');
             gold.setScale(0.5);
-            gold.setData('value', 500);
+            gold.setData('value', 100);
             this.scene.time.delayedCall(2000, () => {
                 this.scene.collectGold(gold);
             }, [], this);
@@ -253,7 +253,7 @@ class Base {
         
         this.enemies.forEach(enemy => {
             if (enemy.isDead) {
-               // enemy.sprite.destroy();
+               enemy.sprite.destroy();
             }
         });
         this.scene.createEnemy(this.baseLevel);

@@ -467,11 +467,12 @@ class LoadingScene extends Phaser.Scene {
 
     preload() {
         this.loadingStartTime = Date.now();
+        this.load.image('hand_pointer', 'assets/images/tips.png');
+        this.load.once('filecomplete-image-hand_pointer', this.createTooltipText, this);
 
         this.createBackground();
         this.createLoadingText();
         this.createProgressBar();
-        this.createTooltipText();
 
         this.loadAssets();
 
@@ -488,7 +489,6 @@ class LoadingScene extends Phaser.Scene {
     createBackground() {
         this.cameras.main.setBackgroundColor('#000');
     }
-
     createLoadingText() {
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
@@ -538,7 +538,8 @@ class LoadingScene extends Phaser.Scene {
             align: 'center',
             wordWrap: { width: width - 100, useAdvancedWrap: true }
         }).setOrigin(0.5, 0);
-
+    
+        this.handPointerImage = this.add.image(width / 2 + 500, tooltipY + 150, 'hand_pointer').setOrigin(0.5, 1);
         this.updateTooltipText();
     }
 
