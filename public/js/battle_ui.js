@@ -911,7 +911,7 @@ class BattleUI extends Phaser.Scene {
             baseLevel: this.scene.get('GameScene').base.baseLevel
         };
         try {
-            const response = await fetch('/.netlify/functions/save-game', {
+            const response = await fetch('/save-game', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
