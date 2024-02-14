@@ -190,7 +190,7 @@ class BattleUI extends Phaser.Scene {
         let partTimeY = 500;
         const playerName = this.scene.get('GameScene').player.name;
         const playerIcon = this.scene.get('GameScene').player.icon;
-        this.playerIcon = this.add.image(panelCenterX - 140, statsTextY + 10, playerIcon).setScale(0.75).setScrollFactor(0).setOrigin(0, 0.5);
+        this.playerIcon = this.add.image(panelCenterX - 150, statsTextY + 10, playerIcon).setScale(0.75).setScrollFactor(0).setOrigin(0, 0.5);
         this.playerNameText = this.add.text(partTimeX + 50, partTimeY, playerName, { font: '18px Orbitron', fill: '#ffffff' });
         this.playerHealthText = this.add.text(partTimeX, partTimeY + 30, 'Health: --/--', { font: '16px Orbitron', fill: '#ffffff' });
         this.playerDamageText = this.add.text(partTimeX, partTimeY + 50, 'Damage: --', { font: '16px Orbitron', fill: '#ffffff' });

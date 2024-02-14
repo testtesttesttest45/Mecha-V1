@@ -213,7 +213,7 @@ class GameScene extends Phaser.Scene {
 
     createPlayer() {
         this.player = null;
-        this.player = new Player(this, 1500, 800, 10, this.enemies);
+        this.player = new Player(this, 1500, 800, 5, this.enemies);
         this.player.create();
     }
 
@@ -457,7 +457,8 @@ class LoadingScene extends Phaser.Scene {
             "Every increase in the Base level amplifies the health and damage of all enemies.",
             "Each time the Base level increases, the damage from Catastrophe grows by an additional 20% from the last level!",
             "Press L to lock/unlock the camera. Press Space to toggle camera follow mode.",
-            "The strongest character is the Thunder Epic Dragon! If you see him, RUN!!!"
+            "The strongest character is the Thunder Epic Dragon! If you see him, RUN!!!",
+            "Enemy attacks can be dodged."
         ];
         this.background = null;
         this.progressBar = null;
@@ -623,10 +624,17 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('moveSpeed1', 'assets/images/moveSpeed1.png');
         this.load.image('moveSpeed2', 'assets/images/moveSpeed2.png');
 
-        this.load.image('ravenMech', 'assets/images/characterIcons/ravenMech.png');
         this.load.image('darkEtherMessiah', 'assets/images/characterIcons/darkEtherMessiah.png');
+        this.load.image('orc', 'assets/images/characterIcons/orc.png');
         this.load.image('metalTrex', 'assets/images/characterIcons/metalTrex.png');
+        this.load.image('burningSlayer', 'assets/images/characterIcons/burningSlayer.png');
+        this.load.image('spectreMech', 'assets/images/characterIcons/spectreMech.png');
+        this.load.image('samuraiMech', 'assets/images/characterIcons/samuraiMech.png');
+        this.load.image('bahamutDragon', 'assets/images/characterIcons/bahamutDragon.png');
+        this.load.image('protowingedMech', 'assets/images/characterIcons/protowingedMech.png');
         this.load.image('brutusMech', 'assets/images/characterIcons/brutusMech.png');
+        this.load.image('ravenMech', 'assets/images/characterIcons/ravenMech.png');
+        this.load.image('thunderEpicDragon', 'assets/images/characterIcons/thunderEpicDragon.png');
     }
 }
 document.addEventListener('DOMContentLoaded', (event) => {

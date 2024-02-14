@@ -22,7 +22,8 @@ const characterMap = {
         speed: 120,
         attackSpeed: 1,
         attackCount: 1,
-        projectile: ''
+        projectile: '',
+        icon: 'orc'
     },
     3: {
         spritesheetKey: 'character3',
@@ -47,7 +48,8 @@ const characterMap = {
         health: 240,
         attackSpeed: 2,
         attackCount: 1,
-        projectile: ''
+        projectile: '',
+        icon: 'burningSlayer'
     },
     5: {
         spritesheetKey: 'character5',
@@ -59,7 +61,8 @@ const characterMap = {
         health: 225,
         attackSpeed: 4,
         attackCount: 1,
-        projectile: 'blueBullet'
+        projectile: 'blueBullet',
+        icon: 'spectreMech'
     },
     6: {
         spritesheetKey: 'character6',
@@ -71,7 +74,8 @@ const characterMap = {
         health: 240,
         attackSpeed: 1,
         attackCount: 2,
-        projectile: ''
+        projectile: '',
+        icon: 'samuraiMech'
     },
     7: {
         spritesheetKey: 'character7',
@@ -83,7 +87,8 @@ const characterMap = {
         health: 284,
         attackSpeed: 1.1,
         attackCount: 1,
-        projectile: 'blueBullet'
+        projectile: 'blueBullet',
+        icon: 'bahamutDragon'
     },
     8: {
         spritesheetKey: 'character8',
@@ -95,7 +100,8 @@ const characterMap = {
         health: 250,
         attackSpeed: 3.13,
         attackCount: 1,
-        projectile: 'blueBullet'
+        projectile: 'blueBullet',
+        icon: 'protowingedMech'
     },
     9: {
         spritesheetKey: 'character9',
@@ -133,7 +139,8 @@ const characterMap = {
         health: 320,
         attackSpeed: 1.01,
         attackCount: 1,
-        projectile: 'blueBullet'
+        projectile: 'blueBullet',
+        icon: 'thunderEpicDragon'
     },
     12: {
         spritesheetKey: 'character12',

@@ -253,7 +253,7 @@ class Base {
         
         this.enemies.forEach(enemy => {
             if (enemy.isDead) {
-                enemy.sprite.destroy();
+               // enemy.sprite.destroy();
             }
         });
         this.scene.createEnemy(this.baseLevel);
