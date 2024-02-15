@@ -165,6 +165,20 @@ const characterMap = {
     //     attackCount: 1,
     //     projectile: ''
     // },
+    13: {
+        spritesheetKey: 'character13',
+        name: 'Avenger Mech',
+        cost: 720,
+        tier: 'hard',
+        range: 250,
+        speed: 220,
+        damage: 59,
+        health: 371,
+        attackSpeed: 1.51,
+        attackCount: 1,
+        projectile: '',
+        icon: 'avengerMech'
+    },
 };
 
 export default characterMap;

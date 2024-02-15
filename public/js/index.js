@@ -213,7 +213,7 @@ class GameScene extends Phaser.Scene {
 
     createPlayer() {
         this.player = null;
-        this.player = new Player(this, 1500, 800, 3, this.enemies);
+        this.player = new Player(this, 1500, 800, 10, this.enemies);
         this.player.create();
     }
 
@@ -606,6 +606,7 @@ class LoadingScene extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'character10', 'assets/sprites/character_10.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character11', 'assets/sprites/character_11.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character12', 'assets/sprites/character_12.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character13', 'assets/sprites/character_13.png', 4000, 4400);
 
         this.load.image('blueBullet', 'assets/projectiles/blue_bullet.png');
         this.load.image('fireball', 'assets/projectiles/fireball.png');
@@ -636,6 +637,7 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('brutusMech', 'assets/images/characterIcons/brutusMech.png');
         this.load.image('ravenMech', 'assets/images/characterIcons/ravenMech.png');
         this.load.image('thunderEpicDragon', 'assets/images/characterIcons/thunderEpicDragon.png');
+        this.load.image('avengerMech', 'assets/images/characterIcons/avengerMech.png');
     }
 }
 class Collections extends Phaser.Scene {
@@ -656,6 +658,7 @@ class Collections extends Phaser.Scene {
         this.load.image('brutusMech', 'assets/images/characterIcons/brutusMech.png');
         this.load.image('ravenMech', 'assets/images/characterIcons/ravenMech.png');
         this.load.image('thunderEpicDragon', 'assets/images/characterIcons/thunderEpicDragon.png');
+        this.load.image('avengerMech', 'assets/images/characterIcons/avengerMech.png');
     }
 
     init(data) {
