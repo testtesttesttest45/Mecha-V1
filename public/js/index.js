@@ -213,7 +213,7 @@ class GameScene extends Phaser.Scene {
 
     createPlayer() {
         this.player = null;
-        this.player = new Player(this, 1500, 800, 10, this.enemies);
+        this.player = new Player(this, 1500, 800, 3, this.enemies);
         this.player.create();
     }
 
