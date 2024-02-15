@@ -39,7 +39,7 @@ const characterMap = {
         attackSpeed: 1.7,
         attackCount: 1,
         projectile: '',
-        icon: 'metalTrex'
+        icon: 'dino'
     },
     4: {
         spritesheetKey: 'character4',

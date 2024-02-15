@@ -627,7 +627,7 @@ class LoadingScene extends Phaser.Scene {
 
         this.load.image('darkEtherMessiah', 'assets/images/characterIcons/darkEtherMessiah.png');
         this.load.image('orc', 'assets/images/characterIcons/orc.png');
-        this.load.image('metalTrex', 'assets/images/characterIcons/metalTrex.png');
+        this.load.image('dino', 'assets/images/characterIcons/dino.png');
         this.load.image('burningSlayer', 'assets/images/characterIcons/burningSlayer.png');
         this.load.image('spectreMech', 'assets/images/characterIcons/spectreMech.png');
         this.load.image('samuraiMech', 'assets/images/characterIcons/samuraiMech.png');
@@ -647,7 +647,7 @@ class Collections extends Phaser.Scene {
         this.load.image('cash', 'assets/images/cash.png');
         this.load.image('darkEtherMessiah', 'assets/images/characterIcons/darkEtherMessiah.png');
         this.load.image('orc', 'assets/images/characterIcons/orc.png');
-        this.load.image('metalTrex', 'assets/images/characterIcons/metalTrex.png');
+        this.load.image('dino', 'assets/images/characterIcons/dino.png');
         this.load.image('burningSlayer', 'assets/images/characterIcons/burningSlayer.png');
         this.load.image('spectreMech', 'assets/images/characterIcons/spectreMech.png');
         this.load.image('samuraiMech', 'assets/images/characterIcons/samuraiMech.png');
