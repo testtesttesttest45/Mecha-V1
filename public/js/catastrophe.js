@@ -55,7 +55,7 @@ class Catastrophe {
                             y: endY + 60,
                             ease: 'Linear',
                             alpha: 0.7,
-                            duration: 1500,
+                            duration: 750,
                             onComplete: () => {
                                 this.checkDamage(x, endY, indicatorRadius);
                                 indicator.destroy();

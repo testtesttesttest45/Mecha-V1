@@ -661,12 +661,13 @@ class Collections extends Phaser.Scene {
     init(data) {
         // Retrieve total cash passed to the scene
         this.totalCash = data.totalCash;
+        this.charactersOwned = data.charactersOwned;
     }
 
     create() {
         const { width, height } = this.sys.game.config;
         this.cameras.main.setBackgroundColor('#000');
-        
+
         // vertical line to visually split the screen in half
         const verticalLine = this.add.graphics();
         verticalLine.lineStyle(2, 0xffffff, 1);
@@ -675,7 +676,7 @@ class Collections extends Phaser.Scene {
         verticalLine.lineTo(width / 2, height);
         verticalLine.closePath();
         verticalLine.strokePath();
-        
+
         // Character list
         const sortedCharacters = Object.entries(characterMap).sort((a, b) => a[1].cost - b[1].cost);
 
@@ -695,17 +696,27 @@ class Collections extends Phaser.Scene {
             const square = this.add.graphics({ fillStyle: { color: 0xffffff } });
             square.fillRect(x, y, squareSize, squareSize);
 
+
             this.add.image(x + squareSize / 2, y + squareSize / 2, character.icon).setDisplaySize(squareSize - 20, squareSize - 20);
 
-            this.characterCost = this.add.text(x + squareSize / 2, y + squareSize, character.cost, { font: '22px Orbitron', fill: '#00ff00' }).setOrigin(0.5, 0).setDepth(50);
-            this.add.image(this.characterCost.x + this.characterCost.width, y + squareSize + 15, 'cash').setDisplaySize(25, 25);
+            if (this.charactersOwned.includes(parseInt(key))) {
+                // Character is owned, display "Use" instead of cost
+                this.add.text(x + squareSize / 2, y + squareSize, 'Use', { font: '18px Orbitron', fill: '#00ff00' }).setOrigin(0.5, 0);
+            } else {
+                // Character is not owned, display cost
+                const costColor = character.cost > this.totalCash ? '#ff0000' : '#00ff00';
+                this.characterCost = this.add.text(x + squareSize / 2, y + squareSize, character.cost, { font: '18px Orbitron', fill: costColor }).setOrigin(0.5, 0);
+                this.add.image(this.characterCost.x + this.characterCost.width, y + squareSize + 15, 'cash').setDisplaySize(25, 25);
+            }
 
             x += squareSize + padding;
         });
-    
+
         this.totalCashText = this.add.text(350, 120, this.totalCash, { font: '48px Orbitron', fill: '#00ff00' });
         this.add.image(this.totalCashText.x + this.totalCashText.width + 60, 150, 'cash');
-    
+
+        this.messageText = this.add.text(600, 130, '', { font: '24px Orbitron', fill: '#ff0000' });
+
         // left arrow as back button
         const backButton = this.add.graphics({ fillStyle: { color: 0xffffff } });
         backButton.beginPath();
@@ -725,7 +736,7 @@ class Collections extends Phaser.Scene {
             document.getElementById('collections-scene').style.display = 'none';
             document.getElementById('main-menu').style.display = 'flex';
         });
-    
+
         // Horizontal line below the total cash and back button
         const horizontalLine = this.add.graphics();
         horizontalLine.lineStyle(2, 0xffffff, 1);
@@ -735,7 +746,7 @@ class Collections extends Phaser.Scene {
         horizontalLine.closePath();
         horizontalLine.strokePath();
     }
-    
+
 }
 
 document.addEventListener('DOMContentLoaded', (event) => {
@@ -817,13 +828,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
         fetch('/get-game-data')
             .then(response => response.json())
             .then(data => {
-                const { initialCash, incomingCash } = data;
+                const { initialCash, incomingCash, charactersOwned } = data;
                 const totalCash = initialCash + incomingCash;
-    
+
                 if (game) {
                     game.destroy(true);
                 }
-    
+
                 const config = {
                     type: Phaser.AUTO,
                     width: 1920,
@@ -834,13 +845,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
                         pixelArt: true,
                     },
                 };
-    
+
                 game = new Phaser.Game(config);
                 game.canvas.id = 'collections-canvas';
-    
+
                 // Assuming you have a way to pass data to your scene, like a global state or directly into the scene's init/data methods
-                game.scene.start('Collections', { totalCash: totalCash });
-    
+                game.scene.start('Collections', { totalCash: totalCash, charactersOwned: charactersOwned });
+
                 resize(game, 'collections-scene');
                 window.addEventListener('resize', () => {
                     resize(game, 'collections-scene');
@@ -848,7 +859,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             })
             .catch(error => console.error('Error fetching saves:', error));
     }
-    
+
 
     collectionsButton.addEventListener('click', () => {
         gameScreen.style.display = 'none';

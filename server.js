@@ -21,36 +21,39 @@ app.post('/save-game', (req, res) => {
       let saveData;
       if (!err && data) {
           const existingData = JSON.parse(data);
-          // Update 'initialCash' to be the sum of the existing 'initialCash' and 'incomingCash'
+          // Update 'initialCash' to include 'incomingCash' from the current session
           const updatedInitialCash = (existingData.initialCash || 0) + (existingData.incomingCash || 0);
 
+          // If 'charactersOwned' does not exist, initialize as an empty array
+          const charactersOwned = existingData.charactersOwned || [1]; // Character 1 owned by default
+
           saveData = {
-              initialCash: updatedInitialCash, // Now 'initialCash' includes the previous 'incomingCash'
-              incomingCash: incomingCash, // The fresh 'incomingCash' from the current session
+              initialCash: updatedInitialCash,
+              incomingCash: incomingCash,
               baseLevel: baseLevel,
-              highestScore: existingData.highestScore || 0, // Preserve existing highestScore
+              highestScore: existingData.highestScore || 0,
               newHighest: false,
-              latestScore: score
+              latestScore: score,
+              charactersOwned: charactersOwned // Include the 'charactersOwned' array
           };
 
-          // Check if the current session's score is a new highest score
           if (score > saveData.highestScore) {
               saveData.highestScore = score;
               saveData.newHighest = true;
           }
       } else {
-          // This is the first save, so 'initialCash' is 0 and 'incomingCash' comes from the session
+          // First save, character 1 is owned by default
           saveData = {
               initialCash: 0,
               incomingCash: incomingCash,
               baseLevel: baseLevel,
               highestScore: score,
-              newHighest: true, // It's the first game, so it's a new high score
-              latestScore: score
+              newHighest: true,
+              latestScore: score,
+              charactersOwned: [1] // Initialize with character 1 owned
           };
       }
 
-      // Write the updated save file
       fs.writeFile(saveFilePath, JSON.stringify(saveData, null, 2), 'utf8', (writeErr) => {
           if (writeErr) {
               console.error(writeErr);
@@ -60,6 +63,7 @@ app.post('/save-game', (req, res) => {
       });
   });
 });
+
 app.get('/get-game-data', (req, res) => {
   const saveFilePath = path.join(__dirname, 'save_file.json');
 
