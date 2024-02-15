@@ -77,7 +77,8 @@ app.get('/get-game-data', (req, res) => {
                   baseLevel: 0,
                   highestScore: 0,
                   newHighest: false,
-                  latestScore: 0
+                  latestScore: 0,
+                  charactersOwned: [1] // Character 1 owned by default
               };
               fs.writeFile(saveFilePath, JSON.stringify(initialData, null, 2), 'utf8', (writeErr) => {
                   if (writeErr) {
@@ -92,6 +93,17 @@ app.get('/get-game-data', (req, res) => {
       } else { // file exist and read successfully
           res.json(JSON.parse(data));
       }
+  });
+});
+
+app.delete('/delete-save', (req, res) => {
+  const saveFilePath = path.join(__dirname, 'save_file.json');
+  fs.unlink(saveFilePath, (err) => {
+      if (err) {
+          console.error(err);
+          return res.status(500).json({ message: 'Error deleting save file' });
+      }
+      res.json({ message: 'Save file deleted successfully' });
   });
 });
 
