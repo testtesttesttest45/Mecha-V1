@@ -14,40 +14,52 @@ app.get('/', (req, res) => {
 });
 
 app.post('/save-game', (req, res) => {
-  const { cash, baseLevel, score } = req.body;
+  const { incomingCash, baseLevel, score } = req.body;
   const saveFilePath = path.join(__dirname, 'save_file.json');
 
   fs.readFile(saveFilePath, (err, data) => {
-    let saveData = { cash, baseLevel, highestScore: 0, newHighest: false, latestScore: score };
+      let saveData;
+      if (!err && data) {
+          const existingData = JSON.parse(data);
+          // Update 'initialCash' to be the sum of the existing 'initialCash' and 'incomingCash'
+          const updatedInitialCash = (existingData.initialCash || 0) + (existingData.incomingCash || 0);
 
-    if (!err && data) {
-      const existingData = JSON.parse(data);
+          saveData = {
+              initialCash: updatedInitialCash, // Now 'initialCash' includes the previous 'incomingCash'
+              incomingCash: incomingCash, // The fresh 'incomingCash' from the current session
+              baseLevel: baseLevel,
+              highestScore: existingData.highestScore || 0, // Preserve existing highestScore
+              newHighest: false,
+              latestScore: score
+          };
 
-      saveData.highestScore = existingData.highestScore || 0; // Initialize highestScore from existing data if available
-
-      // Check if the current session's score is a new highest score
-      if (score > saveData.highestScore) {
-        saveData.highestScore = score;
-        saveData.newHighest = true;
+          // Check if the current session's score is a new highest score
+          if (score > saveData.highestScore) {
+              saveData.highestScore = score;
+              saveData.newHighest = true;
+          }
+      } else {
+          // This is the first save, so 'initialCash' is 0 and 'incomingCash' comes from the session
+          saveData = {
+              initialCash: 0,
+              incomingCash: incomingCash,
+              baseLevel: baseLevel,
+              highestScore: score,
+              newHighest: true, // It's the first game, so it's a new high score
+              latestScore: score
+          };
       }
-    } else {
-      // error area, such as missing file or invalid JSON
-      // since this is the first save, latestScore will also be the highestScore
-      saveData.highestScore = score;
-      saveData.newHighest = true; // since it's the first game, it's implicitly a new high score
-    }
 
-    // write the (new or updated) save file
-    fs.writeFile(saveFilePath, JSON.stringify(saveData, null, 2), 'utf8', (writeErr) => {
-      if (writeErr) {
-        console.error(writeErr);
-        return res.status(500).json({ message: 'Error saving game data' });
-      }
-      res.json({ message: 'Game data saved successfully', ...saveData }); // spread operator used to include all properties of saveData
-    });
+      // Write the updated save file
+      fs.writeFile(saveFilePath, JSON.stringify(saveData, null, 2), 'utf8', (writeErr) => {
+          if (writeErr) {
+              console.error(writeErr);
+              return res.status(500).json({ message: 'Error saving game data' });
+          }
+          res.json({ message: 'Game data saved successfully', ...saveData });
+      });
   });
 });
-
 app.get('/get-game-data', (req, res) => {
   const saveFilePath = path.join(__dirname, 'save_file.json');
 
@@ -56,8 +68,9 @@ app.get('/get-game-data', (req, res) => {
           console.error(err);
           if (err.code === 'ENOENT') { // if not found, create a new file with initial data
               const initialData = {
-                  cash: 0,
-                  baseLevel: 1,
+                  initialCash: 0,
+                  incomingCash: 0,
+                  baseLevel: 0,
                   highestScore: 0,
                   newHighest: false,
                   latestScore: 0

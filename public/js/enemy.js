@@ -655,7 +655,7 @@ class Enemy {
     }
 
     dropCash() {
-        if (Math.random() < 0.25) {
+        if (Math.random() < 0.95) {
             let cash = this.scene.add.sprite(this.sprite.x - 70, this.sprite.y, 'cash');
             cash.setData('value', 1);
             this.scene.time.delayedCall(2000, () => {

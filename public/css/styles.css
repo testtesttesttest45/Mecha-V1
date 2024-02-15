@@ -20,7 +20,8 @@ html {
 }
 
 .main-menu,
-.battle-scene {
+.battle-scene,
+.collections-scene {
     position: relative;
     height: 100%;
     width: 100%;
@@ -119,7 +120,7 @@ html {
 
 .chapter-level {
     position: absolute;
-    top: 20%;
+    top: 5%;
     left: 2vw;
     font-family: 'Orbitron', sans-serif;
     color: #00f3ff;
@@ -128,9 +129,6 @@ html {
         0 0 10px #076bf8,
         0 0 20px #076bf8;
     font-size: 1.2vw;
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
 }
 
 .level-star {
@@ -161,7 +159,7 @@ html {
     height: 50%;
 }
 
-#battle-canvas {
+#battle-canvas, #collections-canvas {
     border: 0.2vw solid #00f3ff;
     border-radius: 2vw;
 }

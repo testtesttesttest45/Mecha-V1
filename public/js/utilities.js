@@ -54,8 +54,8 @@ export function rgbToHex(r, g, b) {
     return "#" + r + g + b;
 }
 
-export function resize(game) {
-    const battleScene = document.getElementById('battle-scene');
+export function resize(game, scene) {
+    const battleScene = document.getElementById(scene);
     const gameWidth = game.config.width;
     const gameHeight = game.config.height;
 

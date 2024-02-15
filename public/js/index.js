@@ -538,7 +538,7 @@ class LoadingScene extends Phaser.Scene {
             align: 'center',
             wordWrap: { width: width - 100, useAdvancedWrap: true }
         }).setOrigin(0.5, 0);
-    
+
         this.handPointerImage = this.add.image(width / 2 + 500, tooltipY + 150, 'hand_pointer').setOrigin(0.5, 1);
         this.updateTooltipText();
     }
@@ -554,36 +554,36 @@ class LoadingScene extends Phaser.Scene {
         const buttonHeight = 50;
         const width = this.cameras.main.width;
         const height = this.cameras.main.height / 2;
-    
+
         let startX = width - buttonWidth - padding;
         let startY = height - buttonHeight - padding;
-    
+
         let startButton = this.add.text(startX, startY, 'Start', {
             font: '20px Orbitron',
             fill: '#FFFFFF',
             backgroundColor: '#5cb85c',
             padding: { x: 10, y: 5 }
         })
-        .setInteractive({ useHandCursor: true })
-        .setOrigin(0.5, 0.5)
-        .on('pointerover', () => startButton.setStyle({ fill: '#4cae4c'}))
-        .on('pointerout', () => startButton.setStyle({ fill: '#FFFFFF'}))
-        .on('pointerdown', () => {
-            this.scene.start('GameScene');
-        });
-    
+            .setInteractive({ useHandCursor: true })
+            .setOrigin(0.5, 0.5)
+            .on('pointerover', () => startButton.setStyle({ fill: '#4cae4c' }))
+            .on('pointerout', () => startButton.setStyle({ fill: '#FFFFFF' }))
+            .on('pointerdown', () => {
+                this.scene.start('GameScene');
+            });
+
         startButton.setStroke('#4cae4c', 4);
         startButton.setShadow(2, 2, 'rgba(0,0,0,0.5)', 2, true, true);
-    
+
         let background = this.add.graphics();
         background.fillStyle(0x5cb85c, 1);
         background.fillRoundedRect(startX - buttonWidth, startY - buttonHeight, buttonWidth, buttonHeight, 5);
         background.setDepth(-1)
-    
+
         startButton.setX(startX - buttonWidth / 2);
         startButton.setY(startY - buttonHeight / 2);
     }
-    
+
 
     loadAssets() {
         this.load.image('ocean', 'assets/images/ocean.png');
@@ -638,10 +638,112 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('thunderEpicDragon', 'assets/images/characterIcons/thunderEpicDragon.png');
     }
 }
+class Collections extends Phaser.Scene {
+    constructor() {
+        super({ key: 'Collections' });
+    }
+
+    preload() {
+        this.load.image('cash', 'assets/images/cash.png');
+        this.load.image('darkEtherMessiah', 'assets/images/characterIcons/darkEtherMessiah.png');
+        this.load.image('orc', 'assets/images/characterIcons/orc.png');
+        this.load.image('metalTrex', 'assets/images/characterIcons/metalTrex.png');
+        this.load.image('burningSlayer', 'assets/images/characterIcons/burningSlayer.png');
+        this.load.image('spectreMech', 'assets/images/characterIcons/spectreMech.png');
+        this.load.image('samuraiMech', 'assets/images/characterIcons/samuraiMech.png');
+        this.load.image('bahamutDragon', 'assets/images/characterIcons/bahamutDragon.png');
+        this.load.image('protowingedMech', 'assets/images/characterIcons/protowingedMech.png');
+        this.load.image('brutusMech', 'assets/images/characterIcons/brutusMech.png');
+        this.load.image('ravenMech', 'assets/images/characterIcons/ravenMech.png');
+        this.load.image('thunderEpicDragon', 'assets/images/characterIcons/thunderEpicDragon.png');
+    }
+
+    init(data) {
+        // Retrieve total cash passed to the scene
+        this.totalCash = data.totalCash;
+    }
+
+    create() {
+        const { width, height } = this.sys.game.config;
+        this.cameras.main.setBackgroundColor('#000');
+        
+        // vertical line to visually split the screen in half
+        const verticalLine = this.add.graphics();
+        verticalLine.lineStyle(2, 0xffffff, 1);
+        verticalLine.beginPath();
+        verticalLine.moveTo(width / 2, 0);
+        verticalLine.lineTo(width / 2, height);
+        verticalLine.closePath();
+        verticalLine.strokePath();
+        
+        // Character list
+        const sortedCharacters = Object.entries(characterMap).sort((a, b) => a[1].cost - b[1].cost);
+
+        const squareSize = 180;
+        const startX = 75;
+        let x = startX;
+        let y = 230;
+        const padding = 30;
+        const perRow = 4;
+
+        sortedCharacters.forEach(([key, character], index) => {
+            if (index % perRow === 0 && index !== 0) {
+                x = startX;
+                y += squareSize + padding + 20;
+            }
+
+            const square = this.add.graphics({ fillStyle: { color: 0xffffff } });
+            square.fillRect(x, y, squareSize, squareSize);
+
+            this.add.image(x + squareSize / 2, y + squareSize / 2, character.icon).setDisplaySize(squareSize - 20, squareSize - 20);
+
+            this.characterCost = this.add.text(x + squareSize / 2, y + squareSize, character.cost, { font: '22px Orbitron', fill: '#00ff00' }).setOrigin(0.5, 0).setDepth(50);
+            this.add.image(this.characterCost.x + this.characterCost.width, y + squareSize + 15, 'cash').setDisplaySize(25, 25);
+
+            x += squareSize + padding;
+        });
+    
+        this.totalCashText = this.add.text(350, 120, this.totalCash, { font: '48px Orbitron', fill: '#00ff00' });
+        this.add.image(this.totalCashText.x + this.totalCashText.width + 60, 150, 'cash');
+    
+        // left arrow as back button
+        const backButton = this.add.graphics({ fillStyle: { color: 0xffffff } });
+        backButton.beginPath();
+        backButton.moveTo(50, 150); // Arrow tip
+        backButton.lineTo(70, 130);
+        backButton.lineTo(70, 140);
+        backButton.lineTo(90, 140);
+        backButton.lineTo(90, 160);
+        backButton.lineTo(70, 160);
+        backButton.lineTo(70, 170);
+        backButton.lineTo(50, 150);
+        backButton.closePath();
+        backButton.fillPath();
+        backButton.setInteractive(new Phaser.Geom.Polygon([
+            50, 150, 70, 130, 70, 140, 90, 140, 90, 160, 70, 160, 70, 170, 50, 150
+        ]), Phaser.Geom.Polygon.Contains).on('pointerdown', () => {
+            document.getElementById('collections-scene').style.display = 'none';
+            document.getElementById('main-menu').style.display = 'flex';
+        });
+    
+        // Horizontal line below the total cash and back button
+        const horizontalLine = this.add.graphics();
+        horizontalLine.lineStyle(2, 0xffffff, 1);
+        horizontalLine.beginPath();
+        horizontalLine.moveTo(0, 200);
+        horizontalLine.lineTo(width / 2, 200);
+        horizontalLine.closePath();
+        horizontalLine.strokePath();
+    }
+    
+}
+
 document.addEventListener('DOMContentLoaded', (event) => {
     const gameScreen = document.getElementById('main-menu');
     const battleScene = document.getElementById('battle-scene');
+    const collectionsScene = document.getElementById('collections-scene');
     const playButton = document.querySelector('.play-button');
+    const collectionsButton = document.querySelector('.collections-button');
 
     let game;
 
@@ -669,10 +771,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
         game = new Phaser.Game(config);
         game.canvas.id = 'battle-canvas';
-        resize(game);
+        resize(game, 'battle-scene');
 
         window.addEventListener('resize', () => {
-            resize(game);
+            resize(game, 'battle-scene');
         });
     }
 
@@ -683,11 +785,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
         startGame();
     });
 
-    function displayHighestScore(score, totalCash, highestBaseLevel) {
+    function displayHighestScore(score, incomingCash, initialCash, highestBaseLevel) {
         const highestScoreElement = document.getElementById('highest-score');
         const cashElement = document.getElementById('cash');
         const baseLevelElement = document.getElementById('base-level');
-        
+
+        const totalCash = incomingCash + initialCash;
+
         if (highestScoreElement && cash && baseLevelElement) {
             highestScoreElement.textContent = `Highest Score: ${score}`;
             cashElement.textContent = `Cash: ${totalCash}`;
@@ -695,16 +799,61 @@ document.addEventListener('DOMContentLoaded', (event) => {
         }
     }
 
-    window.fetchHighestScore = function() {
+    window.fetchHighestScore = function () {
         fetch('/get-game-data')
             .then(response => response.json())
             .then(data => {
-                const { highestScore, cash, baseLevel } = data;
-                displayHighestScore(highestScore, cash, baseLevel);
+                const { highestScore, incomingCash, initialCash, baseLevel } = data;
+                displayHighestScore(highestScore, incomingCash, initialCash, baseLevel);
             })
-            .catch(error => console.error('Error fetching highest score:', error));
+            .catch(error => console.error('Error fetching saves:', error));
     };
 
     window.fetchHighestScore();
+
+
+
+    function viewCollections() {
+        fetch('/get-game-data')
+            .then(response => response.json())
+            .then(data => {
+                const { initialCash, incomingCash } = data;
+                const totalCash = initialCash + incomingCash;
     
+                if (game) {
+                    game.destroy(true);
+                }
+    
+                const config = {
+                    type: Phaser.AUTO,
+                    width: 1920,
+                    height: 1080,
+                    parent: 'collections-scene',
+                    scene: [Collections],
+                    render: {
+                        pixelArt: true,
+                    },
+                };
+    
+                game = new Phaser.Game(config);
+                game.canvas.id = 'collections-canvas';
+    
+                // Assuming you have a way to pass data to your scene, like a global state or directly into the scene's init/data methods
+                game.scene.start('Collections', { totalCash: totalCash });
+    
+                resize(game, 'collections-scene');
+                window.addEventListener('resize', () => {
+                    resize(game, 'collections-scene');
+                });
+            })
+            .catch(error => console.error('Error fetching saves:', error));
+    }
+    
+
+    collectionsButton.addEventListener('click', () => {
+        gameScreen.style.display = 'none';
+        collectionsScene.style.display = 'flex';
+        viewCollections();
+    });
+
 });

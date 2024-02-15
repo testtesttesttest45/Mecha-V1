@@ -920,9 +920,8 @@ class BattleUI extends Phaser.Scene {
     }
 
     async saveGameData() { // got await, so i use async
-        console.log("BOLEH")
         const gameData = {
-            cash: this.cash,
+            incomingCash: this.cash,
             score: this.score,
             baseLevel: this.scene.get('GameScene').base.baseLevel
         };

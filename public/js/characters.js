@@ -2,6 +2,7 @@ const characterMap = {
     1: {
         spritesheetKey: 'character1',
         name: 'Dark Ether Messiah',
+        cost: 100,
         tier: 'hard',
         range: 200,
         speed: 200,
@@ -15,6 +16,7 @@ const characterMap = {
     2: {
         spritesheetKey: 'character2',
         name: 'Orc',
+        cost: 50,
         tier: 'easy',
         health: 150,
         damage: 22,
@@ -28,6 +30,7 @@ const characterMap = {
     3: {
         spritesheetKey: 'character3',
         name: 'Metal T-Rex',
+        cost: 70,
         tier: 'easy',
         health: 262,
         damage: 36,
@@ -41,6 +44,7 @@ const characterMap = {
     4: {
         spritesheetKey: 'character4',
         name: 'Burning Slayer',
+        cost: 100,
         tier: 'easy',
         range: 200,
         speed: 220,
@@ -54,6 +58,7 @@ const characterMap = {
     5: {
         spritesheetKey: 'character5',
         name: 'Spectre Mech',
+        cost: 150,
         tier: 'hard',
         range: 520,
         speed: 250,
@@ -67,6 +72,7 @@ const characterMap = {
     6: {
         spritesheetKey: 'character6',
         name: 'Samurai Mech',
+        cost: 150,
         tier: 'hard',
         range: 250,
         speed: 270,
@@ -80,6 +86,7 @@ const characterMap = {
     7: {
         spritesheetKey: 'character7',
         name: 'Bahamut Dragon',
+        cost: 350,
         tier: 'hard',
         range: 200,
         speed: 220,
@@ -93,6 +100,7 @@ const characterMap = {
     8: {
         spritesheetKey: 'character8',
         name: 'Protowinged Mech',
+        cost: 250,
         tier: 'easy',
         range: 250,
         speed: 250,
@@ -106,6 +114,7 @@ const characterMap = {
     9: {
         spritesheetKey: 'character9',
         name: 'Brutus Mech',
+        cost: 310,
         tier: 'hard',
         range: 250,
         speed: 270,
@@ -119,6 +128,7 @@ const characterMap = {
     10: {
         spritesheetKey: 'character10',
         name: 'Raven Mech',
+        cost: 550,
         tier: 'hard',
         range: 250,
         speed: 220,
@@ -132,6 +142,7 @@ const characterMap = {
     11: {
         spritesheetKey: 'character11',
         name: 'Thunder Epic Dragon',
+        cost: 999,
         tier: 'hard',
         range: 300,
         speed: 500,
@@ -142,18 +153,18 @@ const characterMap = {
         projectile: 'blueBullet',
         icon: 'thunderEpicDragon'
     },
-    12: {
-        spritesheetKey: 'character12',
-        name: 'Mechanic',
-        tier: 'godly',
-        range: 10,
-        speed: 20,
-        damage: 500,
-        health: 10000000,
-        attackSpeed: 3.3,
-        attackCount: 1,
-        projectile: ''
-    },
+    // 12: {
+    //     spritesheetKey: 'character12',
+    //     name: 'Mechanic',
+    //     tier: 'godly',
+    //     range: 10,
+    //     speed: 20,
+    //     damage: 500,
+    //     health: 10000000,
+    //     attackSpeed: 3.3,
+    //     attackCount: 1,
+    //     projectile: ''
+    // },
 };
 
 export default characterMap;
