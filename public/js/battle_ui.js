@@ -31,6 +31,7 @@ class BattleUI extends Phaser.Scene {
         };
         this.purchaseCountText = null;
         this.goldTextShop = null;
+        this.gameDataSaved = false;
     }
 
     resetState() {
@@ -65,6 +66,7 @@ class BattleUI extends Phaser.Scene {
         };
         this.purchaseCountText = null;
         this.goldTextShop = null;
+        this.gameDataSaved = false;
     }
     startMultiplierTimer() {
         if (!this.timerStarted) {
@@ -828,6 +830,12 @@ class BattleUI extends Phaser.Scene {
         this.gameOverContainer.add([gameOverText, retryButton, mainMenuButton]);
 
         this.gameOverContainer.setDepth(100);
+
+        if (!this.gameDataSaved) {
+            this.saveGameData().then(() => {
+                this.gameDataSaved = true; // Ensure we don't save again if the player exits to the main menu
+            }).catch(error => console.error('Error saving game data:', error));
+        }
     }
 
     createStyledButton(x, y, text, backgroundColor, callback) {
@@ -854,6 +862,7 @@ class BattleUI extends Phaser.Scene {
 
         gameScene.scene.restart();
         gameScene.allowInput = false;
+        this.gameDataSaved = false;
     }
 
     exitToMainMenu() {
@@ -861,12 +870,18 @@ class BattleUI extends Phaser.Scene {
         this.scene.stop();
         document.getElementById('battle-scene').style.display = 'none';
         document.getElementById('main-menu').style.display = 'flex';
-        this.saveGameData().then(() => {
-            // Fetch the latest highest score and update the display
+        if (!this.gameDataSaved) {
+            this.saveGameData().then(() => {
+                if (window.fetchHighestScore) {
+                    window.fetchHighestScore();
+                }
+            }).catch(error => console.error('Error saving game data:', error));
+        } else {
             if (window.fetchHighestScore) {
                 window.fetchHighestScore();
             }
-        }).catch(error => console.error('Error saving game data:', error));
+            this.gameDataSaved = false;
+        }
     }
 
     pauseGame() {
@@ -905,6 +920,7 @@ class BattleUI extends Phaser.Scene {
     }
 
     async saveGameData() { // got await, so i use async
+        console.log("BOLEH")
         const gameData = {
             cash: this.cash,
             score: this.score,

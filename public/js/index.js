@@ -683,10 +683,15 @@ document.addEventListener('DOMContentLoaded', (event) => {
         startGame();
     });
 
-    function displayHighestScore(score) {
+    function displayHighestScore(score, totalCash, highestBaseLevel) {
         const highestScoreElement = document.getElementById('highest-score');
-        if (highestScoreElement) {
+        const cashElement = document.getElementById('cash');
+        const baseLevelElement = document.getElementById('base-level');
+        
+        if (highestScoreElement && cash && baseLevelElement) {
             highestScoreElement.textContent = `Highest Score: ${score}`;
+            cashElement.textContent = `Cash: ${totalCash}`;
+            baseLevelElement.textContent = `Base Level: ${highestBaseLevel}`;
         }
     }
 
@@ -694,8 +699,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
         fetch('/get-game-data')
             .then(response => response.json())
             .then(data => {
-                const highestScore = data.highestScore;
-                displayHighestScore(highestScore);
+                const { highestScore, cash, baseLevel } = data;
+                displayHighestScore(highestScore, cash, baseLevel);
             })
             .catch(error => console.error('Error fetching highest score:', error));
     };
