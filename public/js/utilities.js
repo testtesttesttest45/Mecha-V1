@@ -68,9 +68,9 @@ export function resize(game, scene) {
     game.canvas.style.marginLeft = '0px';
 }
 
-export function loadDynamicSpriteSheet(key, path, width, height) {
-    const frameWidth = width / 10;
-    const frameHeight = height / 11;
+export function loadDynamicSpriteSheet(key, path, width, height, rowCount = 10, colCount = 11) {
+    const frameWidth = width / rowCount;
+    const frameHeight = height / colCount;
 
     this.load.spritesheet(key, path, { frameWidth: frameWidth, frameHeight: frameHeight });
 }

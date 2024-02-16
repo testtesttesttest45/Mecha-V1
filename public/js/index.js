@@ -23,11 +23,13 @@ class GameScene extends Phaser.Scene {
         this.allowInput = false;
         this.activeGameTime = 0;
         this.isGamePaused = false;
+        this.characterInUse = null;
     }
 
-    create() {
+    create(data) {
         this.gameScreenWidth = this.sys.game.config.width;
         this.gameScreenHeight = this.sys.game.config.height;
+        this.characterInUse = data.characterInUse;
         this.createStaticBackground();
         this.createLand();
         this.createPlayer();
@@ -213,7 +215,7 @@ class GameScene extends Phaser.Scene {
 
     createPlayer() {
         this.player = null;
-        this.player = new Player(this, 1500, 800, 10, this.enemies);
+        this.player = new Player(this, 1500, 800, this.characterInUse, this.enemies);
         this.player.create();
     }
 
@@ -520,13 +522,21 @@ class LoadingScene extends Phaser.Scene {
     }
 
     onLoadComplete() {
-        console.log('All assets loaded, switching to GameScene');
-        let loadingEndTime = Date.now();
-        let loadingDuration = (loadingEndTime - this.loadingStartTime) / 1000;
-        console.log(`Loading completed in ${loadingDuration.toFixed(2)} seconds`);
-        this.progressBar.destroy();
-        this.progressBox.destroy();
-        this.createStartButton();
+        fetch('/get-game-data')
+            .then(response => response.json())
+            .then(data => {
+                const characterInUse = data.characterInUse;
+                console.log('All assets loaded, switching to GameScene with character:', characterInUse);
+                let loadingEndTime = Date.now();
+                let loadingDuration = (loadingEndTime - this.loadingStartTime) / 1000;
+                console.log(`Loading completed in ${loadingDuration.toFixed(2)} seconds`);
+                this.progressBar.destroy();
+                this.progressBox.destroy();
+                this.createStartButton(data.characterInUse);
+            })
+            .catch(error => {
+                console.error('Error fetching game data:', error);
+            });
     }
 
     createTooltipText() {
@@ -548,7 +558,7 @@ class LoadingScene extends Phaser.Scene {
         this.tooltipText.setText(this.tooltips[randomIndex]);
     }
 
-    createStartButton() {
+    createStartButton(characterInUse) {
         const padding = 10;
         const buttonWidth = 150;
         const buttonHeight = 50;
@@ -569,7 +579,7 @@ class LoadingScene extends Phaser.Scene {
             .on('pointerover', () => startButton.setStyle({ fill: '#4cae4c' }))
             .on('pointerout', () => startButton.setStyle({ fill: '#FFFFFF' }))
             .on('pointerdown', () => {
-                this.scene.start('GameScene');
+                this.scene.start('GameScene', { characterInUse: characterInUse });
             });
 
         startButton.setStroke('#4cae4c', 4);
@@ -640,9 +650,13 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('avengerMech', 'assets/images/characterIcons/avengerMech.png');
     }
 }
+
 class Collections extends Phaser.Scene {
     constructor() {
-        super({ key: 'Collections' });
+        super({ key: 'Collections', active: false });
+        this.selectedIcon = null;
+        this.selectedCharacterKey = null;
+        this.characterUIElements = {};
     }
 
     preload() {
@@ -659,18 +673,37 @@ class Collections extends Phaser.Scene {
         this.load.image('ravenMech', 'assets/images/characterIcons/ravenMech.png');
         this.load.image('thunderEpicDragon', 'assets/images/characterIcons/thunderEpicDragon.png');
         this.load.image('avengerMech', 'assets/images/characterIcons/avengerMech.png');
+
+        this.load.image('health_icon', 'assets/images/collections/statsIcons/health_icon.png');
+        this.load.image('damage_icon', 'assets/images/collections/statsIcons/damage_icon.png');
+        this.load.image('attack_speed_icon', 'assets/images/collections/statsIcons/attack_speed_icon.png');
+        this.load.image('speed_icon', 'assets/images/collections/statsIcons/speed_icon.png');
+        this.load.image('range_icon', 'assets/images/collections/statsIcons/range_icon.png');
+
+        loadDynamicSpriteSheet.call(this, 'character1Idle', 'assets/images/idleDisplays/character1_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character2Idle', 'assets/images/idleDisplays/character2_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character3Idle', 'assets/images/idleDisplays/character3_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character4Idle', 'assets/images/idleDisplays/character4_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character5Idle', 'assets/images/idleDisplays/character5_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character6Idle', 'assets/images/idleDisplays/character6_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character7Idle', 'assets/images/idleDisplays/character7_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character8Idle', 'assets/images/idleDisplays/character8_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character9Idle', 'assets/images/idleDisplays/character9_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character10Idle', 'assets/images/idleDisplays/character10_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character11Idle', 'assets/images/idleDisplays/character11_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character12Idle', 'assets/images/idleDisplays/character12_idle.png', 2250, 900, 5, 2);
     }
 
     init(data) {
-        // Retrieve total cash passed to the scene
         this.totalCash = data.totalCash;
         this.charactersOwned = data.charactersOwned;
+        this.characterInUse = data.characterInUse;
     }
 
     create() {
         const { width, height } = this.sys.game.config;
         this.cameras.main.setBackgroundColor('#000');
-
+        this.attributeTexts = [];
         // vertical line to visually split the screen in half
         const verticalLine = this.add.graphics();
         verticalLine.lineStyle(2, 0xffffff, 1);
@@ -679,6 +712,15 @@ class Collections extends Phaser.Scene {
         verticalLine.lineTo(width / 2, height);
         verticalLine.closePath();
         verticalLine.strokePath();
+
+        // used to split the other half on the right
+        const verticalLine2 = this.add.graphics();
+        verticalLine2.lineStyle(2, 0xffffff, 1);
+        verticalLine2.beginPath();
+        verticalLine2.moveTo(width / 2 + 600, 0);
+        verticalLine2.lineTo(width / 2 + 600, height);
+        verticalLine2.closePath();
+        verticalLine2.strokePath();
 
         // Character list
         const sortedCharacters = Object.entries(characterMap).sort((a, b) => a[1].cost - b[1].cost);
@@ -696,20 +738,34 @@ class Collections extends Phaser.Scene {
                 y += squareSize + padding + 20;
             }
 
+            let container = this.add.container(x, y);
+
             const square = this.add.graphics({ fillStyle: { color: 0xffffff } });
-            square.fillRect(x, y, squareSize, squareSize);
+            square.fillRect(0, 0, squareSize, squareSize);
+            container.add(square);
 
+            const icon = this.add.image(squareSize / 2, squareSize / 2, character.icon).setDisplaySize(squareSize - 20, squareSize - 20);
+            container.add(icon);
 
-            this.add.image(x + squareSize / 2, y + squareSize / 2, character.icon).setDisplaySize(squareSize - 20, squareSize - 20);
-
-            if (this.charactersOwned.includes(parseInt(key))) {
-                // Character is owned, display "Use" instead of cost
-                this.add.text(x + squareSize / 2, y + squareSize, 'Use', { font: '18px Orbitron', fill: '#00ff00' }).setOrigin(0.5, 0);
+            icon.setInteractive();
+            icon.on('pointerdown', () => {
+                this.handleCharacterSelection(key, character, square);
+            });
+            const isCharacterInUse = parseInt(key) === this.characterInUse;
+            const isOwned = this.charactersOwned.includes(parseInt(key));
+            const buttonText = isCharacterInUse ? "In Use" : isOwned ? "Use" : character.cost;
+            const costColor = isCharacterInUse ? '#ffff00' : isOwned ? '#00ff00' : character.cost > this.totalCash ? '#ff0000' : '#00ff00';
+            const textElement = this.add.text(x + squareSize / 2, y + squareSize, buttonText, { font: '18px Orbitron', fill: costColor }).setOrigin(0.5, 0);
+            if (!isCharacterInUse && !isOwned) {
+                const costLogo = this.add.image(textElement.x + textElement.width / 2 + 15, y + squareSize + 15, 'cash').setDisplaySize(25, 25);
+                this.characterUIElements[key] = {
+                    costText: textElement,
+                    costLogo: costLogo,
+                };
             } else {
-                // Character is not owned, display cost
-                const costColor = character.cost > this.totalCash ? '#ff0000' : '#00ff00';
-                this.characterCost = this.add.text(x + squareSize / 2, y + squareSize, character.cost, { font: '18px Orbitron', fill: costColor }).setOrigin(0.5, 0);
-                this.add.image(this.characterCost.x + this.characterCost.width, y + squareSize + 15, 'cash').setDisplaySize(25, 25);
+                this.characterUIElements[key] = {
+                    costText: textElement,
+                };
             }
 
             x += squareSize + padding;
@@ -718,12 +774,10 @@ class Collections extends Phaser.Scene {
         this.totalCashText = this.add.text(350, 120, this.totalCash, { font: '48px Orbitron', fill: '#00ff00' });
         this.add.image(this.totalCashText.x + this.totalCashText.width + 60, 150, 'cash');
 
-        this.messageText = this.add.text(600, 130, '', { font: '24px Orbitron', fill: '#ff0000' });
-
         // left arrow as back button
         const backButton = this.add.graphics({ fillStyle: { color: 0xffffff } });
         backButton.beginPath();
-        backButton.moveTo(50, 150); // Arrow tip
+        backButton.moveTo(50, 150);
         backButton.lineTo(70, 130);
         backButton.lineTo(70, 140);
         backButton.lineTo(90, 140);
@@ -750,6 +804,250 @@ class Collections extends Phaser.Scene {
         horizontalLine.strokePath();
     }
 
+    handleCharacterSelection(key, character, square) {
+        const squareSize = 180;
+        if (this.selectedCharacterKey === key) {
+            return;
+        }
+        if (this.selectedIcon) {
+            // Reset previous selection
+            this.selectedIcon.fillStyle(0xffffff, 1);
+            this.selectedIcon.fillRect(0, 0, squareSize, squareSize);
+        }
+
+        // Update current selection
+        this.selectedIcon = square;
+        this.selectedCharacterKey = key;
+        square.fillStyle(0xffff00, 1);
+        square.fillRect(0, 0, squareSize, squareSize);
+
+        this.showIdleAnimation(character.idle, character);
+    }
+
+    showIdleAnimation(idleKey, character) {
+        const { width, height } = this.sys.game.config;
+
+        if (this.idleAnimationSprite) {
+            this.idleAnimationSprite.destroy();
+        }
+        if (this.actionButton) {
+            this.actionButton.destroy();
+        }
+
+        this.clearAttributesDisplay();
+
+        const animationX = width / 2 + ((width / 2 + 600) - (width / 2)) / 2;
+        const animationY = height / 2;
+
+        this.idleAnimationSprite = this.add.sprite(animationX, animationY, idleKey).setScale(1.2);
+        if (!this.anims.get(`${idleKey}Anim`)) {
+            this.anims.create({
+                key: `${idleKey}Anim`,
+                frames: this.anims.generateFrameNumbers(idleKey, {
+                    start: 0,
+                    end: 9,
+                }),
+                frameRate: 10,
+                repeat: -1
+            });
+        }
+
+        this.idleAnimationSprite.play(`${idleKey}Anim`);
+
+        let buttonText = this.characterInUse === parseInt(this.selectedCharacterKey) ? "In Use" : this.charactersOwned.includes(parseInt(this.selectedCharacterKey)) ? "USE" : `BUY FOR ${character.cost} CASH`;
+
+        this.actionButton = this.add.text(animationX, animationY + 300, buttonText, { font: '24px Orbitron', fill: '#ff00c3' }).setOrigin(0.5, 0).setInteractive();
+        this.actionButton.on('pointerdown', () => {
+            this.handleActionButton(character);
+        });
+
+        this.displayCharacterAttributes(character, animationX + 300, animationY - 300);
+
+    }
+
+    displayCharacterAttributes(character, startX, startY) {
+        this.clearAttributesDisplay();
+    
+        const nameText = this.add.text(startX + 50, startY, character.name, {
+            font: '26px Orbitron',
+            fill: '#FFCC00'
+        });
+        nameText.setStroke('#ffffff', 1);
+        this.attributeTexts.push(nameText);
+    
+        startY += nameText.height + 20;
+    
+        const statsText = this.add.text(startX + 50, startY, 'Stats:', {
+            font: '24px Orbitron',
+            fill: '#FFCC00'
+        });
+        this.attributeTexts.push(statsText);
+    
+        startY += statsText.height + 20;
+    
+        const attributeIcons = {
+            health: 'health_icon',
+            damage: 'damage_icon',
+            range: 'range_icon',
+            speed: 'speed_icon',
+            attackSpeed: 'attack_speed_icon'
+        };
+    
+        const attributes = [
+            { key: 'health', value: `Health: ${character.health}` },
+            { key: 'damage', value: `Damage: ${character.damage}` },
+            { key: 'range', value: `Range: ${character.range}` },
+            { key: 'speed', value: `Speed: ${character.speed}` },
+            { key: 'attackSpeed', value: `Attack Speed: ${character.attackSpeed}` }
+        ];
+    
+        attributes.forEach((attribute, index) => {
+            const panel = this.add.graphics({ x: startX + 30, y: startY + index * 70 });
+            panel.fillStyle(0xfff4a1, 0.5);
+            panel.fillRect(0, 0, 300, 40);
+            this.attributeTexts.push(panel);
+    
+            if (attributeIcons[attribute.key]) {
+                const icon = this.add.image(startX + 40, startY + index * 70 + 20, attributeIcons[attribute.key]);
+                icon.setScale(0.5); // Scale icon size as needed
+                this.attributeTexts.push(icon);
+            }
+    
+            const text = this.add.text(startX + 80, startY + index * 70 + 5, attribute.value, {
+                font: '18px Orbitron',
+                fill: '#FFFFFF'
+            });
+            this.attributeTexts.push(text);
+        });
+    }
+    
+    clearAttributesDisplay() {
+        if (this.attributeTexts && this.attributeTexts.length > 0) {
+            this.attributeTexts.forEach(text => text.destroy());
+            this.attributeTexts = [];
+        }
+    }
+
+    handleActionButton(character) {
+        if (this.charactersOwned.includes(parseInt(this.selectedCharacterKey))) {
+            // Check if the character is already in use
+            if (this.characterInUse !== parseInt(this.selectedCharacterKey)) {
+                fetch('/use-character', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        characterId: parseInt(this.selectedCharacterKey)
+                    }),
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log(`${character.name} is now in use.`);
+                        this.actionButton.setText("In Use");
+                        this.characterInUse = parseInt(this.selectedCharacterKey);
+                        updateCharacterDisplay(this.characterInUse);
+
+                        this.refreshCharacterList();
+                    })
+                    .catch(error => {
+                        console.error('Error using character:', error.message);
+                    });
+            }
+        } else {
+            if (this.totalCash >= character.cost) {
+                fetch('/purchase-character', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        characterId: parseInt(this.selectedCharacterKey),
+                        cost: character.cost,
+                    }),
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        }
+                        throw new Error('Failed to purchase character');
+                    })
+                    .then(data => {
+                        this.totalCash = data.gameData.initialCash + data.gameData.incomingCash;
+                        this.charactersOwned = data.gameData.charactersOwned;
+                        this.updateTotalCashText();
+                        this.updateActionButtonState(character);
+                        this.refreshCharacterList();
+                        this.createPurchaseReceipt('success', character, character.cost);
+                    })
+                    .catch(error => {
+                        console.error('Error purchasing character:', error.message);
+                    });
+            } else {
+                this.createPurchaseReceipt('failed', character, character.cost);
+            }
+        }
+    }
+
+    updateTotalCashText() {
+        this.totalCashText.setText(`${this.totalCash}`);
+    }
+
+    refreshCharacterList() {
+        Object.values(this.characterUIElements).forEach(element => {
+            element.costText.destroy();
+            if (element.costLogo) {
+                element.costLogo.destroy();
+            }
+        });
+        const sortedCharacters = Object.entries(characterMap).sort((a, b) => a[1].cost - b[1].cost);
+        sortedCharacters.forEach(([key, character], index) => {
+            const isCharacterInUse = parseInt(key) === this.characterInUse;
+            const isOwned = this.charactersOwned.includes(parseInt(key));
+            const buttonText = isCharacterInUse ? "In Use" : isOwned ? "Use" : character.cost;
+            const costColor = isCharacterInUse ? '#ffff00' : isOwned ? '#00ff00' : character.cost > this.totalCash ? '#ff0000' : '#00ff00';
+            const textElement = this.add.text(75 + (index % 4) * 210 + 90, 230 + Math.floor(index / 4) * 210 + 180, buttonText, { font: '18px Orbitron', fill: costColor }).setOrigin(0.5, 0);
+            if (!isCharacterInUse && !isOwned) {
+                const costLogo = this.add.image(textElement.x + textElement.width / 2 + 15, 230 + Math.floor(index / 4) * 210 + 180 + 15, 'cash').setDisplaySize(25, 25);
+                this.characterUIElements[key] = {
+                    costText: textElement,
+                    costLogo: costLogo,
+                };
+            } else {
+                this.characterUIElements[key] = {
+                    costText: textElement,
+                };
+            }
+
+        });
+    }
+
+    updateActionButtonState(character) {
+        if (this.actionButton && this.charactersOwned.includes(parseInt(this.selectedCharacterKey))) {
+            this.actionButton.setText("USE");
+        }
+    }
+
+    createPurchaseReceipt(purchaseStatus, character, cash) {
+        let purchaseReceipt;
+        if (purchaseStatus === 'success') {
+            purchaseReceipt = this.add.text(600, 130, `Purchased ${character.name} for ${cash} cash!`, { font: '20px Orbitron', fill: '#ffff00', wordWrap: { width: 300 } });
+        } else {
+            purchaseReceipt = this.add.text(600, 130, `Not enough cash to buy!`, { font: '20px Orbitron', fill: '#ff0000', wordWrap: { width: 300 } });
+        }
+        purchaseReceipt.setDepth(1);
+        this.tweens.add({
+            targets: purchaseReceipt,
+            alpha: { from: 1, to: 0 },
+            ease: 'Linear',
+            duration: 2000,
+            repeat: 0,
+            onComplete: () => {
+                purchaseReceipt.destroy();
+            }
+        });
+    }
+
 }
 
 document.addEventListener('DOMContentLoaded', (event) => {
@@ -758,7 +1056,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const collectionsScene = document.getElementById('collections-scene');
     const playButton = document.querySelector('.play-button');
     const collectionsButton = document.querySelector('.collections-button');
-
     let game;
 
     function startGame() {
@@ -792,7 +1089,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
         });
     }
 
-
     playButton.addEventListener('click', () => {
         gameScreen.style.display = 'none';
         battleScene.style.display = 'flex';
@@ -817,21 +1113,20 @@ document.addEventListener('DOMContentLoaded', (event) => {
         fetch('/get-game-data')
             .then(response => response.json())
             .then(data => {
-                const { highestScore, incomingCash, initialCash, baseLevel } = data;
-                displayHighestScore(highestScore, incomingCash, initialCash, baseLevel);
+                const { highestScore, incomingCash, initialCash, highestBaseLevel, characterInUse } = data;
+                updateCharacterDisplay(characterInUse);
+                displayHighestScore(highestScore, incomingCash, initialCash, highestBaseLevel);
             })
             .catch(error => console.error('Error fetching saves:', error));
     };
 
     window.fetchHighestScore();
 
-
-
     function viewCollections() {
         fetch('/get-game-data')
             .then(response => response.json())
             .then(data => {
-                const { initialCash, incomingCash, charactersOwned } = data;
+                const { initialCash, incomingCash, charactersOwned, characterInUse } = data;
                 const totalCash = initialCash + incomingCash;
 
                 if (game) {
@@ -852,8 +1147,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 game = new Phaser.Game(config);
                 game.canvas.id = 'collections-canvas';
 
-                // Assuming you have a way to pass data to your scene, like a global state or directly into the scene's init/data methods
-                game.scene.start('Collections', { totalCash: totalCash, charactersOwned: charactersOwned });
+                game.scene.start('Collections', { totalCash: totalCash, charactersOwned: charactersOwned, characterInUse: characterInUse });
 
                 resize(game, 'collections-scene');
                 window.addEventListener('resize', () => {
@@ -870,4 +1164,40 @@ document.addEventListener('DOMContentLoaded', (event) => {
         viewCollections();
     });
 
+    
+
 });
+
+// set animation interval at a higher scope. then, ensure only 1 interval is running at a time. if the interval is already running, clear it and set it to null. if it's null, set it to a new interval.
+let animationInterval = null;
+function updateCharacterDisplay(characterInUse) {
+    const characterDisplay = document.querySelector('.character-display');
+    if (!characterDisplay) return;
+
+    const imageUrl = `assets/images/idleDisplays/character${characterInUse}_idle.png`;
+    characterDisplay.style.width = '450px';
+    characterDisplay.style.height = '450px';
+    characterDisplay.style.backgroundImage = `url(${imageUrl})`;
+    characterDisplay.style.backgroundRepeat = 'no-repeat';
+
+    let currentFrame = 0;
+    const framesPerRow = 5;
+    const frameWidth = 2250 / framesPerRow;
+    const frameHeight = 900 / 2;
+
+    function animate() {
+        const row = Math.floor(currentFrame / framesPerRow);
+        const col = currentFrame % framesPerRow;
+
+        characterDisplay.style.backgroundPosition = `-${col * frameWidth}px -${row * frameHeight}px`; // for horizontal and vertical position
+
+        currentFrame = (currentFrame + 1) % 10;
+    }
+
+    if (animationInterval) {
+        clearInterval(animationInterval);
+        animationInterval = null;
+    }
+
+    animationInterval = setInterval(animate, 100);
+}

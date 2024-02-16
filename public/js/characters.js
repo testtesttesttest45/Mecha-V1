@@ -11,12 +11,13 @@ const characterMap = {
         attackSpeed: 1,
         attackCount: 1,
         projectile: '',
-        icon: 'darkEtherMessiah'
+        icon: 'darkEtherMessiah',
+        idle: 'character1Idle'
     },
     2: {
         spritesheetKey: 'character2',
         name: 'Orc',
-        cost: 50,
+        cost: 55,
         tier: 'easy',
         health: 150,
         damage: 22,
@@ -25,7 +26,8 @@ const characterMap = {
         attackSpeed: 1,
         attackCount: 1,
         projectile: '',
-        icon: 'orc'
+        icon: 'orc',
+        idle: 'character2Idle'
     },
     3: {
         spritesheetKey: 'character3',
@@ -39,7 +41,8 @@ const characterMap = {
         attackSpeed: 1.7,
         attackCount: 1,
         projectile: '',
-        icon: 'dino'
+        icon: 'dino',
+        idle: 'character3Idle'
     },
     4: {
         spritesheetKey: 'character4',
@@ -53,7 +56,8 @@ const characterMap = {
         attackSpeed: 2,
         attackCount: 1,
         projectile: '',
-        icon: 'burningSlayer'
+        icon: 'burningSlayer',
+        idle: 'character4Idle'
     },
     5: {
         spritesheetKey: 'character5',
@@ -67,7 +71,8 @@ const characterMap = {
         attackSpeed: 4,
         attackCount: 1,
         projectile: 'blueBullet',
-        icon: 'spectreMech'
+        icon: 'spectreMech',
+        idle: 'character5Idle'
     },
     6: {
         spritesheetKey: 'character6',
@@ -81,7 +86,8 @@ const characterMap = {
         attackSpeed: 1,
         attackCount: 2,
         projectile: '',
-        icon: 'samuraiMech'
+        icon: 'samuraiMech',
+        idle: 'character6Idle'
     },
     7: {
         spritesheetKey: 'character7',
@@ -95,7 +101,8 @@ const characterMap = {
         attackSpeed: 1.1,
         attackCount: 1,
         projectile: 'blueBullet',
-        icon: 'bahamutDragon'
+        icon: 'bahamutDragon',
+        idle: 'character7Idle'
     },
     8: {
         spritesheetKey: 'character8',
@@ -109,7 +116,8 @@ const characterMap = {
         attackSpeed: 3.13,
         attackCount: 1,
         projectile: 'blueBullet',
-        icon: 'protowingedMech'
+        icon: 'protowingedMech',
+        idle: 'character8Idle'
     },
     9: {
         spritesheetKey: 'character9',
@@ -123,7 +131,8 @@ const characterMap = {
         attackSpeed: 2.2,
         attackCount: 1,
         projectile: '',
-        icon: 'brutusMech'
+        icon: 'brutusMech',
+        idle: 'character9Idle'
     },
     10: {
         spritesheetKey: 'character10',
@@ -137,7 +146,8 @@ const characterMap = {
         attackSpeed: 1.3,
         attackCount: 1,
         projectile: '',
-        icon: 'ravenMech'
+        icon: 'ravenMech',
+        idle: 'character10Idle'
     },
     11: {
         spritesheetKey: 'character11',
@@ -151,7 +161,8 @@ const characterMap = {
         attackSpeed: 1.01,
         attackCount: 1,
         projectile: 'blueBullet',
-        icon: 'thunderEpicDragon'
+        icon: 'thunderEpicDragon',
+        idle: 'character11Idle'
     },
     // 12: {
     //     spritesheetKey: 'character12',
@@ -177,7 +188,8 @@ const characterMap = {
         attackSpeed: 1.51,
         attackCount: 1,
         projectile: '',
-        icon: 'avengerMech'
+        icon: 'avengerMech',
+        idle: 'character13Idle'
     },
 };
 

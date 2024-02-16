@@ -923,7 +923,7 @@ class BattleUI extends Phaser.Scene {
         const gameData = {
             incomingCash: this.cash,
             score: this.score,
-            baseLevel: this.scene.get('GameScene').base.baseLevel
+            latestBaseLevel: this.scene.get('GameScene').base.baseLevel
         };
         try {
             const response = await fetch('/save-game', {
