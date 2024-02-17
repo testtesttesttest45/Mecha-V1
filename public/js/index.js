@@ -691,7 +691,7 @@ class Collections extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'character9Idle', 'assets/images/idleDisplays/character9_idle.png', 2250, 900, 5, 2);
         loadDynamicSpriteSheet.call(this, 'character10Idle', 'assets/images/idleDisplays/character10_idle.png', 2250, 900, 5, 2);
         loadDynamicSpriteSheet.call(this, 'character11Idle', 'assets/images/idleDisplays/character11_idle.png', 2250, 900, 5, 2);
-        loadDynamicSpriteSheet.call(this, 'character12Idle', 'assets/images/idleDisplays/character12_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character13Idle', 'assets/images/idleDisplays/character13_idle.png', 2250, 900, 5, 2);
     }
 
     init(data) {
