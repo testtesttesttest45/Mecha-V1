@@ -24,6 +24,7 @@ class GameScene extends Phaser.Scene {
         this.activeGameTime = 0;
         this.isGamePaused = false;
         this.characterInUse = null;
+        this.isGameOver = false;
     }
 
     create(data) {
@@ -330,6 +331,7 @@ class GameScene extends Phaser.Scene {
     }
 
     collectGold(goldSprite) {
+        if (this.isGameOver) return;
         const targetPosition = { x: 3000, y: 1000 }
         this.tweens.add({
             targets: goldSprite,
@@ -347,6 +349,7 @@ class GameScene extends Phaser.Scene {
     }
 
     collectCash(cashSprite) {
+        if (this.isGameOver) return;
         const targetPosition = { x: 3000, y: 1600 }
         this.tweens.add({
             targets: cashSprite,
@@ -449,7 +452,7 @@ class LoadingScene extends Phaser.Scene {
             "The white bar below the enemies' health bar represents Interest. When the player stays out of range long enough, enemies' Interest bar drops and eventually gives up chasing the player.",
             "Destroying the base can kill all enemies alive. However, while the base is still standing, any enemies alive will be enraged, gaining increased movement speed and double damage. Take them out first!",
             "Enemies will lose their Enraged state after a while, but attacking their base again will reset their Enraged timer.",
-            "Sometimes enemies can drop Cash. New characters can be purchased with Cash in the main menu. (Not available yet)",
+            "Sometimes enemies can drop Cash. New characters can be purchased with Cash in the main menu.",
             "When enemies die, they drop gold. Destruction of the base drops extra gold. Gold drops are reduced if enemies died as a result of the base being destroyed.",
             "Spend the gold you earned in the Battle Shop to purchase items that make you stronger!",
             "The blue square on the left of the health bar of enemies represents the stats they inherit from the current base level. The black hexagon on the right of the health bar of enemies represents additional stats they gain after periodic Enemy Strengthenings. Don't take too long to kill them, or they become too strong to kill!",
@@ -460,7 +463,8 @@ class LoadingScene extends Phaser.Scene {
             "Each time the Base level increases, the damage from Catastrophe grows by an additional 20% from the last level!",
             "Press L to lock/unlock the camera. Press Space to toggle camera follow mode.",
             "The strongest character is the Thunder Epic Dragon! If you see him, RUN!!!",
-            "Enemy attacks can be dodged."
+            "Enemy attacks can be dodged.",
+            "Gold and Cash drops are collected automatically, don't worry about picking them up.",
         ];
         this.background = null;
         this.progressBar = null;
@@ -557,42 +561,42 @@ class LoadingScene extends Phaser.Scene {
         const randomIndex = Phaser.Math.Between(0, this.tooltips.length - 1);
         this.tooltipText.setText(this.tooltips[randomIndex]);
     }
-
+    
     createStartButton(characterInUse) {
         const padding = 10;
         const buttonWidth = 150;
         const buttonHeight = 50;
         const width = this.cameras.main.width;
-        const height = this.cameras.main.height / 2;
-
-        let startX = width - buttonWidth - padding;
-        let startY = height - buttonHeight - padding;
-
-        let startButton = this.add.text(startX, startY, 'Start', {
+        const height = this.cameras.main.height;
+    
+        let startX = width / 2 + 500;
+        let startY = 400;
+    
+        let background = this.add.graphics({ x: startX, y: startY });
+        background.fillStyle(0x5cb85c, 1);
+        background.fillRoundedRect(0, 0, buttonWidth, buttonHeight, 20);
+    
+        let startText = this.add.text(startX + buttonWidth / 2, startY + buttonHeight / 2, 'START', {
             font: '20px Orbitron',
             fill: '#FFFFFF',
-            backgroundColor: '#5cb85c',
-            padding: { x: 10, y: 5 }
-        })
-            .setInteractive({ useHandCursor: true })
-            .setOrigin(0.5, 0.5)
-            .on('pointerover', () => startButton.setStyle({ fill: '#4cae4c' }))
-            .on('pointerout', () => startButton.setStyle({ fill: '#FFFFFF' }))
+        }).setOrigin(0.5, 0.5);
+    
+        let buttonContainer = this.add.container(0, 0);
+        buttonContainer.add([background, startText]);
+    
+        background.setInteractive(new Phaser.Geom.Rectangle(0, 0, buttonWidth, buttonHeight), Phaser.Geom.Rectangle.Contains)
+            .on('pointerover', () => {
+                background.clear().fillStyle(0x05e814, 1).fillRoundedRect(0, 0, buttonWidth, buttonHeight, 20);
+            })
+            .on('pointerout', () => {
+                background.clear().fillStyle(0x5cb85c, 1).fillRoundedRect(0, 0, buttonWidth, buttonHeight, 20);
+            })
             .on('pointerdown', () => {
                 this.scene.start('GameScene', { characterInUse: characterInUse });
             });
-
-        startButton.setStroke('#4cae4c', 4);
-        startButton.setShadow(2, 2, 'rgba(0,0,0,0.5)', 2, true, true);
-
-        let background = this.add.graphics();
-        background.fillStyle(0x5cb85c, 1);
-        background.fillRoundedRect(startX - buttonWidth, startY - buttonHeight, buttonWidth, buttonHeight, 5);
-        background.setDepth(-1)
-
-        startButton.setX(startX - buttonWidth / 2);
-        startButton.setY(startY - buttonHeight / 2);
     }
+    
+    
 
 
     loadAssets() {
@@ -753,7 +757,7 @@ class Collections extends Phaser.Scene {
             });
             const isCharacterInUse = parseInt(key) === this.characterInUse;
             const isOwned = this.charactersOwned.includes(parseInt(key));
-            const buttonText = isCharacterInUse ? "In Use" : isOwned ? "Use" : character.cost;
+            const buttonText = isCharacterInUse ? "IN USE" : isOwned ? "USE" : character.cost;
             const costColor = isCharacterInUse ? '#ffff00' : isOwned ? '#00ff00' : character.cost > this.totalCash ? '#ff0000' : '#00ff00';
             const textElement = this.add.text(x + squareSize / 2, y + squareSize, buttonText, { font: '18px Orbitron', fill: costColor }).setOrigin(0.5, 0);
             if (!isCharacterInUse && !isOwned) {
@@ -827,11 +831,12 @@ class Collections extends Phaser.Scene {
     showIdleAnimation(idleKey, character) {
         const { width, height } = this.sys.game.config;
 
+        // Clean up previous animations and panels
         if (this.idleAnimationSprite) {
             this.idleAnimationSprite.destroy();
         }
-        if (this.actionButton) {
-            this.actionButton.destroy();
+        if (this.panelContainer) {
+            this.panelContainer.destroy();
         }
 
         this.clearAttributesDisplay();
@@ -839,52 +844,58 @@ class Collections extends Phaser.Scene {
         const animationX = width / 2 + ((width / 2 + 600) - (width / 2)) / 2;
         const animationY = height / 2;
 
+        // Create and play idle animation sprite
         this.idleAnimationSprite = this.add.sprite(animationX, animationY, idleKey).setScale(1.2);
         if (!this.anims.get(`${idleKey}Anim`)) {
             this.anims.create({
                 key: `${idleKey}Anim`,
-                frames: this.anims.generateFrameNumbers(idleKey, {
-                    start: 0,
-                    end: 9,
-                }),
+                frames: this.anims.generateFrameNumbers(idleKey, { start: 0, end: 9 }),
                 frameRate: 10,
                 repeat: -1
             });
         }
-
         this.idleAnimationSprite.play(`${idleKey}Anim`);
 
-        let buttonText = this.characterInUse === parseInt(this.selectedCharacterKey) ? "In Use" : this.charactersOwned.includes(parseInt(this.selectedCharacterKey)) ? "USE" : `BUY FOR ${character.cost} CASH`;
+        const textColor = this.characterInUse === parseInt(this.selectedCharacterKey) ? '#ffff00' : this.charactersOwned.includes(parseInt(this.selectedCharacterKey)) ? '#00ff00' : character.cost > this.totalCash ? '#ff0000' : '#00ff00';
+        let buttonText = this.characterInUse === parseInt(this.selectedCharacterKey) ? "IN USE" : this.charactersOwned.includes(parseInt(this.selectedCharacterKey)) ? "USE" : `BUY FOR ${character.cost} CASH`;
 
-        this.actionButton = this.add.text(animationX, animationY + 300, buttonText, { font: '24px Orbitron', fill: '#ff00c3' }).setOrigin(0.5, 0).setInteractive();
-        this.actionButton.on('pointerdown', () => {
+        // Instead of using Phaser graphics, use a sprite for the panel for better control and visibility
+        const panelSprite = this.add.rectangle(0, 0, 500, 40, 0xffffff);
+        panelSprite.setFillStyle(0x0000ff, 0.5);
+        this.actionText = this.add.text(0, -15, buttonText, { font: '24px Orbitron', fill: textColor }).setStroke('#000', 3);
+        this.actionText.setOrigin(0.5, 0);
+
+        // Create container and add both panel and text
+        this.panelContainer = this.add.container(animationX, animationY + 300, [panelSprite, this.actionText]);
+        this.panelContainer.setSize(500, 40);
+        this.panelContainer.setInteractive(new Phaser.Geom.Rectangle(0, 0, 500, 40), Phaser.Geom.Rectangle.Contains);
+        this.panelContainer.on('pointerdown', () => {
             this.handleActionButton(character);
         });
 
         this.displayCharacterAttributes(character, animationX + 300, animationY - 300);
-
     }
 
     displayCharacterAttributes(character, startX, startY) {
         this.clearAttributesDisplay();
-    
+
         const nameText = this.add.text(startX + 50, startY, character.name, {
             font: '26px Orbitron',
             fill: '#FFCC00'
         });
         nameText.setStroke('#ffffff', 1);
         this.attributeTexts.push(nameText);
-    
+
         startY += nameText.height + 20;
-    
+
         const statsText = this.add.text(startX + 50, startY, 'Stats:', {
             font: '24px Orbitron',
             fill: '#FFCC00'
         });
         this.attributeTexts.push(statsText);
-    
+
         startY += statsText.height + 20;
-    
+
         const attributeIcons = {
             health: 'health_icon',
             damage: 'damage_icon',
@@ -892,7 +903,7 @@ class Collections extends Phaser.Scene {
             speed: 'speed_icon',
             attackSpeed: 'attack_speed_icon'
         };
-    
+
         const attributes = [
             { key: 'health', value: `Health: ${character.health}` },
             { key: 'damage', value: `Damage: ${character.damage}` },
@@ -900,19 +911,19 @@ class Collections extends Phaser.Scene {
             { key: 'speed', value: `Speed: ${character.speed}` },
             { key: 'attackSpeed', value: `Attack Speed: ${character.attackSpeed}` }
         ];
-    
+
         attributes.forEach((attribute, index) => {
             const panel = this.add.graphics({ x: startX + 30, y: startY + index * 70 });
             panel.fillStyle(0xfff4a1, 0.5);
             panel.fillRect(0, 0, 300, 40);
             this.attributeTexts.push(panel);
-    
+
             if (attributeIcons[attribute.key]) {
                 const icon = this.add.image(startX + 40, startY + index * 70 + 20, attributeIcons[attribute.key]);
                 icon.setScale(0.5); // Scale icon size as needed
                 this.attributeTexts.push(icon);
             }
-    
+
             const text = this.add.text(startX + 80, startY + index * 70 + 5, attribute.value, {
                 font: '18px Orbitron',
                 fill: '#FFFFFF'
@@ -920,7 +931,7 @@ class Collections extends Phaser.Scene {
             this.attributeTexts.push(text);
         });
     }
-    
+
     clearAttributesDisplay() {
         if (this.attributeTexts && this.attributeTexts.length > 0) {
             this.attributeTexts.forEach(text => text.destroy());
@@ -944,7 +955,8 @@ class Collections extends Phaser.Scene {
                     .then(response => response.json())
                     .then(data => {
                         console.log(`${character.name} is now in use.`);
-                        this.actionButton.setText("In Use");
+                        this.actionText.setText("IN USE");
+                        this.actionText.setFill('#ffff00');
                         this.characterInUse = parseInt(this.selectedCharacterKey);
                         updateCharacterDisplay(this.characterInUse);
 
@@ -1000,15 +1012,29 @@ class Collections extends Phaser.Scene {
                 element.costLogo.destroy();
             }
         });
+
+        const squareSize = 180;
+        const startX = 75;
+        let x = startX;
+        let y = 230;
+        const padding = 30;
+        const perRow = 4;
+
         const sortedCharacters = Object.entries(characterMap).sort((a, b) => a[1].cost - b[1].cost);
+
         sortedCharacters.forEach(([key, character], index) => {
+            if (index % perRow === 0 && index !== 0) {
+                x = startX;
+                y += squareSize + padding + 20;
+            }
+
             const isCharacterInUse = parseInt(key) === this.characterInUse;
             const isOwned = this.charactersOwned.includes(parseInt(key));
-            const buttonText = isCharacterInUse ? "In Use" : isOwned ? "Use" : character.cost;
             const costColor = isCharacterInUse ? '#ffff00' : isOwned ? '#00ff00' : character.cost > this.totalCash ? '#ff0000' : '#00ff00';
-            const textElement = this.add.text(75 + (index % 4) * 210 + 90, 230 + Math.floor(index / 4) * 210 + 180, buttonText, { font: '18px Orbitron', fill: costColor }).setOrigin(0.5, 0);
+            const buttonText = isCharacterInUse ? "IN USE" : isOwned ? "USE" : character.cost;
+            const textElement = this.add.text(x + squareSize / 2, y + squareSize, buttonText, { font: '18px Orbitron', fill: costColor }).setOrigin(0.5, 0);
             if (!isCharacterInUse && !isOwned) {
-                const costLogo = this.add.image(textElement.x + textElement.width / 2 + 15, 230 + Math.floor(index / 4) * 210 + 180 + 15, 'cash').setDisplaySize(25, 25);
+                const costLogo = this.add.image(textElement.x + textElement.width / 2 + 15, y + squareSize + 15, 'cash').setDisplaySize(25, 25);
                 this.characterUIElements[key] = {
                     costText: textElement,
                     costLogo: costLogo,
@@ -1019,12 +1045,13 @@ class Collections extends Phaser.Scene {
                 };
             }
 
+            x += squareSize + padding;
         });
     }
 
     updateActionButtonState(character) {
-        if (this.actionButton && this.charactersOwned.includes(parseInt(this.selectedCharacterKey))) {
-            this.actionButton.setText("USE");
+        if (this.actionText && this.charactersOwned.includes(parseInt(this.selectedCharacterKey))) {
+            this.actionText.setText("USE");
         }
     }
 
@@ -1164,7 +1191,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         viewCollections();
     });
 
-    
+
 
 });
 

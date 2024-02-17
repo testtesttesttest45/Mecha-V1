@@ -94,7 +94,7 @@ const characterMap = {
         name: 'Bahamut Dragon',
         cost: 350,
         tier: 'hard',
-        range: 200,
+        range: 300,
         speed: 220,
         damage: 52,
         health: 284,

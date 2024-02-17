@@ -66,14 +66,14 @@ app.get('/get-game-data', (req, res) => {
             console.error(err);
             if (err.code === 'ENOENT') { // if not found, create a new file with initial data
                 const initialData = {
-                    initialCash: 0,
+                    initialCash: 1000,
                     incomingCash: 0,
                     highestBaseLevel: 0,
                     latestBaseLevel: 0,
                     highestScore: 0,
                     newHighest: false,
                     latestScore: 0,
-                    charactersOwned: [1], // Character 1 owned by default
+                    charactersOwned: [1, 10], // Character 1 owned by default
                     characterInUse: 1
                 };
                 fs.writeFile(saveFilePath, JSON.stringify(initialData, null, 2), 'utf8', (writeErr) => {
@@ -90,14 +90,14 @@ app.get('/get-game-data', (req, res) => {
         else if (Object.keys(JSON.parse(data)).length !== 9) {
             console.log('Game data file is corrupted. Creating a new one...')
             const initialData = {
-                initialCash: 0,
+                initialCash: 1000,
                 incomingCash: 0,
                 highestBaseLevel: 0,
                 latestBaseLevel: 0,
                 highestScore: 0,
                 newHighest: false,
                 latestScore: 0,
-                charactersOwned: [1], // Character 1 owned by default
+                charactersOwned: [1, 10], // Character 1 owned by default
                 characterInUse: 1
             };
             fs.writeFile(saveFilePath, JSON.stringify(initialData, null, 2), 'utf8', (writeErr) => {

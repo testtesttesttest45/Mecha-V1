@@ -100,7 +100,7 @@ class Base {
         this.healthBar.setDepth(11);
     
         const healthPercentage = this.health / this.totalHealth;
-        const healthBarWidth = healthPercentage * this.sprite.width + 100;
+        const healthBarWidth = healthPercentage * (this.sprite.width + 100);
         this.healthBar.fillStyle(0xff0000, 1);
         this.healthBar.fillRect(-40, 0, healthBarWidth, 20);
     
@@ -203,7 +203,6 @@ class Base {
         this.destroyedTime = this.scene.activeGameTime;
         
         this.isRebuilding = true; // Indicate that the base is now rebuilding.
-        this.scene.scene.get('BattleUI').pauseMultiplier();
     }
 
     randomGoldDrop() {
@@ -214,17 +213,17 @@ class Base {
             let gold = this.scene.add.sprite(goldX, goldY, 'gold');
             gold.setScale(0.5);
             gold.setData('value', 100);
-            this.scene.time.delayedCall(2000, () => {
+            this.scene.time.delayedCall(1500, () => {
                 this.scene.collectGold(gold);
             }, [], this);
         }
     }
 
     dropCash() {
-        if (Math.random() < 0.25) {
+        if (Math.random() < 0.50) {
             let cash = this.scene.add.sprite(this.sprite.x - 70, this.sprite.y, 'cash');
             cash.setData('value', 1);
-            this.scene.time.delayedCall(2000, () => {
+            this.scene.time.delayedCall(1500, () => {
                 this.scene.collectCash(cash);
             }, [], this);
         }

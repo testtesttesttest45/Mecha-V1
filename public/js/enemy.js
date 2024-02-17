@@ -648,7 +648,7 @@ class Enemy {
             let gold = this.scene.add.sprite(goldX, goldY, 'gold');
             gold.setScale(0.5);
             gold.setData('value', 100);
-            this.scene.time.delayedCall(2000, () => {
+            this.scene.time.delayedCall(1500, () => {
                 this.scene.collectGold(gold);
             }, [], this);
         }
@@ -658,7 +658,7 @@ class Enemy {
         if (Math.random() < 0.5) {
             let cash = this.scene.add.sprite(this.sprite.x - 70, this.sprite.y, 'cash');
             cash.setData('value', 1);
-            this.scene.time.delayedCall(2000, () => {
+            this.scene.time.delayedCall(1500, () => {
                 this.scene.collectCash(cash);
             }, [], this);
         }

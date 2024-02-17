@@ -204,20 +204,25 @@ class BattleUI extends Phaser.Scene {
         this.playerAttackSpeedBonusText = this.add.text(this.playerAttackSpeedText.x + 200, partTimeY + 70, '', { font: '16px Orbitron', fill: '#00BFFF' });
         this.playerSpeedBonusText = this.add.text(this.playerSpeedText.x + 200, partTimeY + 90, '', { font: '16px Orbitron', fill: '#00BFFF' });
 
-        const shopTextY = statsTextY + 200;
+        const shopTextY = statsTextY + 300;
 
         this.shopButtonContainer = this.add.container(panelCenterX, shopTextY).setScrollFactor(0);
 
-        this.shopIcon = this.add.image(-140, 0, 'gold').setOrigin(0, 0.5).setScale(0.75);
-
-        this.goldText = this.add.text(0, 0, this.gold, {
+        this.shopText = this.add.text(-40, -40, 'Shop', {
             font: '20px Orbitron',
             fill: '#ffffff'
-        }).setOrigin(0.5, 0);
+        });
 
-        this.shopButtonContainer.add([this.shopIcon, this.goldText]);
+        this.goldText = this.add.text(-80, 10, this.gold, {
+            font: '24px Orbitron',
+            fill: '#ffffff'
+        });
 
-        this.shopButtonContainer.setSize(300, 50);
+        this.shopIcon = this.add.image(this.goldText.width - 80, 25, 'gold').setOrigin(0, 0.5).setScale(0.75);
+
+        this.shopButtonContainer.add([this.shopIcon, this.goldText, this.shopText]);
+
+        this.shopButtonContainer.setSize(300, 100);
 
         this.shopButtonContainer.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
             this.createShopModal();
@@ -237,7 +242,6 @@ class BattleUI extends Phaser.Scene {
         const scorePanelY = this.scale.height - 120;
         const scorePanelWidth = 350;
         const scorePanelHeight = 100;
-
 
         const scorePanelBackground = this.add.rectangle(scorePanelX, scorePanelY, scorePanelWidth, scorePanelHeight, 0x000000, 0.5);
         scorePanelBackground.setOrigin(1, 1);
@@ -364,6 +368,11 @@ class BattleUI extends Phaser.Scene {
             font: '28px Orbitron',
             fill: '#FFD700'
         });
+        const legendarySectionY = this.attackSpeedSectionTitle.y + 450;
+        this.legendaryUpgradesSectionTitle = this.add.text(damageSectionX, legendarySectionY, "Legendary Upgrades", {
+            font: '28px Orbitron',
+            fill: '#FFD700'
+        });
 
         // Upgrades definition
         const damageUpgrades = [
@@ -386,13 +395,26 @@ class BattleUI extends Phaser.Scene {
             { name: "Mecha Sneakers", description: "Increase movement speed by 16%", cost: 1300, icon: 'moveSpeed2' },
         ];
 
+        const legendaryUpgrades = [
+            { name: "Cash", description: "Exchange 300 Gold for 1 Cash", cost: 300, icon: 'cash' },
+            { name: "Forbidden Excalibur", description: "Gain Double Damage and Health for the next 5 Bases", cost: 9999, icon: 'sword2' },
+            { name: "Thunderlord Seal", description: "Permanent Immunity to Catastrophe storms", cost: 9999, icon: 'sword1' },
+            { name: "Elixir of Life", description: "Triple passive Heal amount", cost: 9999, icon: 'health2' },
+            { name: "Soul of the Phoenix", description: "Revive once", cost: 9999, icon: 'attackSpeed2' },
+            { name: "Winter Frost", description: "Enraged enemies deal 25% lesser damage and move 25% slower", cost: 9999, icon: 'moveSpeed1' },
+        ];
+
         this.createItems(damageUpgrades, damageSectionX, sectionY + 60, sectionWidth);
         this.createItems(healthUpgrades, healthSectionX, sectionY + 60, sectionWidth);
         this.createItems(attackSpeedUpgrades, damageSectionX, attackSpeedSectionY + 100, sectionWidth);
         this.createItems(movementSpeedUpgrades, healthSectionX, attackSpeedSectionY + 100, sectionWidth);
 
+        const fullWidth = modalWidth - 60;
+
+        this.createItems(legendaryUpgrades, damageSectionX, legendarySectionY + 60, fullWidth);
+
         this.shopModalContainer.add([this.closeButtonText, this.goldTextShop]);
-        this.scrollableContainer.add([this.damageSectionTitle, this.healthSectionTitle, this.attackSpeedSectionTitle, this.movementSpeedSectionTitle]);
+        this.scrollableContainer.add([this.damageSectionTitle, this.healthSectionTitle, this.attackSpeedSectionTitle, this.movementSpeedSectionTitle, this.legendaryUpgradesSectionTitle]);
         let lastPointerY = 0;
         let isScrolling = false;
 
@@ -418,7 +440,7 @@ class BattleUI extends Phaser.Scene {
         this.scrollbarHandle.setInteractive(new Phaser.Geom.Rectangle(viewportX + viewportWidth + scrollbarMargin, viewportY, scrollbarTrackWidth, scrollbarTrackHeight), Phaser.Geom.Rectangle.Contains);
         this.scrollbarHandle.setDepth(10)
         this.shopModalContainer.add([this.scrollbarTrack, this.scrollbarHandle]);
-        const initialHandleY = 140;
+        const initialHandleY = 150;
         this.scrollbarHandle.y = initialHandleY;
         let isScrollbarHandleDragging = false;
         let initialPointerY = 0;
@@ -428,11 +450,11 @@ class BattleUI extends Phaser.Scene {
             initialPointerY = pointer.y;
         });
         this.input.on('pointermove', (pointer) => {
-            const handleRange = 550 - 140;
-            const contentRange = -200 - 0;
-            const handleMinY = 140;
+            const handleRange = 550 - 150;
+            const contentRange = -1500 - 0;
+            const handleMinY = 150;
             const handleMaxY = 550;
-            const contentMinY = -200;
+            const contentMinY = -1500;
             const contentMaxY = 0;
             if (isScrolling) {
                 const deltaY = pointer.y - lastPointerY;
@@ -470,8 +492,29 @@ class BattleUI extends Phaser.Scene {
                 isScrolling = false;
             }
         });
-    }
 
+        // add mousewheel support
+        this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
+            if (gameObjects.length > 0) {
+                const handleRange = 550 - 150;
+                const contentRange = -1500 - 0;
+                const handleMinY = 150;
+                const handleMaxY = 550;
+                const contentMinY = -1500;
+                const contentMaxY = 0;
+
+                let newY = this.scrollableContainer.y + (-deltaY * 5);
+                newY = Phaser.Math.Clamp(newY, contentMinY, contentMaxY);
+                this.scrollableContainer.y = newY;
+
+                const contentScrollRatio = (newY - contentMaxY) / (contentMinY - contentMaxY);
+                const handleNewY = handleMinY + (contentScrollRatio * handleRange);
+                this.scrollbarHandle.y = handleNewY;
+            }
+        });
+
+        
+    }
 
     createItems(upgrades, startX, startY, sectionWidth) {
         upgrades.forEach((upgrade, index) => {
@@ -483,7 +526,7 @@ class BattleUI extends Phaser.Scene {
                 .fillStyle(0x333333, 0.8)
                 .fillRoundedRect(startX, itemY, itemWidth, itemHeight, 10);
 
-            const icon = this.add.image(startX + 40, itemY + 40, upgrade.icon).setScale(0.5);
+            const icon = this.add.image(startX + 40, itemY + 40, upgrade.icon).setScale(upgrade.icon === 'cash' ? 0.75 : 0.5);
 
             const nameText = this.add.text(startX + 80, itemY + 10, upgrade.name, {
                 font: '18px Orbitron',
@@ -502,7 +545,10 @@ class BattleUI extends Phaser.Scene {
                 fill: '#FFD700'
             });
 
-            const buyButton = this.add.text(startX + itemWidth - 100, itemY + itemHeight - 40, 'BUY', {
+            const buyButton = upgrade.cost === 9999 ? this.add.text(startX + itemWidth - 100, itemY + itemHeight - 40, 'Not for sale', {
+                font: '20px Orbitron',
+                fill: '#FF0000'
+            }).setOrigin(1, 0) : this.add.text(startX + itemWidth - 100, itemY + itemHeight - 40, 'BUY', {
                 font: '20px Orbitron',
                 fill: '#4CAF50'
             }).setInteractive({ useHandCursor: true }).setOrigin(1, 0)
@@ -593,6 +639,10 @@ class BattleUI extends Phaser.Scene {
             }
             if (upgradeName === "Mecha Sneakers") {
                 this.scene.get('GameScene').player.speed = Math.round(this.scene.get('GameScene').player.speed * 1.16);
+            }
+            if (upgradeName === "Cash") {
+                this.cash++;
+                this.updateCashDisplay();
             }
 
         } else {
@@ -727,6 +777,7 @@ class BattleUI extends Phaser.Scene {
             }
         }
         this.buyButtons.forEach((item) => {
+            if (item.cost === 9999) return;
             if (this.gold >= item.cost) {
                 item.button.setText('BUY').setStyle({ fill: '#4CAF50' });
             } else {
@@ -762,10 +813,6 @@ class BattleUI extends Phaser.Scene {
                 this.multiplierBarFill.width = 300;
             }
         }
-    }
-
-    pauseMultiplier() {
-
     }
 
     resetMultiplier() {
@@ -823,6 +870,8 @@ class BattleUI extends Phaser.Scene {
             strokeThickness: 6
         }).setOrigin(0.5);
 
+        this.scene.get('GameScene').isGameOver = true;
+
         let retryButton = this.createStyledButton(this.scale.width / 2, this.scale.height / 2, 'Retry', '#ff0000', () => this.restartGameScene());
 
         let mainMenuButton = this.createStyledButton(this.scale.width / 2, this.scale.height / 2 + 100, 'Main Menu', '#007bff', () => this.exitToMainMenu());
@@ -859,6 +908,7 @@ class BattleUI extends Phaser.Scene {
         this.resetState();
         let gameScene = this.scene.get('GameScene');
         gameScene.isGamePaused = false;
+        gameScene.isGameOver = false;
 
         gameScene.scene.restart();
         gameScene.allowInput = false;
@@ -942,7 +992,7 @@ class BattleUI extends Phaser.Scene {
             return console.error('Error:', error);
         }
     }
-    
+
 
 }
 
