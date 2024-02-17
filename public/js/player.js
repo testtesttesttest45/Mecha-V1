@@ -112,7 +112,7 @@ class Player {
         if (this.currentHealth < this.maxHealth && !this.isDead) {
             // calc heal amount as 5% of max health
             const healPercentage = 0.05;
-            let healAmount = Math.floor(this.maxHealth * healPercentage);
+            let healAmount = Math.round(this.maxHealth * healPercentage);
     
             healAmount = Math.min(healAmount, this.maxHealth - this.currentHealth);
     

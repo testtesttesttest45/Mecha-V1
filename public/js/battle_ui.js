@@ -68,6 +68,7 @@ class BattleUI extends Phaser.Scene {
         this.goldTextShop = null;
         this.gameDataSaved = false;
     }
+
     startMultiplierTimer() {
         if (!this.timerStarted) {
             this.timerStarted = true;
@@ -369,10 +370,12 @@ class BattleUI extends Phaser.Scene {
             fill: '#FFD700'
         });
         const legendarySectionY = this.attackSpeedSectionTitle.y + 450;
-        this.legendaryUpgradesSectionTitle = this.add.text(damageSectionX, legendarySectionY, "Legendary Upgrades", {
+        // this.legendaryUpgradesSectionTitle = this.add.text(damageSectionX, legendarySectionY, "Legendary Upgrades", {
+            // place title in centre of the modal
+        this.legendaryUpgradesSectionTitle = this.add.text(modalX + 300, legendarySectionY, "Legendary Upgrades", {
             font: '28px Orbitron',
             fill: '#FFD700'
-        });
+        })
 
         // Upgrades definition
         const damageUpgrades = [
@@ -382,7 +385,7 @@ class BattleUI extends Phaser.Scene {
 
         const healthUpgrades = [
             { name: "Heaven's Rain", description: "Increase max health by 5%", cost: 750, icon: 'health1' },
-            { name: "Health Potion", description: "Instantly heal back 1000 health", cost: 300, icon: 'health2' },
+            { name: "Health Potion", description: "Instantly heal back 50% Max Health", cost: 300, icon: 'health2' },
         ];
 
         const attackSpeedUpgrades = [
@@ -402,6 +405,8 @@ class BattleUI extends Phaser.Scene {
             { name: "Elixir of Life", description: "Triple passive Heal amount", cost: 9999, icon: 'health2' },
             { name: "Soul of the Phoenix", description: "Revive once", cost: 9999, icon: 'attackSpeed2' },
             { name: "Winter Frost", description: "Enraged enemies deal 25% lesser damage and move 25% slower", cost: 9999, icon: 'moveSpeed1' },
+            { name: "Treasure Finder", description: "Every Gold is worth 2 times more value", cost: 9999, icon: 'sword1' },
+            { name: "Cosmic Scimitar", description: "Gain additional 12% damage and max health for every bases destroyed", cost: 9999, icon: 'sword2' },
         ];
 
         this.createItems(damageUpgrades, damageSectionX, sectionY + 60, sectionWidth);
@@ -451,10 +456,10 @@ class BattleUI extends Phaser.Scene {
         });
         this.input.on('pointermove', (pointer) => {
             const handleRange = 550 - 150;
-            const contentRange = -1500 - 0;
+            const contentRange = -1900 - 0;
             const handleMinY = 150;
             const handleMaxY = 550;
-            const contentMinY = -1500;
+            const contentMinY = -1900;
             const contentMaxY = 0;
             if (isScrolling) {
                 const deltaY = pointer.y - lastPointerY;
@@ -497,13 +502,13 @@ class BattleUI extends Phaser.Scene {
         this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
             if (gameObjects.length > 0) {
                 const handleRange = 550 - 150;
-                const contentRange = -1500 - 0;
+                const contentRange = -1900 - 0;
                 const handleMinY = 150;
                 const handleMaxY = 550;
-                const contentMinY = -1500;
+                const contentMinY = -1900;
                 const contentMaxY = 0;
 
-                let newY = this.scrollableContainer.y + (-deltaY * 5);
+                let newY = this.scrollableContainer.y + (-deltaY * 2);
                 newY = Phaser.Math.Clamp(newY, contentMinY, contentMaxY);
                 this.scrollableContainer.y = newY;
 
@@ -625,8 +630,11 @@ class BattleUI extends Phaser.Scene {
                 this.scene.get('GameScene').player.maxHealth = Math.round(this.scene.get('GameScene').player.maxHealth * 1.05);
             }
             if (upgradeName === "Health Potion") {
-                this.scene.get('GameScene').player.currentHealth = Math.min(this.scene.get('GameScene').player.maxHealth, this.scene.get('GameScene').player.currentHealth + 1000);
-                this.scene.get('GameScene').player.createHealingText(1000);
+                const healPercentage = 0.5;
+                let healAmount = Math.round(this.scene.get('GameScene').player.maxHealth * healPercentage);
+                healAmount = Math.min(healAmount, this.scene.get('GameScene').player.maxHealth - this.scene.get('GameScene').player.currentHealth);
+                this.scene.get('GameScene').player.currentHealth += healAmount;
+                this.scene.get('GameScene').player.createHealingText(healAmount);
             }
             if (upgradeName === "Energy Gun") {
                 this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.08 * 100) / 100;

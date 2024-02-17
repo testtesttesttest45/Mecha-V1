@@ -12,7 +12,8 @@ const characterMap = {
         attackCount: 1,
         projectile: '',
         icon: 'darkEtherMessiah',
-        idle: 'character1Idle'
+        idle: 'character1Idle',
+        description: 'Gatekeeper of the Underworld. Versatile and powerful, the Dark Ether Messiah is a force to be reckoned with.'
     },
     2: {
         spritesheetKey: 'character2',
@@ -27,7 +28,8 @@ const characterMap = {
         attackCount: 1,
         projectile: '',
         icon: 'orc',
-        idle: 'character2Idle'
+        idle: 'character2Idle',
+        description: 'A basic unit with moderate health damage.'
     },
     3: {
         spritesheetKey: 'character3',
@@ -42,7 +44,8 @@ const characterMap = {
         attackCount: 1,
         projectile: '',
         icon: 'dino',
-        idle: 'character3Idle'
+        idle: 'character3Idle',
+        description: 'Mechanical dinosaur created to hunt and destroy.'
     },
     4: {
         spritesheetKey: 'character4',
@@ -57,7 +60,8 @@ const characterMap = {
         attackCount: 1,
         projectile: '',
         icon: 'burningSlayer',
-        idle: 'character4Idle'
+        idle: 'character4Idle',
+        description: 'Fiery warrior with a burning passion for victory.'
     },
     5: {
         spritesheetKey: 'character5',
@@ -72,7 +76,8 @@ const characterMap = {
         attackCount: 1,
         projectile: 'blueBullet',
         icon: 'spectreMech',
-        idle: 'character5Idle'
+        idle: 'character5Idle',
+        description: 'The longest range unit in the game. The Spectre Mech is a powerful sniper with high recoil.'
     },
     6: {
         spritesheetKey: 'character6',
@@ -87,7 +92,8 @@ const characterMap = {
         attackCount: 2,
         projectile: '',
         icon: 'samuraiMech',
-        idle: 'character6Idle'
+        idle: 'character6Idle',
+        description: 'A swift and deadly warrior. The Samurai Mech strikes twice with each attack. The only unit with a multi-attack.'
     },
     7: {
         spritesheetKey: 'character7',
@@ -102,7 +108,8 @@ const characterMap = {
         attackCount: 1,
         projectile: 'blueBullet',
         icon: 'bahamutDragon',
-        idle: 'character7Idle'
+        idle: 'character7Idle',
+        description: 'Terror of the skies. The Bahamut Dragon is a powerful and versatile unit with a decent range and high damage.'
     },
     8: {
         spritesheetKey: 'character8',
@@ -117,7 +124,8 @@ const characterMap = {
         attackCount: 1,
         projectile: 'blueBullet',
         icon: 'protowingedMech',
-        idle: 'character8Idle'
+        idle: 'character8Idle',
+        description: 'The most beautiful unit and controller of the plasma energy.'
     },
     9: {
         spritesheetKey: 'character9',
@@ -132,7 +140,8 @@ const characterMap = {
         attackCount: 1,
         projectile: '',
         icon: 'brutusMech',
-        idle: 'character9Idle'
+        idle: 'character9Idle',
+        description: 'Stay out of his way or be bashed to nothingess.'
     },
     10: {
         spritesheetKey: 'character10',
@@ -147,7 +156,8 @@ const characterMap = {
         attackCount: 1,
         projectile: '',
         icon: 'ravenMech',
-        idle: 'character10Idle'
+        idle: 'character10Idle',
+        description: 'Slim and fast, the Raven Mech is a deadly assassin.'
     },
     11: {
         spritesheetKey: 'character11',
@@ -162,7 +172,8 @@ const characterMap = {
         attackCount: 1,
         projectile: 'blueBullet',
         icon: 'thunderEpicDragon',
-        idle: 'character11Idle'
+        idle: 'character11Idle',
+        description: 'The strongest character in the game. Unparalleled in speed and power.'
     },
     // 12: {
     //     spritesheetKey: 'character12',
@@ -189,7 +200,8 @@ const characterMap = {
         attackCount: 1,
         projectile: '',
         icon: 'avengerMech',
-        idle: 'character13Idle'
+        idle: 'character13Idle',
+        description: 'Keeper of Justice, he will avenge the fallen with his razor sharp whips.'
     },
 };
 

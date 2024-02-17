@@ -80,7 +80,6 @@ class GameScene extends Phaser.Scene {
             if (this.isZoomEnabled) {
                 const newZoom = deltaY > 0 ? Math.max(this.cameras.main.zoom - 0.25, 0.5) : Math.min(this.cameras.main.zoom + 0.25, 2.5);
                 this.cameras.main.zoomTo(newZoom, 300);
-
             }
         });
 
@@ -151,10 +150,10 @@ class GameScene extends Phaser.Scene {
                 this.isCameraLocked = true;
                 this.isCameraDraggable = false;
                 this.isZoomEnabled = false;
-                this.cameras.main.setZoom(this.initialZoom);
-                this.cameras.main.scrollX = this.land.x - this.gameScreenWidth / 2;
-                this.cameras.main.scrollY = this.land.y - this.gameScreenHeight / 2;
                 this.cameras.main.stopFollow();
+                this.cameras.main.setZoom(0.7);
+                this.cameras.main.scrollX = 1300;
+                this.cameras.main.scrollY = this.land.y - this.gameScreenHeight / 2;
             }
         });
 
@@ -596,9 +595,6 @@ class LoadingScene extends Phaser.Scene {
             });
     }
     
-    
-
-
     loadAssets() {
         this.load.image('ocean', 'assets/images/ocean.png');
         this.load.image('land', 'assets/images/land2.png');
@@ -878,24 +874,33 @@ class Collections extends Phaser.Scene {
 
     displayCharacterAttributes(character, startX, startY) {
         this.clearAttributesDisplay();
-
-        const nameText = this.add.text(startX + 50, startY, character.name, {
+    
+        const nameText = this.add.text(startX + 25, startY, character.name, {
             font: '26px Orbitron',
             fill: '#FFCC00'
         });
         nameText.setStroke('#ffffff', 1);
         this.attributeTexts.push(nameText);
-
-        startY += nameText.height + 20;
-
+    
+        startY += nameText.height + 10;
+    
+        const descriptionText = this.add.text(startX + 25, startY, character.description, {
+            font: '20px Orbitron',
+            fill: '#FFFFFF',
+            wordWrap: { width: 280 }
+        });
+        this.attributeTexts.push(descriptionText);
+    
+        startY = 500;
+    
         const statsText = this.add.text(startX + 50, startY, 'Stats:', {
             font: '24px Orbitron',
             fill: '#FFCC00'
         });
         this.attributeTexts.push(statsText);
-
+    
         startY += statsText.height + 20;
-
+    
         const attributeIcons = {
             health: 'health_icon',
             damage: 'damage_icon',
@@ -903,7 +908,7 @@ class Collections extends Phaser.Scene {
             speed: 'speed_icon',
             attackSpeed: 'attack_speed_icon'
         };
-
+    
         const attributes = [
             { key: 'health', value: `Health: ${character.health}` },
             { key: 'damage', value: `Damage: ${character.damage}` },
@@ -911,19 +916,19 @@ class Collections extends Phaser.Scene {
             { key: 'speed', value: `Speed: ${character.speed}` },
             { key: 'attackSpeed', value: `Attack Speed: ${character.attackSpeed}` }
         ];
-
+    
         attributes.forEach((attribute, index) => {
             const panel = this.add.graphics({ x: startX + 30, y: startY + index * 70 });
             panel.fillStyle(0xfff4a1, 0.5);
             panel.fillRect(0, 0, 300, 40);
             this.attributeTexts.push(panel);
-
+    
             if (attributeIcons[attribute.key]) {
                 const icon = this.add.image(startX + 40, startY + index * 70 + 20, attributeIcons[attribute.key]);
-                icon.setScale(0.5); // Scale icon size as needed
+                icon.setScale(0.5);
                 this.attributeTexts.push(icon);
             }
-
+    
             const text = this.add.text(startX + 80, startY + index * 70 + 5, attribute.value, {
                 font: '18px Orbitron',
                 fill: '#FFFFFF'
@@ -931,6 +936,7 @@ class Collections extends Phaser.Scene {
             this.attributeTexts.push(text);
         });
     }
+    
 
     clearAttributesDisplay() {
         if (this.attributeTexts && this.attributeTexts.length > 0) {
@@ -1132,7 +1138,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         if (highestScoreElement && cash && baseLevelElement) {
             highestScoreElement.textContent = `Highest Score: ${score}`;
             cashElement.textContent = `Cash: ${totalCash}`;
-            baseLevelElement.textContent = `Base Level: ${highestBaseLevel}`;
+            baseLevelElement.textContent = `Highest Base Seen: ${highestBaseLevel}`;
         }
     }
 
