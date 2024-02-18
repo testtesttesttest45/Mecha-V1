@@ -1173,26 +1173,32 @@ document.addEventListener('DOMContentLoaded', (event) => {
     
         const totalCash = incomingCash + initialCash;
     
-        // Rank definitions
+        // Updated rank definitions with divisions
         const ranks = [
             { threshold: 0, name: 'UNRANKED', image: '/assets/images/ranks/rank_unranked.png' },
-            { threshold: 1, name: 'IRON', image: '/assets/images/ranks/rank_iron.png' },
-            { threshold: 10000, name: 'BRONZE', image: '/assets/images/ranks/rank_bronze.png' },
-            { threshold: 20000, name: 'SILVER', image: '/assets/images/ranks/rank_silver.png' },
-            { threshold: 30000, name: 'GOLD', image: '/assets/images/ranks/rank_gold.png' },
-            { threshold: 40000, name: 'PLATINUM', image: '/assets/images/ranks/rank_platinum.png' },
-            { threshold: 50000, name: 'EMERALD', image: '/assets/images/ranks/rank_emerald.png' },
+            { threshold: 1, divisions: 9000, name: 'IRON', image: '/assets/images/ranks/rank_iron.png' },
+            { threshold: 10000, divisions: 10000, name: 'BRONZE', image: '/assets/images/ranks/rank_bronze.png' },
+            { threshold: 20000, divisions: 10000, name: 'SILVER', image: '/assets/images/ranks/rank_silver.png' },
+            { threshold: 30000, divisions: 10000, name: 'GOLD', image: '/assets/images/ranks/rank_gold.png' },
+            { threshold: 40000, divisions: 10000, name: 'PLATINUM', image: '/assets/images/ranks/rank_platinum.png' },
+            { threshold: 50000, divisions: 10000, name: 'EMERALD', image: '/assets/images/ranks/rank_emerald.png' },
             { threshold: 60000, name: 'DIAMOND', image: '/assets/images/ranks/rank_diamond.png' },
             { threshold: 70000, name: 'MASTER', image: '/assets/images/ranks/rank_master.png' },
             { threshold: 80000, name: 'GRANDMASTER', image: '/assets/images/ranks/rank_grandmaster.png' },
             { threshold: 90000, name: 'CHALLENGER', image: '/assets/images/ranks/rank_challenger.png' },
         ];
     
-        // Determine rank based on score
         let rank = ranks[0]; // Default to Unranked
+        let division = '';
         for (let i = ranks.length - 1; i >= 0; i--) {
             if (score >= ranks[i].threshold) {
                 rank = ranks[i];
+                // Calculate division for ranks with divisions
+                if (rank.divisions) {
+                    const divisionIndex = Math.floor((score - rank.threshold) / (rank.divisions / 4));
+                    const romanNumerals = ['IV', 'III', 'II', 'I'];
+                    division = ` ${romanNumerals[divisionIndex] || ''}`;
+                }
                 break;
             }
         }
@@ -1201,11 +1207,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
             highestScoreElement.textContent = score;
             cashElement.textContent = totalCash;
             baseLevelElement.textContent = highestBaseLevel;
-            rankTextElement.textContent = rank.name;
+            rankTextElement.textContent = rank.name + division; // Include division in rank name if applicable
             rankImageElement.src = rank.image;
             newHighScoreIconElement.style.display = newHighestScore ? 'block' : 'none';
         }
     }
+    
 
     window.fetchHighestScore = function () {
         fetch('/get-game-data')
