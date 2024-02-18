@@ -166,7 +166,7 @@ const characterMap = {
         tier: 'hard',
         range: 300,
         speed: 500,
-        damage: 65,
+        damage: 125,
         health: 320,
         attackSpeed: 1.01,
         attackCount: 1,

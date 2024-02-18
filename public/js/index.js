@@ -172,7 +172,7 @@ class GameScene extends Phaser.Scene {
         this.isCameraDraggable = false;
         this.isZoomEnabled = false;
         this.cameras.main.stopFollow();
-        this.cameras.main.setZoom(0.7);
+        this.cameras.main.setZoom(0.75);
         this.cameras.main.scrollX = 1300;
         this.cameras.main.scrollY = this.land.y - this.gameScreenHeight / 2;
     }
@@ -1163,17 +1163,47 @@ document.addEventListener('DOMContentLoaded', (event) => {
         startGame();
     });
 
-    function displayHighestScore(score, incomingCash, initialCash, highestBaseLevel) {
-        const highestScoreElement = document.getElementById('highest-score');
-        const cashElement = document.getElementById('cash');
-        const baseLevelElement = document.getElementById('base-level');
-
+    function displayHighestScore(score, incomingCash, initialCash, highestBaseLevel, newHighestScore) {
+        const highestScoreElement = document.querySelector('.highest-score');
+        const cashElement = document.querySelector('.cash-text');
+        const baseLevelElement = document.querySelector('.base-level');
+        const rankTextElement = document.querySelector('.rank-text');
+        const rankImageElement = document.querySelector('.rank-image');
+        const newHighScoreIconElement = document.querySelector('.new-highscore-icon');
+    
         const totalCash = incomingCash + initialCash;
-
-        if (highestScoreElement && cash && baseLevelElement) {
-            highestScoreElement.textContent = `Highest Score: ${score}`;
-            cashElement.textContent = `Cash: ${totalCash}`;
-            baseLevelElement.textContent = `Highest Base Seen: ${highestBaseLevel}`;
+    
+        // Rank definitions
+        const ranks = [
+            { threshold: 0, name: 'UNRANKED', image: '/assets/images/ranks/rank_unranked.png' },
+            { threshold: 1, name: 'IRON', image: '/assets/images/ranks/rank_iron.png' },
+            { threshold: 10000, name: 'BRONZE', image: '/assets/images/ranks/rank_bronze.png' },
+            { threshold: 20000, name: 'SILVER', image: '/assets/images/ranks/rank_silver.png' },
+            { threshold: 30000, name: 'GOLD', image: '/assets/images/ranks/rank_gold.png' },
+            { threshold: 40000, name: 'PLATINUM', image: '/assets/images/ranks/rank_platinum.png' },
+            { threshold: 50000, name: 'EMERALD', image: '/assets/images/ranks/rank_emerald.png' },
+            { threshold: 60000, name: 'DIAMOND', image: '/assets/images/ranks/rank_diamond.png' },
+            { threshold: 70000, name: 'MASTER', image: '/assets/images/ranks/rank_master.png' },
+            { threshold: 80000, name: 'GRANDMASTER', image: '/assets/images/ranks/rank_grandmaster.png' },
+            { threshold: 90000, name: 'CHALLENGER', image: '/assets/images/ranks/rank_challenger.png' },
+        ];
+    
+        // Determine rank based on score
+        let rank = ranks[0]; // Default to Unranked
+        for (let i = ranks.length - 1; i >= 0; i--) {
+            if (score >= ranks[i].threshold) {
+                rank = ranks[i];
+                break;
+            }
+        }
+    
+        if (highestScoreElement && cashElement && baseLevelElement && rankTextElement && rankImageElement && newHighScoreIconElement) {
+            highestScoreElement.textContent = score;
+            cashElement.textContent = totalCash;
+            baseLevelElement.textContent = highestBaseLevel;
+            rankTextElement.textContent = rank.name;
+            rankImageElement.src = rank.image;
+            newHighScoreIconElement.style.display = newHighestScore ? 'block' : 'none';
         }
     }
 
@@ -1181,9 +1211,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
         fetch('/get-game-data')
             .then(response => response.json())
             .then(data => {
-                const { highestScore, incomingCash, initialCash, highestBaseLevel, characterInUse } = data;
+                const { highestScore, incomingCash, initialCash, highestBaseLevel, characterInUse, newHighest } = data;
                 updateCharacterDisplay(characterInUse);
-                displayHighestScore(highestScore, incomingCash, initialCash, highestBaseLevel);
+                displayHighestScore(highestScore, incomingCash, initialCash, highestBaseLevel, newHighest);
             })
             .catch(error => console.error('Error fetching saves:', error));
     };

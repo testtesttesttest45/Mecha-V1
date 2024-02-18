@@ -299,7 +299,7 @@ class BattleUI extends Phaser.Scene {
                 top: 2,
                 bottom: 2
             }
-        }).setOrigin(1, 0).setVisible(false);
+        }).setOrigin(1, 0).setVisible(false).setDepth(1);
 
         cameraButtonBackground.setInteractive(new Phaser.Geom.Circle(cameraButtonX, cameraButtonY, cameraButtonRadius), Phaser.Geom.Circle.Contains)
             .on('pointerdown', () => {
@@ -335,7 +335,7 @@ class BattleUI extends Phaser.Scene {
                 top: 2,
                 bottom: 2
             }
-        }).setOrigin(1, 0).setVisible(false);
+        }).setOrigin(1, 0).setVisible(false).setDepth(1);
 
         locationButtonBackground.setInteractive(new Phaser.Geom.Circle(locationButtonX, locationButtonY, locationButtonRadius), Phaser.Geom.Circle.Contains)
             .on('pointerdown', () => {
@@ -1094,6 +1094,7 @@ class BattleUI extends Phaser.Scene {
         this.scene.get('GameScene').scene.stop();
         this.scene.stop();
         document.getElementById('battle-scene').style.display = 'none';
+        document.querySelector('.new-highscore-icon').style.display = 'none';
         document.getElementById('main-menu').style.display = 'flex';
         if (!this.gameDataSaved) {
             this.saveGameData().then(() => {

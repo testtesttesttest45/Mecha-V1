@@ -120,8 +120,8 @@ html {
 
 .chapter-level {
     position: absolute;
-    top: 5%;
-    left: 2vw;
+    top: 15%;
+    right: 5%;
     font-family: 'Orbitron', sans-serif;
     color: #00f3ff;
     text-shadow:
@@ -129,37 +129,24 @@ html {
         0 0 10px #076bf8,
         0 0 20px #076bf8;
     font-size: 1.2vw;
-}
-
-.level-star {
-    background: url('../assets/images/yellow_star.png') no-repeat center center;
-    background-size: contain;
-    padding: 1vw;
-    border-radius: 0.5vw;
-    width: 6vw;
-    height: 6vw;
-    transform: rotate(62deg);
+    width: 300px;
+    background-color: #ff00003b;
+    border: 0.2vw solid #00f3ff;
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
-}
-
-.level-number {
-    font-size: 1.5vw;
-    transform: rotate(-62deg);
-    margin-top: 0.1vw;
-    margin-right: 0.6vw;
 }
 
 .character-display {
     position: absolute;
-    top: 40%;
+    top: 35%;
     left: 2vw;
     width: 25%;
     height: 50%;
 }
 
-#battle-canvas, #collections-canvas {
+#battle-canvas,
+#collections-canvas {
     border: 0.2vw solid #00f3ff;
     border-radius: 2vw;
 }
@@ -171,3 +158,71 @@ html {
     transform: translate(-50%, -50%);
 }
 
+.little-table {
+    padding: 5px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.horizontal-line {
+    width: 90%;
+    border-top: 1px solid #00f3ff;
+    margin: 5px auto;
+}
+
+.centered {
+    margin: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+
+img.centered {
+    display: block;
+    margin: auto;
+}
+
+.cash-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.circle {
+    height: 50px;
+    width: 50px;
+    background-color: #eaa40b;
+    border-radius: 50%;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+}
+
+.cash-display {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.cash-display h4 {
+    margin-right: 10px;
+}
+
+.cash-display img {
+    width: 30px;
+    height: auto;
+}
+
+.new-highscore-icon {
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    display: none;
+    width: 100px;
+    height: auto;
+}
