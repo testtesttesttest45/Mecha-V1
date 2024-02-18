@@ -125,39 +125,74 @@ class GameScene extends Phaser.Scene {
             this.isDragging = false;  // Reset the dragging flag
         });
 
-        this.input.keyboard.on('keydown-SPACE', () => {
-            this.isCameraFollowingPlayer = !this.isCameraFollowingPlayer;
-            if (this.isCameraFollowingPlayer) {
-                // Start following the player
-                this.cameras.main.startFollow(this.player.getPosition(), true, 0.01, 0.01);
-            } else {
-                // Stop following the player
-                this.cameras.main.stopFollow();
-            }
-        });
+        // this.input.keyboard.on('keydown-SPACE', () => {
+        //     this.isCameraFollowingPlayer = !this.isCameraFollowingPlayer;
+        //     if (this.isCameraFollowingPlayer) {
+        //         // Start following the player
+        //         this.cameras.main.startFollow(this.player.getPosition(), true, 0.01, 0.01);
+        //     } else {
+        //         // Stop following the player
+        //         this.cameras.main.stopFollow();
+        //     }
+        // });
 
         this.isCameraDraggable = true;
         this.isZoomEnabled = true; // Ensure zoom is enabled by default
 
-        this.input.keyboard.on('keydown-L', () => {
-            if (this.isCameraLocked) {
-                // Unlock the camera
-                this.isCameraLocked = false;
-                this.isCameraDraggable = true;
-                this.isZoomEnabled = true;
-            } else {
-                // Lock the camera
-                this.isCameraLocked = true;
-                this.isCameraDraggable = false;
-                this.isZoomEnabled = false;
-                this.cameras.main.stopFollow();
-                this.cameras.main.setZoom(0.7);
-                this.cameras.main.scrollX = 1300;
-                this.cameras.main.scrollY = this.land.y - this.gameScreenHeight / 2;
-            }
-        });
+        // this.input.keyboard.on('keydown-L', () => {
+        //     if (this.isCameraLocked) {
+        //         // Unlock the camera
+        //         this.isCameraLocked = false;
+        //         this.isCameraDraggable = true;
+        //         this.isZoomEnabled = true;
+        //     } else {
+        //         // Lock the camera
+        //         this.isCameraLocked = true;
+        //         this.isCameraDraggable = false;
+        //         this.isZoomEnabled = false;
+        //         this.cameras.main.stopFollow();
+        //         this.cameras.main.setZoom(0.7);
+        //         this.cameras.main.scrollX = 1300;
+        //         this.cameras.main.scrollY = this.land.y - this.gameScreenHeight / 2;
+        //     }
+        // });
 
     }
+
+    toggleCameraLock() {
+        this.isCameraLocked = !this.isCameraLocked;
+        if (this.isCameraLocked) {
+            this.lockCamera();
+        } else {
+            this.unlockCamera();
+        }
+    }
+    
+    lockCamera() {
+        this.isCameraDraggable = false;
+        this.isZoomEnabled = false;
+        this.cameras.main.stopFollow();
+        this.cameras.main.setZoom(0.7);
+        this.cameras.main.scrollX = 1300;
+        this.cameras.main.scrollY = this.land.y - this.gameScreenHeight / 2;
+    }
+    
+    unlockCamera() {
+        this.isCameraDraggable = true;
+        this.isZoomEnabled = true;
+    }
+
+    toggleCameraFollow() {
+        this.isCameraFollowingPlayer = !this.isCameraFollowingPlayer;
+        if (this.isCameraFollowingPlayer) {
+            // Start following the player
+            this.cameras.main.startFollow(this.player.getPosition(), true, 0.01, 0.01);
+        } else {
+            // Stop following the player
+            this.cameras.main.stopFollow();
+        }
+    }
+    
 
     handlePlayerClick(pointer) {
         if (!this.allowInput || pointer.button !== 0) return;

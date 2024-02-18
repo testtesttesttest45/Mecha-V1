@@ -107,15 +107,14 @@ class BattleUI extends Phaser.Scene {
 
         const panelCenterX = this.scale.width - 30 - panel.width / 2;
         const headerTextY = 150;
-        this.add.text(panelCenterX, headerTextY, "Battle Panel", {
+        this.add.text(panelCenterX - 50, headerTextY, "Battle Panel", {
             font: '20px Orbitron',
             fill: '#ffffff'
         }).setOrigin(0.5, 0).setScrollFactor(0);
 
-        const pauseButtonX = panelCenterX + 150;
-        const pauseButtonY = headerTextY;
+        const pauseButtonX = panelCenterX + 150; // 1865
+        const pauseButtonY = headerTextY; // 150
         const pauseButtonRadius = 20;
-
         const pauseButtonBackground = this.add.graphics();
         pauseButtonBackground.fillStyle(0xff0000, 1);
         pauseButtonBackground.fillCircle(pauseButtonX, pauseButtonY, pauseButtonRadius);
@@ -127,6 +126,16 @@ class BattleUI extends Phaser.Scene {
 
         pauseButtonBackground.setInteractive(new Phaser.Geom.Circle(pauseButtonX, pauseButtonY, pauseButtonRadius), Phaser.Geom.Circle.Contains).on('pointerdown', () => {
             this.pauseGame();
+        });
+
+        this.createCameraIcon();
+        this.input.keyboard.on('keydown-L', () => {
+            this.toggleCameraLock();
+        });
+        
+        this.createLocationIcon();
+        this.input.keyboard.on('keydown-SPACE', () => {
+            this.toggleCameraFollow();
         });
 
         const approachingTextY = headerTextY + 50;
@@ -268,6 +277,164 @@ class BattleUI extends Phaser.Scene {
         this.createBaseRebuildTimer();
     }
 
+    createCameraIcon() {
+        const cameraButtonX = 1820;
+        const cameraButtonY = 150;
+        const cameraButtonRadius = 20;
+
+        const cameraButtonBackground = this.add.graphics();
+        cameraButtonBackground.fillStyle(0x000000, 0.5);
+        cameraButtonBackground.fillCircle(cameraButtonX, cameraButtonY, cameraButtonRadius);
+
+        this.cameraIconGraphics = this.add.graphics({ x: cameraButtonX, y: cameraButtonY });
+        this.updateCameraIcon();
+
+        this.cameraTooltip = this.add.text(cameraButtonX, cameraButtonY - 25, 'Toggle Camera Lock [L]', {
+            font: '14px Orbitron',
+            fill: '#ffffff',
+            backgroundColor: '#000000',
+            padding: {
+                left: 5,
+                right: 5,
+                top: 2,
+                bottom: 2
+            }
+        }).setOrigin(1, 0).setVisible(false);
+
+        cameraButtonBackground.setInteractive(new Phaser.Geom.Circle(cameraButtonX, cameraButtonY, cameraButtonRadius), Phaser.Geom.Circle.Contains)
+            .on('pointerdown', () => {
+                this.toggleCameraLock();
+            })
+            .on('pointerover', () => {
+                this.cameraTooltip.setVisible(true);
+            })
+            .on('pointerout', () => {
+                this.cameraTooltip.setVisible(false);
+            });
+    }
+
+    createLocationIcon() {
+        const locationButtonX = 1775;
+        const locationButtonY = 150;
+        const locationButtonRadius = 20;
+
+        const locationButtonBackground = this.add.graphics();
+        locationButtonBackground.fillStyle(0x000000, 0.5);
+        locationButtonBackground.fillCircle(locationButtonX, locationButtonY, locationButtonRadius);
+
+        this.locationIconGraphics = this.add.graphics({ x: locationButtonX, y: locationButtonY -5 });
+        this.drawLocationIcon(this.locationIconGraphics, 0x999999);
+
+        this.locationTooltip = this.add.text(locationButtonX, locationButtonY - 25, 'Toggle Camera Follow [SPACE]', {
+            font: '14px Orbitron',
+            fill: '#ffffff',
+            backgroundColor: '#000000',
+            padding: {
+                left: 5,
+                right: 5,
+                top: 2,
+                bottom: 2
+            }
+        }).setOrigin(1, 0).setVisible(false);
+
+        locationButtonBackground.setInteractive(new Phaser.Geom.Circle(locationButtonX, locationButtonY, locationButtonRadius), Phaser.Geom.Circle.Contains)
+            .on('pointerdown', () => {
+                this.toggleCameraFollow();
+            }
+            )
+            .on('pointerover', () => {
+                this.locationTooltip.setVisible(true);
+            }
+            )
+            .on('pointerout', () => {
+                this.locationTooltip.setVisible(false);
+            }
+            );
+    }
+
+    updateCameraIcon() {
+        const gameScene = this.scene.get('GameScene');
+        if (!gameScene) return;
+
+        const isCameraLocked = gameScene.isCameraLocked;
+        this.drawCameraIcon(this.cameraIconGraphics, isCameraLocked ? 0xffff00 : 0x999999);
+    }
+
+    updateLocationIcon() {
+        const gameScene = this.scene.get('GameScene');
+        if (!gameScene) return;
+
+        const isCameraFollowingPlayer = gameScene.isCameraFollowingPlayer;
+        this.drawLocationIcon(this.locationIconGraphics, isCameraFollowingPlayer ? 0xffff00 : 0x999999);
+    }
+
+    drawCameraIcon(graphics, fillColor) { // by ChatGPT
+        graphics.clear();
+
+        // Camera body
+        graphics.fillStyle(fillColor, 1);
+        graphics.fillRect(-15, -10, 30, 20);
+
+        // Camera lens
+        graphics.fillStyle(0x000000, 1);
+        graphics.fillCircle(0, 0, 8);
+
+        // Lens reflection (smaller circle inside the lens to give a bit of a glossy effect)
+        graphics.fillStyle(0xffffff, 0.5);
+        graphics.fillCircle(3, -3, 3);
+
+        // Flash
+        graphics.fillStyle(0xffffff, 1);
+        graphics.fillRect(-20, -15, 8, 8);
+
+        // Detail on the body (to suggest buttons or camera details)
+        graphics.fillStyle(0x777777, 1);
+        graphics.fillRect(10, -7, 2, 4);
+        graphics.fillRect(10, 3, 2, 4);
+    }
+
+    drawLocationIcon(graphics, fillColor) {
+        graphics.clear();
+
+        const pinRadius = 10;
+        const pinHeight = 20;
+        const holeRadius = 3;
+
+        graphics.fillStyle(fillColor, 1);
+
+        graphics.fillCircle(0, 0, pinRadius);
+
+        graphics.beginPath();
+        graphics.moveTo(-pinRadius, 0);
+        graphics.lineTo(0, pinHeight);
+        graphics.lineTo(pinRadius, 0);
+        graphics.closePath();
+        graphics.fillPath();
+
+        graphics.fillStyle(0x000000, 1);
+        graphics.fillCircle(0, 0, holeRadius);
+    }
+
+
+    toggleCameraLock() {
+        const gameScene = this.scene.get('GameScene');
+        if (!gameScene) return;
+
+        gameScene.toggleCameraLock();
+
+        this.updateCameraIcon();
+    }
+
+    toggleCameraFollow() {
+        const gameScene = this.scene.get('GameScene');
+        if (!gameScene) return;
+
+        gameScene.toggleCameraFollow();
+
+        this.updateLocationIcon();
+    }
+
+
     displayPlayerStats(x, y) {
         const { originalHealth, currentHealth, maxHealth, damage, originalDamage, attackSpeed, originalAttackSpeed, speed, originalSpeed } = this.scene.get('GameScene').player;
         const bonusHealth = maxHealth - originalHealth;
@@ -371,7 +538,7 @@ class BattleUI extends Phaser.Scene {
         });
         const legendarySectionY = this.attackSpeedSectionTitle.y + 450;
         // this.legendaryUpgradesSectionTitle = this.add.text(damageSectionX, legendarySectionY, "Legendary Upgrades", {
-            // place title in centre of the modal
+        // place title in centre of the modal
         this.legendaryUpgradesSectionTitle = this.add.text(modalX + 300, legendarySectionY, "Legendary Upgrades", {
             font: '28px Orbitron',
             fill: '#FFD700'
@@ -518,7 +685,7 @@ class BattleUI extends Phaser.Scene {
             }
         });
 
-        
+
     }
 
     createItems(upgrades, startX, startY, sectionWidth) {
