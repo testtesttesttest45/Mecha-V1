@@ -160,6 +160,12 @@ class GameScene extends Phaser.Scene {
     }
 
     toggleCameraLock() {
+        // If the camera is currently following the player, stop following before locking the camera
+        if (this.isCameraFollowingPlayer) {
+            this.toggleCameraFollow();
+            this.scene.get('BattleUI').updateLocationIcon();
+        }
+    
         this.isCameraLocked = !this.isCameraLocked;
         if (this.isCameraLocked) {
             this.lockCamera();
@@ -181,8 +187,14 @@ class GameScene extends Phaser.Scene {
         this.isCameraDraggable = true;
         this.isZoomEnabled = true;
     }
-
+    
     toggleCameraFollow() {
+        // If the camera is currently locked, unlock it before starting to follow the player
+        if (this.isCameraLocked) {
+            this.toggleCameraLock();
+            this.scene.get('BattleUI').updateCameraIcon();
+        }
+    
         this.isCameraFollowingPlayer = !this.isCameraFollowingPlayer;
         if (this.isCameraFollowingPlayer) {
             // Start following the player
