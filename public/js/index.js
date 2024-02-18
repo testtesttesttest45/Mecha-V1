@@ -1188,7 +1188,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         // Updated rank definitions with divisions
         const ranks = [
             { threshold: 0, name: 'UNRANKED', image: '/assets/images/ranks/rank_unranked.png' },
-            { threshold: 1, divisions: 9000, name: 'IRON', image: '/assets/images/ranks/rank_iron.png' },
+            { threshold: 1, divisions: 10000, name: 'IRON', image: '/assets/images/ranks/rank_iron.png' },
             { threshold: 10000, divisions: 10000, name: 'BRONZE', image: '/assets/images/ranks/rank_bronze.png' },
             { threshold: 20000, divisions: 10000, name: 'SILVER', image: '/assets/images/ranks/rank_silver.png' },
             { threshold: 30000, divisions: 10000, name: 'GOLD', image: '/assets/images/ranks/rank_gold.png' },

@@ -571,7 +571,7 @@ class BattleUI extends Phaser.Scene {
             { name: "Thunderlord Seal", description: "Permanent Immunity to Catastrophe storms", cost: 9999, icon: 'sword1' },
             { name: "Elixir of Life", description: "Triple passive Heal amount", cost: 9999, icon: 'health2' },
             { name: "Soul of the Phoenix", description: "Revive once", cost: 9999, icon: 'attackSpeed2' },
-            { name: "Winter Frost", description: "Enraged enemies deal 25% lesser damage and move 25% slower", cost: 9999, icon: 'moveSpeed1' },
+            { name: "Winter Frost", description: "Enraged enemies move 25% slower", cost: 9999, icon: 'moveSpeed1' },
             { name: "Treasure Finder", description: "Every Gold is worth 2 times more value", cost: 9999, icon: 'sword1' },
             { name: "Cosmic Scimitar", description: "Gain additional 12% damage and max health for every bases destroyed", cost: 9999, icon: 'sword2' },
         ];
