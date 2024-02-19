@@ -165,7 +165,7 @@ class GameScene extends Phaser.Scene {
             this.toggleCameraFollow();
             this.scene.get('BattleUI').updateLocationIcon();
         }
-    
+
         this.isCameraLocked = !this.isCameraLocked;
         if (this.isCameraLocked) {
             this.lockCamera();
@@ -173,7 +173,7 @@ class GameScene extends Phaser.Scene {
             this.unlockCamera();
         }
     }
-    
+
     lockCamera() {
         this.isCameraDraggable = false;
         this.isZoomEnabled = false;
@@ -182,19 +182,19 @@ class GameScene extends Phaser.Scene {
         this.cameras.main.scrollX = 1300;
         this.cameras.main.scrollY = this.land.y - this.gameScreenHeight / 2;
     }
-    
+
     unlockCamera() {
         this.isCameraDraggable = true;
         this.isZoomEnabled = true;
     }
-    
+
     toggleCameraFollow() {
         // If the camera is currently locked, unlock it before starting to follow the player
         if (this.isCameraLocked) {
             this.toggleCameraLock();
             this.scene.get('BattleUI').updateCameraIcon();
         }
-    
+
         this.isCameraFollowingPlayer = !this.isCameraFollowingPlayer;
         if (this.isCameraFollowingPlayer) {
             // Start following the player
@@ -204,7 +204,7 @@ class GameScene extends Phaser.Scene {
             this.cameras.main.stopFollow();
         }
     }
-    
+
 
     handlePlayerClick(pointer) {
         if (!this.allowInput || pointer.button !== 0) return;
@@ -507,10 +507,12 @@ class LoadingScene extends Phaser.Scene {
             "Pay attention to the Catastrophe timer, avoid shopping when the Catastrophe is approaching!",
             "Every increase in the Base level amplifies the health and damage of all enemies.",
             "Each time the Base level increases, the damage from Catastrophe grows by an additional 20% from the last level!",
-            "Press L to lock/unlock the camera. Press Space to toggle camera follow mode.",
+            "Press [L] to lock/unlock the camera. Press [Space] to toggle camera follow mode.",
             "The strongest character is the Thunder Epic Dragon! If you see him, RUN!!!",
             "Enemy attacks can be dodged.",
             "Gold and Cash drops are collected automatically, don't worry about picking them up.",
+            "Although destroying the base is the main objective, gold drops from enemies are reduced. Think of your strategy!",
+            "The game is played best with full screen mode. Press [F11] to toggle full screen.",
         ];
         this.background = null;
         this.progressBar = null;
@@ -607,29 +609,29 @@ class LoadingScene extends Phaser.Scene {
         const randomIndex = Phaser.Math.Between(0, this.tooltips.length - 1);
         this.tooltipText.setText(this.tooltips[randomIndex]);
     }
-    
+
     createStartButton(characterInUse) {
         const padding = 10;
         const buttonWidth = 150;
         const buttonHeight = 50;
         const width = this.cameras.main.width;
         const height = this.cameras.main.height;
-    
+
         let startX = width / 2 + 500;
         let startY = 400;
-    
+
         let background = this.add.graphics({ x: startX, y: startY });
         background.fillStyle(0x5cb85c, 1);
         background.fillRoundedRect(0, 0, buttonWidth, buttonHeight, 20);
-    
+
         let startText = this.add.text(startX + buttonWidth / 2, startY + buttonHeight / 2, 'START', {
             font: '20px Orbitron',
             fill: '#FFFFFF',
         }).setOrigin(0.5, 0.5);
-    
+
         let buttonContainer = this.add.container(0, 0);
         buttonContainer.add([background, startText]);
-    
+
         background.setInteractive(new Phaser.Geom.Rectangle(0, 0, buttonWidth, buttonHeight), Phaser.Geom.Rectangle.Contains)
             .on('pointerover', () => {
                 background.clear().fillStyle(0x05e814, 1).fillRoundedRect(0, 0, buttonWidth, buttonHeight, 20);
@@ -641,7 +643,7 @@ class LoadingScene extends Phaser.Scene {
                 this.scene.start('GameScene', { characterInUse: characterInUse });
             });
     }
-    
+
     loadAssets() {
         this.load.image('ocean', 'assets/images/ocean.png');
         this.load.image('land', 'assets/images/land2.png');
@@ -921,33 +923,33 @@ class Collections extends Phaser.Scene {
 
     displayCharacterAttributes(character, startX, startY) {
         this.clearAttributesDisplay();
-    
+
         const nameText = this.add.text(startX + 25, startY, character.name, {
             font: '26px Orbitron',
             fill: '#FFCC00'
         });
         nameText.setStroke('#ffffff', 1);
         this.attributeTexts.push(nameText);
-    
+
         startY += nameText.height + 10;
-    
+
         const descriptionText = this.add.text(startX + 25, startY, character.description, {
             font: '20px Orbitron',
             fill: '#FFFFFF',
             wordWrap: { width: 280 }
         });
         this.attributeTexts.push(descriptionText);
-    
+
         startY = 500;
-    
+
         const statsText = this.add.text(startX + 50, startY, 'Stats:', {
             font: '24px Orbitron',
             fill: '#FFCC00'
         });
         this.attributeTexts.push(statsText);
-    
+
         startY += statsText.height + 20;
-    
+
         const attributeIcons = {
             health: 'health_icon',
             damage: 'damage_icon',
@@ -955,7 +957,7 @@ class Collections extends Phaser.Scene {
             speed: 'speed_icon',
             attackSpeed: 'attack_speed_icon'
         };
-    
+
         const attributes = [
             { key: 'health', value: `Health: ${character.health}` },
             { key: 'damage', value: `Damage: ${character.damage}` },
@@ -963,19 +965,19 @@ class Collections extends Phaser.Scene {
             { key: 'speed', value: `Speed: ${character.speed}` },
             { key: 'attackSpeed', value: `Attack Speed: ${character.attackSpeed}` }
         ];
-    
+
         attributes.forEach((attribute, index) => {
             const panel = this.add.graphics({ x: startX + 30, y: startY + index * 70 });
             panel.fillStyle(0xfff4a1, 0.5);
             panel.fillRect(0, 0, 300, 40);
             this.attributeTexts.push(panel);
-    
+
             if (attributeIcons[attribute.key]) {
                 const icon = this.add.image(startX + 40, startY + index * 70 + 20, attributeIcons[attribute.key]);
                 icon.setScale(0.5);
                 this.attributeTexts.push(icon);
             }
-    
+
             const text = this.add.text(startX + 80, startY + index * 70 + 5, attribute.value, {
                 font: '18px Orbitron',
                 fill: '#FFFFFF'
@@ -983,7 +985,7 @@ class Collections extends Phaser.Scene {
             this.attributeTexts.push(text);
         });
     }
-    
+
 
     clearAttributesDisplay() {
         if (this.attributeTexts && this.attributeTexts.length > 0) {
@@ -1182,9 +1184,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
         const rankTextElement = document.querySelector('.rank-text');
         const rankImageElement = document.querySelector('.rank-image');
         const newHighScoreIconElement = document.querySelector('.new-highscore-icon');
-    
+
         const totalCash = incomingCash + initialCash;
-    
+
         // Updated rank definitions with divisions
         const ranks = [
             { threshold: 0, name: 'UNRANKED', image: '/assets/images/ranks/rank_unranked.png' },
@@ -1199,7 +1201,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             { threshold: 80000, name: 'GRANDMASTER', image: '/assets/images/ranks/rank_grandmaster.png' },
             { threshold: 90000, name: 'CHALLENGER', image: '/assets/images/ranks/rank_challenger.png' },
         ];
-    
+
         let rank = ranks[0]; // Default to Unranked
         let division = '';
         for (let i = ranks.length - 1; i >= 0; i--) {
@@ -1214,7 +1216,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 break;
             }
         }
-    
+
         if (highestScoreElement && cashElement && baseLevelElement && rankTextElement && rankImageElement && newHighScoreIconElement) {
             highestScoreElement.textContent = score;
             cashElement.textContent = totalCash;
@@ -1224,7 +1226,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             newHighScoreIconElement.style.display = newHighestScore ? 'block' : 'none';
         }
     }
-    
+
 
     window.fetchHighestScore = function () {
         fetch('/get-game-data')
@@ -1281,8 +1283,42 @@ document.addEventListener('DOMContentLoaded', (event) => {
         viewCollections();
     });
 
+    const settingsButton = document.querySelector('.settings-button');
+    const modal = document.getElementById('settings-modal');
+    const closeButton = document.querySelector('.close-button');
+    const resetButton = document.getElementById('reset-game-button');
 
+    settingsButton.addEventListener('click', () => {
+        modal.style.display = 'block';
+    });
 
+    closeButton.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    window.onclick = function (event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    };
+
+    resetButton.addEventListener('click', () => {
+        if (confirm('Are you sure you want to reset your game progress?')) {
+            fetch('/reset-game', {
+                method: 'DELETE',
+            })
+                .then(response => {
+                    if (response.ok) {
+                        console.log('Game progress reset successfully');
+                        modal.style.display = 'none';
+                        window.fetchHighestScore();
+                    } else {
+                        console.error('Failed to reset game progress');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        }
+    });
 });
 
 // set animation interval at a higher scope. then, ensure only 1 interval is running at a time. if the interval is already running, clear it and set it to null. if it's null, set it to a new interval.

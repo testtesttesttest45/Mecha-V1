@@ -46,7 +46,6 @@
                 </div>
             </div>
 
-
             <div class="character-display"></div>
             <h1 class="title">Mecha V1</h1>
             <button class="play-button">Play</button>
@@ -61,6 +60,16 @@
             style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0); z-index: 9999; display: none;">
         </div>
         <div class="collections-scene" id="collections-scene" style="display: none;">
+        </div>
+        <div id="settings-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h2 style="margin-top:0px;">Settings</h2>
+                <button id="reset-game-button">Reset Game Progress</button>
+                <div class="fullscreen-toggle-container">
+                    <span id="fullscreen-text">Press [F11] for Fullscreen</span>
+                </div>
+            </div>
         </div>
     </div>
     <script src="js/index.js" type="module"></script>

@@ -183,7 +183,7 @@ app.post('/use-character', (req, res) => {
     });
 });
 
-app.delete('/delete-save', (req, res) => {
+app.delete('/reset-game', (req, res) => {
     const saveFilePath = path.join(__dirname, 'save_file.json');
     fs.unlink(saveFilePath, (err) => {
         if (err) {

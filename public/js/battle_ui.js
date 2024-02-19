@@ -567,12 +567,12 @@ class BattleUI extends Phaser.Scene {
 
         const legendaryUpgrades = [
             { name: "Cash", description: "Exchange 300 Gold for 1 Cash", cost: 300, icon: 'cash' },
-            { name: "Forbidden Excalibur", description: "Gain Double Damage and Health for the next 5 Bases", cost: 9999, icon: 'sword2' },
             { name: "Thunderlord Seal", description: "Permanent Immunity to Catastrophe storms", cost: 9999, icon: 'sword1' },
             { name: "Elixir of Life", description: "Triple passive Heal amount", cost: 9999, icon: 'health2' },
-            { name: "Soul of the Phoenix", description: "Revive once", cost: 9999, icon: 'attackSpeed2' },
-            { name: "Winter Frost", description: "Enraged enemies move 25% slower", cost: 9999, icon: 'moveSpeed1' },
+            { name: "Winter Frost", description: "Enraged enemies move 50% slower", cost: 9999, icon: 'moveSpeed1' },
             { name: "Treasure Finder", description: "Every Gold is worth 2 times more value", cost: 9999, icon: 'sword1' },
+            { name: "Forbidden Excalibur", description: "Gain Double Damage and Health for the next 5 Bases", cost: 9999, icon: 'sword2' },
+            { name: "Soul of the Phoenix", description: "Revive once", cost: 9999, icon: 'attackSpeed2' },
             { name: "Cosmic Scimitar", description: "Gain additional 12% damage and max health for every bases destroyed", cost: 9999, icon: 'sword2' },
         ];
 

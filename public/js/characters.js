@@ -45,7 +45,7 @@ const characterMap = {
         projectile: '',
         icon: 'dino',
         idle: 'character3Idle',
-        description: 'Mechanical dinosaur created to hunt and destroy.'
+        description: 'Mechanical dinosaur created to hunt with his powerful claws.'
     },
     4: {
         spritesheetKey: 'character4',
@@ -61,7 +61,7 @@ const characterMap = {
         projectile: '',
         icon: 'burningSlayer',
         idle: 'character4Idle',
-        description: 'Fiery warrior with a burning passion for victory.'
+        description: 'Guardian of the Molten Core. Remarkable attack speed.'
     },
     5: {
         spritesheetKey: 'character5',
@@ -93,7 +93,7 @@ const characterMap = {
         projectile: '',
         icon: 'samuraiMech',
         idle: 'character6Idle',
-        description: 'A swift and deadly warrior. The Samurai Mech strikes twice with each attack. The only unit with a multi-attack.'
+        description: 'Also known as Shogun Mech, The Samurai Mech strikes twice with each attack. The only unit with a multi-attack.'
     },
     7: {
         spritesheetKey: 'character7',
@@ -125,7 +125,7 @@ const characterMap = {
         projectile: 'blueBullet',
         icon: 'protowingedMech',
         idle: 'character8Idle',
-        description: 'The most beautiful unit and controller of the plasma energy.'
+        description: 'Order of Plasma. The most beautiful unit in the game.'
     },
     9: {
         spritesheetKey: 'character9',
@@ -141,7 +141,7 @@ const characterMap = {
         projectile: '',
         icon: 'brutusMech',
         idle: 'character9Idle',
-        description: 'Stay out of his way or be bashed to nothingess.'
+        description: 'Rampage of the battlefield. Stay away from his powerful fists.'
     },
     10: {
         spritesheetKey: 'character10',
@@ -157,7 +157,7 @@ const characterMap = {
         projectile: '',
         icon: 'ravenMech',
         idle: 'character10Idle',
-        description: 'Slim and fast, the Raven Mech is a deadly assassin.'
+        description: 'Shadow of the night. The Raven Mech is a slim and deadly assassin.'
     },
     11: {
         spritesheetKey: 'character11',
@@ -173,7 +173,7 @@ const characterMap = {
         projectile: 'blueBullet',
         icon: 'thunderEpicDragon',
         idle: 'character11Idle',
-        description: 'The strongest character in the game. Unparalleled in speed and power.'
+        description: 'Embodiment of Thunder. The strongest unit in the game. Unparalleled in speed and power.'
     },
     // 12: {
     //     spritesheetKey: 'character12',
