@@ -9,7 +9,7 @@ class Base {
         this.safeDistanceFromPlayer = 500; // not too close to player
         this.minX = 1200; this.maxX = 2800;
         this.minY = 700; this.maxY = 1300;
-        this.totalHealth = Math.round(this.originalHealth * Math.pow(1.2, this.baseLevel - 1));
+        this.totalHealth = Math.round(this.originalHealth * Math.pow(1.35, this.baseLevel - 1));
         this.health = this.totalHealth;
         this.healthBar = null;
         this.isDestroyed = false;
@@ -18,7 +18,8 @@ class Base {
         this.customSquare = null;
         this.enemies = enemies;
         this.isRebuilding = false;
-        this.healthText = null; 
+        this.healthText = null;
+        this.goldValue = 100;
     }
 
     create() {
@@ -212,7 +213,7 @@ class Base {
             let goldY = this.sprite.y + (Math.random() * 100) - 50;
             let gold = this.scene.add.sprite(goldX, goldY, 'gold');
             gold.setScale(0.5);
-            gold.setData('value', 100);
+            gold.setData('value', this.goldValue);
             this.scene.time.delayedCall(1500, () => {
                 this.scene.collectGold(gold);
             }, [], this);
@@ -239,7 +240,7 @@ class Base {
 
     recreateBaseAndEnemies() {
         this.baseLevel++;
-        this.totalHealth = Math.round(this.originalHealth * Math.pow(1.2, this.baseLevel - 1));
+        this.totalHealth = Math.round(this.originalHealth * Math.pow(1.35, this.baseLevel - 1));
 
         this.scene.scene.get('BattleUI').resetBaseRebuildUI();
         const newBaseLocation = this.findSuitableBaseLocation();

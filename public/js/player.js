@@ -39,6 +39,8 @@ class Player {
         this.targetedEnemy = null;
         this.name = character.name;
         this.icon = character.icon;
+        this.isImmuneToStorms = false;
+        this.healPercentage = 0.05;
     }
 
     create() {
@@ -99,7 +101,7 @@ class Player {
         this.detectionField.setStrokeStyle(4, 0xff0000);
 
         this.healTimer = this.scene.time.addEvent({
-            delay: 5000,
+            delay: 4000,
             callback: this.autoHeal,
             callbackScope: this,
             loop: true,
@@ -111,8 +113,7 @@ class Player {
     autoHeal() {
         if (this.currentHealth < this.maxHealth && !this.isDead) {
             // calc heal amount as 5% of max health
-            const healPercentage = 0.05;
-            let healAmount = Math.round(this.maxHealth * healPercentage);
+            let healAmount = Math.round(this.maxHealth * this.healPercentage);
     
             healAmount = Math.min(healAmount, this.maxHealth - this.currentHealth);
     
@@ -124,7 +125,7 @@ class Player {
 
     resetHealTimer() {
         this.healTimer.reset({
-            delay: 5000,
+            delay: 4000,
             callback: this.autoHeal,
             callbackScope: this,
             loop: true
@@ -436,6 +437,9 @@ class Player {
 
     takeDamage(damage, source) {
         if (this.isDead) return;
+        if (this.isImmuneToStorms && source === 'catastrophe') { // legendary item was purchased
+            return;
+        }
         let wasAtFullHealth = this.currentHealth === this.maxHealth;
 
         this.currentHealth -= damage;
@@ -502,8 +506,8 @@ class Player {
         const isAttacking = this.robotSprite.anims.isPlaying && this.robotSprite.anims.currentAnim.key.startsWith('attack');
 
         if (!isMoving && !isAttacking && !this.isDead) {
-            if (time - this.lastActionTime > 5000) { // 5 seconds of inactivity
-                if (time - this.lastAnimationChange > 5000) {
+            if (time - this.lastActionTime > 4000) { // 4 seconds of inactivity
+                if (time - this.lastAnimationChange > 4000) {
                     this.idleAnimationIndex = (this.idleAnimationIndex + 1) % 4;
                     this.robotSprite.play(`idle${this.idleAnimationIndex + 1}`);
                     this.lastAnimationChange = time;

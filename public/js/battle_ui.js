@@ -1,7 +1,7 @@
 class BattleUI extends Phaser.Scene {
     constructor() {
         super({ key: 'BattleUI', active: false });
-        this.gold = 1000;
+        this.gold = 1200;
         this.score = 0;
         this.scoreText = null;
         this.multiplier = 5;
@@ -29,13 +29,27 @@ class BattleUI extends Phaser.Scene {
             "Lightning Core": 0,
             "Mecha Sneakers": 0,
         };
+        this.legendaryPurchaseLimit = 1;
+        this.legendaryPurchaseCount = {
+            "Thunderlord Seal": 0,
+            "Elixir of Life": 0,
+            "Winter Frost": 0,
+            "Treasure Finder": 0,
+            "Forbidden Excalibur": 0,
+            "Soul of the Phoenix": 0,
+            "Cosmic Scimitar": 0,
+        };
         this.purchaseCountText = null;
+        this.legendaryPurchaseCountText = null;
         this.goldTextShop = null;
         this.gameDataSaved = false;
+        this.penknifeBulkBuyButton = null;
+        this.legendaryIcons = [];
     }
 
     resetState() {
         console.log('State resetted');
+        this.gold = 1200;
         this.score = 0;
         this.scoreText = null;
         this.multiplier = 5;
@@ -48,7 +62,6 @@ class BattleUI extends Phaser.Scene {
         this.baseRebuildBarFill = null;
         this.baseRebuilding = false;
         this.isMultiplierPaused = false;
-        this.gold = 1000;
         this.cash = 0;
         this.scrollbarTrack = null;
         this.scrollbarHandle = null;
@@ -64,9 +77,22 @@ class BattleUI extends Phaser.Scene {
             "Lightning Core": 0,
             "Mecha Sneakers": 0,
         };
+        this.legendaryPurchaseLimit = 1;
+        this.legendaryPurchaseCount = {
+            "Thunderlord Seal": 0,
+            "Elixir of Life": 0,
+            "Winter Frost": 0,
+            "Treasure Finder": 0,
+            "Forbidden Excalibur": 0,
+            "Soul of the Phoenix": 0,
+            "Cosmic Scimitar": 0,
+        };
         this.purchaseCountText = null;
+        this.legendaryPurchaseCountText = null;
         this.goldTextShop = null;
         this.gameDataSaved = false;
+        this.penknifeBulkBuyButton = null;
+        this.legendaryIcons = [];
     }
 
     startMultiplierTimer() {
@@ -132,7 +158,7 @@ class BattleUI extends Phaser.Scene {
         this.input.keyboard.on('keydown-L', () => {
             this.toggleCameraLock();
         });
-        
+
         this.createLocationIcon();
         this.input.keyboard.on('keydown-SPACE', () => {
             this.toggleCameraFollow();
@@ -322,7 +348,7 @@ class BattleUI extends Phaser.Scene {
         locationButtonBackground.fillStyle(0x000000, 0.5);
         locationButtonBackground.fillCircle(locationButtonX, locationButtonY, locationButtonRadius);
 
-        this.locationIconGraphics = this.add.graphics({ x: locationButtonX, y: locationButtonY -5 });
+        this.locationIconGraphics = this.add.graphics({ x: locationButtonX, y: locationButtonY - 5 });
         this.drawLocationIcon(this.locationIconGraphics, 0x999999);
 
         this.locationTooltip = this.add.text(locationButtonX, locationButtonY - 25, 'Toggle Camera Follow [SPACE]', {
@@ -556,21 +582,21 @@ class BattleUI extends Phaser.Scene {
         ];
 
         const attackSpeedUpgrades = [
-            { name: "Energy Gun", description: "Increase attack speed by 8%", cost: 660, icon: 'attackSpeed1' },
-            { name: "Quickblade", description: "Increase attack speed by 16%", cost: 1250, icon: 'attackSpeed2' },
+            { name: "Energy Gun", description: "Increase attack speed by 6%", cost: 660, icon: 'attackSpeed1' },
+            { name: "Quickblade", description: "Increase attack speed by 12%", cost: 1250, icon: 'attackSpeed2' },
         ];
 
         const movementSpeedUpgrades = [
-            { name: "Lightning Core", description: "Increase movement speed by 8%", cost: 700, icon: 'moveSpeed1' },
-            { name: "Mecha Sneakers", description: "Increase movement speed by 16%", cost: 1300, icon: 'moveSpeed2' },
+            { name: "Lightning Core", description: "Increase movement speed by 6%", cost: 700, icon: 'moveSpeed1' },
+            { name: "Mecha Sneakers", description: "Increase movement speed by 12%", cost: 1300, icon: 'moveSpeed2' },
         ];
 
         const legendaryUpgrades = [
             { name: "Cash", description: "Exchange 300 Gold for 1 Cash", cost: 300, icon: 'cash' },
-            { name: "Thunderlord Seal", description: "Permanent Immunity to Catastrophe storms", cost: 9999, icon: 'sword1' },
-            { name: "Elixir of Life", description: "Triple passive Heal amount", cost: 9999, icon: 'health2' },
-            { name: "Winter Frost", description: "Enraged enemies move 50% slower", cost: 9999, icon: 'moveSpeed1' },
-            { name: "Treasure Finder", description: "Every Gold is worth 2 times more value", cost: 9999, icon: 'sword1' },
+            { name: "Thunderlord Seal", description: "Permanent Immunity to Catastrophe storms", cost: 7000, icon: 'thunderlordSeal' },
+            { name: "Elixir of Life", description: "Triple passive Heal amount", cost: 5400, icon: 'elixirOfLife' },
+            { name: "Winter Frost", description: "Enraged enemies move 50% slower raged speed", cost: 5600, icon: 'winterFrost' },
+            { name: "Treasure Finder", description: "Every Gold is worth 2 times more value", cost: 4800, icon: 'treasureFinder' },
             { name: "Forbidden Excalibur", description: "Gain Double Damage and Health for the next 5 Bases", cost: 9999, icon: 'sword2' },
             { name: "Soul of the Phoenix", description: "Revive once", cost: 9999, icon: 'attackSpeed2' },
             { name: "Cosmic Scimitar", description: "Gain additional 12% damage and max health for every bases destroyed", cost: 9999, icon: 'sword2' },
@@ -712,7 +738,7 @@ class BattleUI extends Phaser.Scene {
                 wordWrapWidth: itemWidth - 140
             });
 
-            const costText = this.add.text(startX + 60, itemY + itemHeight - 40, upgrade.cost, {
+            const costText = this.add.text(startX + 60, itemY + itemHeight - 50, upgrade.cost, {
                 font: '16px Orbitron',
                 fill: '#FFD700'
             });
@@ -720,14 +746,25 @@ class BattleUI extends Phaser.Scene {
             const buyButton = upgrade.cost === 9999 ? this.add.text(startX + itemWidth - 100, itemY + itemHeight - 40, 'Not for sale', {
                 font: '20px Orbitron',
                 fill: '#FF0000'
-            }).setOrigin(1, 0) : this.add.text(startX + itemWidth - 100, itemY + itemHeight - 40, 'BUY', {
+            }).setOrigin(1, 0) : this.add.text(startX + itemWidth - 40, itemY + itemHeight - 50, 'BUY', {
                 font: '20px Orbitron',
                 fill: '#4CAF50'
             }).setInteractive({ useHandCursor: true }).setOrigin(1, 0)
-                .on('pointerdown', () => this.purchaseUpgrade(upgrade.name, upgrade.cost));
+                .on('pointerdown', () => this.purchaseUpgrade(upgrade.name, upgrade.cost, upgrade.icon));
             this.buyButtons.push({ button: buyButton, cost: upgrade.cost });
 
             this.scrollableContainer.add([itemBg, icon, nameText, descText, costText, buyButton]);
+
+            if (upgrade.name === "Penknife") {
+                this.penknifeBulkBuyButton = this.add.text(startX + itemWidth - 150, itemY + itemHeight - 50, 'BULK BUY', {
+                    font: '20px Orbitron',
+                    fill: '#0000ff'
+                }).setInteractive({ useHandCursor: true }).setOrigin(1, 0)
+                    .on('pointerdown', () => this.bulkPurchasePenknife(upgrade.cost));
+
+                this.scrollableContainer.add(this.penknifeBulkBuyButton);
+            }
+
             if (this.purchaseCounts.hasOwnProperty(upgrade.name)) {
                 // Create purchase count text for special items
                 const purchaseCountText = this.add.text(startX + itemWidth - 20, itemY + 10, `(${this.purchaseCounts[upgrade.name] || 0}/${this.itemPurchaseLimit})`, {
@@ -743,7 +780,23 @@ class BattleUI extends Phaser.Scene {
                     upgradeName: upgrade.name,
                     purchaseCountText: purchaseCountText
                 });
-            } else { // non special items
+            } else if (this.legendaryPurchaseCount.hasOwnProperty(upgrade.name)) {
+                // Create purchase count text for special items
+                const purchaseCountText = this.add.text(startX + itemWidth - 20, itemY + 10, `(${this.legendaryPurchaseCount[upgrade.name] || 0}/${this.legendaryPurchaseLimit})`, {
+                    font: '16px Orbitron',
+                    fill: '#FFD700'
+                }).setOrigin(1, 0);
+
+                this.scrollableContainer.add(purchaseCountText);
+
+                this.buyButtons.push({
+                    button: buyButton,
+                    cost: upgrade.cost,
+                    upgradeName: upgrade.name,
+                    purchaseCountText: purchaseCountText
+                });
+            } 
+            else { // non special items
                 this.buyButtons.push({
                     button: buyButton,
                     cost: upgrade.cost,
@@ -755,6 +808,17 @@ class BattleUI extends Phaser.Scene {
         });
     }
 
+    bulkPurchasePenknife(cost) {
+        const maxPurchases = Math.floor(this.gold / cost);
+        if (maxPurchases > 0) {
+            this.gold -= maxPurchases * cost;
+            this.updateGoldDisplay();
+            this.scene.get('GameScene').player.damage += maxPurchases;
+            this.showPurchaseFeedback(`Bought ${maxPurchases} Penknives! +${maxPurchases} Damage`, '#00ff00');
+        }
+    }
+
+
     toggleShopModal(visible) {
         if (visible === false) {
             this.buyButtons = [];
@@ -762,7 +826,7 @@ class BattleUI extends Phaser.Scene {
         this.shopModalContainer.setVisible(visible); // include all children
     }
 
-    purchaseUpgrade(upgradeName, cost) {
+    purchaseUpgrade(upgradeName, cost, upgradeIcon) {
         // if player is dead, don't allow purchase
         if (this.scene.get('GameScene').player.currentHealth <= 0) {
             this.showPurchaseFeedback("You are dead! You cannot purchase upgrades", '#ff0000');
@@ -776,6 +840,19 @@ class BattleUI extends Phaser.Scene {
                     const item = this.buyButtons.find(item => item.upgradeName === upgradeName);
                     if (item && item.purchaseCountText) {
                         item.purchaseCountText.setText(`(${this.purchaseCounts[upgradeName]}/${this.itemPurchaseLimit})`);
+                    }
+                } else {
+                    this.showPurchaseFeedback(`Limit reached for ${upgradeName}`, '#ff0000');
+                    return;
+                }
+            }
+
+            if (this.legendaryPurchaseCount.hasOwnProperty(upgradeName) && upgradeName !== "Cash") {
+                if (this.legendaryPurchaseCount[upgradeName] < this.legendaryPurchaseLimit) {
+                    this.legendaryPurchaseCount[upgradeName]++;
+                    const item = this.buyButtons.find(item => item.upgradeName === upgradeName);
+                    if (item && item.purchaseCountText) {
+                        item.purchaseCountText.setText(`(${this.legendaryPurchaseCount[upgradeName]}/${this.legendaryPurchaseLimit})`);
                     }
                 } else {
                     this.showPurchaseFeedback(`Limit reached for ${upgradeName}`, '#ff0000');
@@ -804,24 +881,79 @@ class BattleUI extends Phaser.Scene {
                 this.scene.get('GameScene').player.createHealingText(healAmount);
             }
             if (upgradeName === "Energy Gun") {
-                this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.08 * 100) / 100;
+                this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.06 * 100) / 100;
             }
             if (upgradeName === "Quickblade") {
-                this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.16 * 100) / 100;
+                this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.12 * 100) / 100;
             }
             if (upgradeName === "Lightning Core") {
-                this.scene.get('GameScene').player.speed = Math.round(this.scene.get('GameScene').player.speed * 1.08);
+                this.scene.get('GameScene').player.speed = Math.round(this.scene.get('GameScene').player.speed * 1.06);
             }
             if (upgradeName === "Mecha Sneakers") {
-                this.scene.get('GameScene').player.speed = Math.round(this.scene.get('GameScene').player.speed * 1.16);
+                this.scene.get('GameScene').player.speed = Math.round(this.scene.get('GameScene').player.speed * 1.12);
             }
             if (upgradeName === "Cash") {
                 this.cash++;
                 this.updateCashDisplay();
             }
+            if (upgradeName === "Thunderlord Seal") {
+                this.scene.get('GameScene').player.isImmuneToStorms = true;
+            }
+            if (upgradeName === "Elixir of Life") {
+                this.scene.get('GameScene').player.healPercentage *= 3;
+            }
+            if (upgradeName === "Winter Frost") {
+                this.scene.get('GameScene').enemies.forEach(enemy => {
+                    enemy.isWinterFrosted = true;
+                });
+            }
+            if (upgradeName === "Treasure Finder") {
+                this.scene.get('GameScene').enemies.forEach(enemy => {
+                    enemy.goldValue *= 2;
+                });
+                this.scene.get('GameScene').base.goldValue *= 2;
+            }
+            if (upgradeName === "Thunderlord Seal" || upgradeName === "Elixir of Life" || upgradeName === "Winter Frost" || upgradeName === "Treasure Finder" || upgradeName === "Forbidden Excalibur" || upgradeName === "Soul of the Phoenix" || upgradeName === "Cosmic Scimitar") {
+                if (!this.legendaryIcons.some(icon => icon.name === upgradeName)) {
+                    const iconX = this.playerSpeedBonusText.x - 180 + (this.legendaryIcons.length * 50);
+                    const iconY = this.playerSpeedBonusText.y + 60;
+                    const icon = this.add.image(iconX, iconY, upgradeIcon).setScale(0.5).setInteractive({ useHandCursor: true });
+        
+                    icon.on('pointerover', () => {
+                        this.showUpgradeTooltip(upgradeName, iconX, iconY - 30);
+                    }).on('pointerout', () => {
+                        this.hideUpgradeTooltip();
+                    });
+        
+                    // Save icon and its upgrade name for future reference
+                    this.legendaryIcons.push({ name: upgradeName, icon: icon });
+                }
+            }
 
         } else {
             this.showPurchaseFeedback(`You need ${cost - this.gold} more gold`, '#ff0000');
+        }
+    }
+
+    showUpgradeTooltip(upgradeName, x, y) {
+        this.hideUpgradeTooltip(); // Hide existing tooltip if any
+        this.upgradeTooltip = this.add.text(x, y, upgradeName, {
+            font: '18px Orbitron',
+            fill: '#ffffff',
+            backgroundColor: '#000000',
+            padding: {
+                left: 5,
+                right: 5,
+                top: 2,
+                bottom: 2
+            }
+        }).setOrigin(0.5, 1).setDepth(20);
+    }
+
+    hideUpgradeTooltip() {
+        if (this.upgradeTooltip) {
+            this.upgradeTooltip.destroy();
+            this.upgradeTooltip = null;
         }
     }
 
@@ -951,8 +1083,20 @@ class BattleUI extends Phaser.Scene {
                 }
             }
         }
+        if (this.penknifeBulkBuyButton) {
+            const canAffordBulkBuy = this.gold >= 55;
+            this.penknifeBulkBuyButton.setText(canAffordBulkBuy ? 'BULK BUY' : '');
+        }
         this.buyButtons.forEach((item) => {
             if (item.cost === 9999) return;
+            if (this.purchaseCounts.hasOwnProperty(item.upgradeName) && this.purchaseCounts[item.upgradeName] >= this.itemPurchaseLimit) {
+                item.button.setText('Limit reached').setStyle({ fill: '#FF0000' });
+                return;
+            }
+            if (this.legendaryPurchaseCount.hasOwnProperty(item.upgradeName) && this.legendaryPurchaseCount[item.upgradeName] >= this.legendaryPurchaseLimit) {
+                item.button.setText('Limit reached').setStyle({ fill: '#FF0000' });
+                return;
+            }
             if (this.gold >= item.cost) {
                 item.button.setText('BUY').setStyle({ fill: '#4CAF50' });
             } else {

@@ -11,18 +11,20 @@ class Enemy {
         const character = characterMap[this.characterCode];
         this.level = level;
         this.strengthenLevel = 1;
-        const levelMultiplier = 1 + (this.level - 1) * 0.2; // 20% increase per level
-        this.health = Math.round((character.health * levelMultiplier) * 0.5); // player character and enemy character same, the enemy should be weaker
+        const levelMultiplier = 1 + (this.level - 1) * 0.3; // 20% increase per level
+        this.health = Math.round((character.health * levelMultiplier) * 0.75); // player character and enemy character same, the enemy should be weaker
         this.maxHealth = this.health;
         this.isDead = false;
         this.healthBar = null;
         this.speed = character.speed;
-        this.attackSpeed = character.attackSpeed;
+        // this.attackSpeed = character.attackSpeed;
+        this.attackSpeed = Math.round(character.attackSpeed * 0.7 * 100) / 100; // 2.51 * 0.7 = 1.757
         this.attackRange = character.range;
         this.isMoving = false;
         this.moveTween = null;
         this.spritesheetKey = character.spritesheetKey;
-        this.detectionRadius = 200;
+        // this.detectionRadius = 200;
+        this.detectionRadius = this.attackRange * 1.5;
         this.timeOutOfDetection = 0;
         this.detectionBar = null;
         this.isAlert = false;
@@ -32,7 +34,7 @@ class Enemy {
         this.lastActionTime = 0;
         this.isAttacking = false;
         this.attackEvent = null;
-        this.damage = Math.round((character.damage * levelMultiplier) * 0.5);
+        this.damage = Math.round((character.damage * levelMultiplier) * 0.3);
         this.attackRangeRect = null;
         this.attackRangeArc = null;
         this.projectile = character.projectile;
@@ -41,7 +43,7 @@ class Enemy {
         this.inCamp = true;
         this.lastHealTime = 0;
         this.isEnraged = false;
-        this.enrageDuration = 6000;
+        this.enrageDuration = 5000;
         this.enrageStartTime = 0;
         this.player = player;
         this.customSquare = null;
@@ -52,8 +54,15 @@ class Enemy {
         this.base = base;
         this.idleAnimations = [`character${this.characterCode}Idle1`, `character${this.characterCode}Idle2`, `character${this.characterCode}Idle3`, `character${this.characterCode}Idle4`];
         this.timerStarted = false;
-        this.enemyStrengthenInterval = 18000;
+        this.enemyStrengthenInterval = 15000;
         this.attackCount = character.attackCount;
+        this.patrolling = false;
+        this.patrolBounds = { minX: 1000, maxX: 3000, minY: 500, maxY: 1100 };
+        this.nextPatrolTime = 0;
+        this.patrolInterval = 2000; // Change direction every 2000 milliseconds
+        this.destination = { x: this.x, y: this.y };
+        this.isWinterFrosted = false;
+        this.goldValue = 100;
     }
 
     startTimer() {
@@ -67,23 +76,31 @@ class Enemy {
         return Math.max(0, this.strengthenTimer - this.scene.activeGameTime);
     }
 
-
     strengthenEnemies() {
-        const healthIncrease = Math.round(this.maxHealth * 0.25);
-        const damageIncrease = Math.round(this.damage * 0.25);
+        const damageIncrease = Math.round(this.damage * 0.27);
         this.strengthenLevel++;
-        this.maxHealth += healthIncrease;
         this.damage += damageIncrease;
+    
+        // Only increase max health if the enemy is not patrolling
+        if (!this.patrolling) {
+            const healthIncrease = Math.round(this.maxHealth * 0.25);
+            this.maxHealth += healthIncrease;
+            this.createStrengthenedText(damageIncrease, healthIncrease);
+        } else {
+            this.createStrengthenedText(damageIncrease, 0); // Pass 0 for health increase as it remains unchanged
+        }
+    
         this.strengthenTimer = this.scene.activeGameTime + this.enemyStrengthenInterval;
-
-        this.createStrengthenedText(damageIncrease, healthIncrease);
     }
-
+    
     createStrengthenedText(damageIncrease, healthIncrease) {
-        const roundedDamageIncrease = Math.round(damageIncrease);
-        const roundedHealthIncrease = Math.round(healthIncrease);
-
-        const strengthenedText = this.scene.add.text(this.sprite.x, this.sprite.y - 100, `DMG +${roundedDamageIncrease}\nMax HP +${roundedHealthIncrease}`, {
+        let textMessage = `DMG +${Math.round(damageIncrease)}`;
+        // Append health increase text only if there is any health increase
+        if (healthIncrease > 0) {
+            textMessage += `\nMax HP +${Math.round(healthIncrease)}`;
+        }
+    
+        const strengthenedText = this.scene.add.text(this.sprite.x, this.sprite.y - 100, textMessage, {
             font: '24px Orbitron',
             fill: '#0d00ff'
         });
@@ -100,10 +117,10 @@ class Enemy {
             }
         });
     }
+    
 
     create() {
         const character = characterMap[this.characterCode];
-
         this.sprite = this.scene.add.sprite(this.x, this.y, character.idle);
         this.sprite.setOrigin(0.5, 0.5);
         this.sprite.setScale(0.75);
@@ -195,8 +212,7 @@ class Enemy {
         if (this.returningToCamp) return;
 
         // Enemy is immune to catastrophe damage if it has reached camp but not to player damage
-        if (this.inCamp && source === 'catastrophe') return;
-
+        if (this.inCamp && source === 'catastrophe' || this.patrolling && source === 'catastrophe' && !this.hasPlayerBeenDetected) return;
         this.health -= damage;
         this.health = Math.max(this.health, 0);
 
@@ -374,9 +390,9 @@ class Enemy {
                         }
                     } else if (distance > this.attackRange) {
                         this.timeOutOfDetection += Math.round(delta);
-                        const detectionPercentage = 1 - (this.timeOutOfDetection / 4000);
+                        const detectionPercentage = 1 - (this.timeOutOfDetection / 3000);
                         this.updateDetectionBar(Math.max(detectionPercentage, 0));
-                        if (this.timeOutOfDetection >= 4000) {
+                        if (this.timeOutOfDetection >= 3000) {
                             this.isMoving = false;
                             if (this.moveTween) {
                                 this.moveTween.stop();
@@ -532,13 +548,6 @@ class Enemy {
         return distanceToPlayer <= range && angleToPlayer >= startAngle && angleToPlayer <= endAngle;
     }
 
-    playerWithinPursuitRange() { // to fix a rare bug where enemy stops chasing player 
-        const playerPosition = this.attacker.getPosition();
-        const distanceToPlayer = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, playerPosition.x, playerPosition.y);
-        const pursuitRange = this.attackRange + 100;
-        return distanceToPlayer <= pursuitRange;
-    }
-
     getPosition() {
         return {
             x: this.sprite.x,
@@ -647,7 +656,7 @@ class Enemy {
             let goldY = this.sprite.y + (Math.random() * 100) - 50;
             let gold = this.scene.add.sprite(goldX, goldY, 'gold');
             gold.setScale(0.5);
-            gold.setData('value', 100);
+            gold.setData('value', this.goldValue);
             this.scene.time.delayedCall(1500, () => {
                 this.scene.collectGold(gold);
             }, [], this);
@@ -753,7 +762,12 @@ class Enemy {
 
     drawHexagon() {
         this.strengthenedSquare.clear();
-        this.strengthenedSquare.fillStyle('#000', 1); // black, 100% opacity
+        if (this.patrolling) {
+            this.strengthenedSquare.fillStyle(0x228b6c, 1);
+        } else {
+            // forest green
+            this.strengthenedSquare.fillStyle(0x000000, 1);
+        }
 
         // Draw a hexagon
         const radius = 15;
@@ -919,7 +933,7 @@ class Enemy {
         if (!this.isEnraged) {
             this.isEnraged = true;
             this.damage = this.damage * 2;
-            this.speed = this.speed * 2;
+            this.speed = this.isWinterFrosted ? this.speed * 1.5 : this.speed * 2;
             this.enrageStartTime = this.scene.activeGameTime;
 
             this.customSquareContainer.remove(this.customSquare, false);
@@ -948,58 +962,76 @@ class Enemy {
         this.customSquareContainer.addAt(this.customSquare, 0);
     }
 
+    updatePatrol(time, delta) {
+        if (!this.patrolling) return;
+        if (this.isAttacking || this.hasPlayerBeenDetected) return;
+        // Check if it's time to pick a new destination
+        if (time >= this.nextPatrolTime) {
+            const newX = Phaser.Math.Between(this.patrolBounds.minX, this.patrolBounds.maxX);
+            const newY = Phaser.Math.Between(this.patrolBounds.minY, this.patrolBounds.maxY);
+            this.destination = { x: newX, y: newY };
+            this.nextPatrolTime = time + this.patrolInterval;
+    
+            let distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, newX, newY);
+            let duration = (distance / (this.speed * 0.75)) * 1000;
+            const direction = this.determineDirectionToPoint(newX, newY);
+            const movingAnimationKey = `character${this.characterCode}Moving${direction}`;
+
+            if (this.sprite.anims.currentAnim.key !== movingAnimationKey) {
+                this.sprite.play(movingAnimationKey);
+            }
+    
+            if (this.moveTween) this.moveTween.stop();
+            this.moveTween = this.scene.tweens.add({
+                targets: this.sprite,
+                x: newX,
+                y: newY,
+                duration: duration,
+                ease: 'Linear'
+            });
+        }
+    }
+
     update(time, delta) {
         if (this.isDead) return;
-        // this.detectionField.setPosition(this.sprite.x, this.sprite.y);
         this.updateHealthBar();
-
-        const isMoving = this.moveTween && this.moveTween.isPlaying();
-        const isAttacking = this.sprite.anims.isPlaying && this.sprite.anims.currentAnim.key.includes('Attack');
-
-        if (!isMoving && !isAttacking) {
-            // Check if enough time has passed to change the animation
-            if (time - this.lastActionTime > 5000) { // 5 seconds of inactivity
-                const randomIdleAnimation = this.idleAnimations[Math.floor(Math.random() * this.idleAnimations.length)];
-                this.sprite.play(randomIdleAnimation);
-                this.lastActionTime = time;
+        this.updatePatrol(time, delta);
+    
+        if (this.originalCamp) {
+            const distanceFromCamp = Phaser.Math.Distance.Between(
+                this.sprite.x, this.sprite.y,
+                this.originalCamp.x, this.originalCamp.y
+            );
+    
+            if (distanceFromCamp > this.originalCamp.radius) {
+                this.inCamp = false;
+            } else if (!this.isMoving && !this.isAttacking) {
+                this.inCamp = true;
+            } else {
+                this.inCamp = false;
             }
-        } else {
-            this.lastActionTime = time; // Reset the last action time if the enemy is moving or attacking
-        }
-
-        const distanceFromCamp = Phaser.Math.Distance.Between(
-            this.sprite.x, this.sprite.y,
-            this.originalCamp.x, this.originalCamp.y
-        );
-
-        if (distanceFromCamp > this.originalCamp.radius) {
-            this.inCamp = false;
-        } else if (!this.isMoving && !this.isAttacking) {
-            this.inCamp = true;
-        } else {
-            this.inCamp = false;
-        }
-
-        if (this.inCamp && this.health < this.maxHealth) {
-            if (time - this.lastHealTime > 1000) { // Heal every 1 second
-                const healPercentage = 0.05; // 5% of max health per second
-                let healAmount = Math.round(this.maxHealth * healPercentage);
-
-                healAmount = Math.min(healAmount, this.maxHealth - this.health);
-                this.heal(healAmount);
-                this.lastHealTime = time;
+    
+            if (this.inCamp && this.health < this.maxHealth) {
+                if (time - this.lastHealTime > 1000) { // Heal every 1 second
+                    const healPercentage = 0.05; // 5% of max health per second
+                    let healAmount = Math.round(this.maxHealth * healPercentage);
+    
+                    healAmount = Math.min(healAmount, this.maxHealth - this.health);
+                    this.heal(healAmount);
+                    this.lastHealTime = time;
+                }
             }
         }
-
+    
         if (this.isEnraged && time - this.enrageStartTime > this.enrageDuration) {
             this.disenrage();
         }
-
+    
         if (time > this.strengthenTimer) {
             this.strengthenEnemies();
         }
-
     }
+    
 
 }
 

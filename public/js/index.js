@@ -43,9 +43,14 @@ class GameScene extends Phaser.Scene {
         this.messageText.setVisible(false);
 
         this.catastrophe = new Catastrophe(this, this.base.baseLevel);
+        this.catastrophe.drawstormShelter();
 
         this.scene.launch('BattleUI');
         this.enableInputAfterDelay();
+    }
+
+    createPatrollingEnemies() {
+        
     }
 
     createStaticBackground() {
@@ -259,7 +264,6 @@ class GameScene extends Phaser.Scene {
         });
     }
 
-
     createPlayer() {
         this.player = null;
         this.player = new Player(this, 1500, 800, this.characterInUse, this.enemies);
@@ -269,9 +273,12 @@ class GameScene extends Phaser.Scene {
     createEnemy() {
         this.enemies = [];
         const camps = [this.camp1, this.camp2, this.camp3];
+        const enemiesCount = this.base.baseLevel === 1 ? 1 : 3;
+        const patrollerCount = this.base.baseLevel === 1 ? 1 : 2;
 
+        // normal camp enemies
         camps.forEach(camp => {
-            for (let i = 0; i < 3; i++) {
+            for (let i = 0; i < enemiesCount; i++) {
                 const randomPosition = camp.getRandomPositionInRadius();
                 const characterCode = this.selectEnemyCharacterCode();
                 const enemy = new Enemy(this, randomPosition.x, randomPosition.y, characterCode, camp, this.player, this.base.baseLevel, this.base);
@@ -310,6 +317,40 @@ class GameScene extends Phaser.Scene {
 
             }
         });
+
+        // patrolling enemies
+        for (let i = 0; i < patrollerCount; i++) {
+            const basePos = this.base.getPosition();
+            const enemy = new Enemy(this, basePos.x, basePos.y, 1, null, this.player, this.base.baseLevel, this.base);
+            enemy.patrolling = true;
+            enemy.create();
+            this.enemies.push(enemy);
+
+            enemy.sprite.on('pointerover', () => {
+                if (!enemy.isDead) {
+                    setAttackCursor(this);
+                }
+            });
+
+            enemy.sprite.on('pointerout', () => {
+                setDefaultCursor(this);
+            });
+
+            enemy.sprite.on('pointerdown', () => {
+                console.log("Enemy clicked");
+                this.enemyClicked = true;
+                this.player.targetedEnemy = enemy;
+                this.player.isMovingTowardsEnemy = true;
+                if (this.player.targetedEnemy === enemy && this.player.isAttacking) {
+                    return;
+                }
+                this.cancelClick = true;
+                this.player.moveStraight(enemy.sprite.x, enemy.sprite.y, () => {
+                    this.player.playAttackAnimation(enemy);
+                    this.player.continueAttacking = true;
+                });
+            });
+        }
 
         // update this.base.enemies to include updated array of enemies
         this.base.enemies = this.enemies;
@@ -501,7 +542,7 @@ class LoadingScene extends Phaser.Scene {
             "Sometimes enemies can drop Cash. New characters can be purchased with Cash in the main menu.",
             "When enemies die, they drop gold. Destruction of the base drops extra gold. Gold drops are reduced if enemies died as a result of the base being destroyed.",
             "Spend the gold you earned in the Battle Shop to purchase items that make you stronger!",
-            "The blue square on the left of the health bar of enemies represents the stats they inherit from the current base level. The black hexagon on the right of the health bar of enemies represents additional stats they gain after periodic Enemy Strengthenings. Don't take too long to kill them, or they become too strong to kill!",
+            "The Blue Square on the left of the health bar of enemies represents the stats they inherit from the current Base Level. The Black Hexagon on the right of the health bar of enemies represents additional stats they gain after periodic Enemy Strengthenings. Don't take too long to kill them, or they become too strong to kill!",
             "Every few seconds, the player heals back some amount of health based on his Max Health.",
             "Stronger enemies appear on Base level 5 onwards. Beware!",
             "Pay attention to the Catastrophe timer, avoid shopping when the Catastrophe is approaching!",
@@ -513,6 +554,9 @@ class LoadingScene extends Phaser.Scene {
             "Gold and Cash drops are collected automatically, don't worry about picking them up.",
             "Although destroying the base is the main objective, gold drops from enemies are reduced. Think of your strategy!",
             "The game is played best with full screen mode. Press [F11] to toggle full screen.",
+            "The Storm Shelter is a safe zone for players only, marked by a blue circle. Stay inside the circle to avoid Catastrophe damage while shopping.",
+            "Patrolling enemies can be a nuisance if left unchecked. They are also immune to Catastrophe.",
+            "The sole developer of this game would like to thank you for playing! Enjoy the game!",
         ];
         this.background = null;
         this.progressBar = null;
@@ -652,6 +696,7 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('mouse_cursor_attack', 'assets/images/mouse_cursor_attack.png');
         this.load.image('enemy_camp', 'assets/images/enemy_camp1.png');
         this.load.image('enemy_base', 'assets/images/enemy_base1.png');
+        this.load.image('storm_shelter', 'assets/images/storm_shelter.png');
 
         loadDynamicSpriteSheet.call(this, 'character1', 'assets/sprites/character_1.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character2', 'assets/sprites/character_2.png', 4000, 4400);
@@ -666,6 +711,7 @@ class LoadingScene extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'character11', 'assets/sprites/character_11.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character12', 'assets/sprites/character_12.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character13', 'assets/sprites/character_13.png', 4000, 4400);
+        // loadDynamicSpriteSheet.call(this, 'character14', 'assets/sprites/character_14.png', 4000, 4400);
 
         this.load.image('blueBullet', 'assets/projectiles/blue_bullet.png');
         this.load.image('fireball', 'assets/projectiles/fireball.png');
@@ -684,6 +730,10 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('attackSpeed2', 'assets/images/attackSpeed2.png');
         this.load.image('moveSpeed1', 'assets/images/moveSpeed1.png');
         this.load.image('moveSpeed2', 'assets/images/moveSpeed2.png');
+        this.load.image('thunderlordSeal', 'assets/images/thunderlordSeal.png');
+        this.load.image('elixirOfLife', 'assets/images/elixirOfLife.png');
+        this.load.image('winterFrost', 'assets/images/winterFrost.png');
+        this.load.image('treasureFinder', 'assets/images/treasureFinder.png');
 
         this.load.image('darkEtherMessiah', 'assets/images/characterIcons/darkEtherMessiah.png');
         this.load.image('orc', 'assets/images/characterIcons/orc.png');
@@ -697,6 +747,7 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('ravenMech', 'assets/images/characterIcons/ravenMech.png');
         this.load.image('thunderEpicDragon', 'assets/images/characterIcons/thunderEpicDragon.png');
         this.load.image('avengerMech', 'assets/images/characterIcons/avengerMech.png');
+        this.load.image('ninja', 'assets/images/characterIcons/ninja.png');
     }
 }
 
@@ -722,6 +773,7 @@ class Collections extends Phaser.Scene {
         this.load.image('ravenMech', 'assets/images/characterIcons/ravenMech.png');
         this.load.image('thunderEpicDragon', 'assets/images/characterIcons/thunderEpicDragon.png');
         this.load.image('avengerMech', 'assets/images/characterIcons/avengerMech.png');
+        this.load.image('ninja', 'assets/images/characterIcons/ninja.png');
 
         this.load.image('health_icon', 'assets/images/collections/statsIcons/health_icon.png');
         this.load.image('damage_icon', 'assets/images/collections/statsIcons/damage_icon.png');
@@ -741,6 +793,7 @@ class Collections extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'character10Idle', 'assets/images/idleDisplays/character10_idle.png', 2250, 900, 5, 2);
         loadDynamicSpriteSheet.call(this, 'character11Idle', 'assets/images/idleDisplays/character11_idle.png', 2250, 900, 5, 2);
         loadDynamicSpriteSheet.call(this, 'character13Idle', 'assets/images/idleDisplays/character13_idle.png', 2250, 900, 5, 2);
+        // loadDynamicSpriteSheet.call(this, 'character14Idle', 'assets/images/idleDisplays/character14_idle.png', 2250, 900, 5, 2);
     }
 
     init(data) {
@@ -774,12 +827,12 @@ class Collections extends Phaser.Scene {
         // Character list
         const sortedCharacters = Object.entries(characterMap).sort((a, b) => a[1].cost - b[1].cost);
 
-        const squareSize = 180;
-        const startX = 75;
+        const squareSize = 150;
+        const startX = 50;
         let x = startX;
         let y = 230;
-        const padding = 30;
-        const perRow = 4;
+        const padding = 20;
+        const perRow = 5;
 
         sortedCharacters.forEach(([key, character], index) => {
             if (index % perRow === 0 && index !== 0) {
@@ -854,7 +907,7 @@ class Collections extends Phaser.Scene {
     }
 
     handleCharacterSelection(key, character, square) {
-        const squareSize = 180;
+        const squareSize = 150;
         if (this.selectedCharacterKey === key) {
             return;
         }
@@ -1068,12 +1121,12 @@ class Collections extends Phaser.Scene {
             }
         });
 
-        const squareSize = 180;
-        const startX = 75;
+        const squareSize = 150;
+        const startX = 50;
         let x = startX;
         let y = 230;
-        const padding = 30;
-        const perRow = 4;
+        const padding = 20;
+        const perRow = 5;
 
         const sortedCharacters = Object.entries(characterMap).sort((a, b) => a[1].cost - b[1].cost);
 

@@ -15,6 +15,11 @@ class Catastrophe {
         this.damage = Math.round(this.baseDamage * Math.pow(1.2, this.baseLevel - 1));
         this.activeStormEffects = 0;
         this.timerStarted = false;
+        this.stormShelter = {
+            centerX: 2000,
+            centerY: 1400,
+            radius: 100
+        };
     }
     
     startStormTimer() {
@@ -78,20 +83,22 @@ class Catastrophe {
         this.isStorming = false;
         this.fireballTimer = this.scene.activeGameTime + this.stormInterval;
     }
-
+    
     checkDamage(x, y, radius) {
-        // Player damage check (existing logic)
+        // Check for player damage
         let playerPos = this.scene.player.getPosition();
         let distanceToPlayer = Phaser.Math.Distance.Between(x, y, playerPos.x, playerPos.y);
-        if (distanceToPlayer <= radius) { // player within fireball impact zone
+    
+        let distanceTostormShelter = Phaser.Math.Distance.Between(playerPos.x, playerPos.y, this.stormShelter.centerX, this.stormShelter.centerY);
+        if (distanceToPlayer <= radius && distanceTostormShelter > this.stormShelter.radius) {
+            // Player is within fireball impact zone but not in the safe zone
             this.scene.player.takeDamage(this.damage, 'catastrophe');
         }
-
-        // Enemy damage check
+    
         this.scene.enemies.forEach(enemy => {
             let enemyPos = enemy.getPosition();
             let distanceToEnemy = Phaser.Math.Distance.Between(x, y, enemyPos.x, enemyPos.y);
-            if (distanceToEnemy <= radius && !enemy.returningToCamp && !enemy.inCamp) {
+            if (distanceToEnemy <= radius && !enemy.returningToCamp && !enemy.inCamp && !enemy.isRoaming) {
                 enemy.takeDamage(this.damage, 'catastrophe');
             }
         });
@@ -123,6 +130,12 @@ class Catastrophe {
     updateDamage(newBaseLevel) {
         this.damage = Math.round(this.baseDamage * (1 + (newBaseLevel - 1) * 0.2)); // linear increase approach
         this.damage = Math.round(this.baseDamage * Math.pow(1.2, newBaseLevel - 1)); // compounded increase approach using exponential function
+    }
+
+    drawstormShelter() {
+        let circle = this.scene.add.circle(this.stormShelter.centerX, this.stormShelter.centerY, this.stormShelter.radius);
+        circle.setStrokeStyle(4, 0x0000ff, 0.5);
+        let shelter = this.scene.add.sprite(this.stormShelter.centerX, this.stormShelter.centerY, 'storm_shelter').setScale(0.4).setDepth(0);
     }
 
     update(time, delta) {

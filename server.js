@@ -66,7 +66,7 @@ app.get('/get-game-data', (req, res) => {
             console.error(err);
             if (err.code === 'ENOENT') { // if not found, create a new file with initial data
                 const initialData = {
-                    initialCash: 1000,
+                    initialCash: 1200,
                     incomingCash: 0,
                     highestBaseLevel: 0,
                     latestBaseLevel: 0,
@@ -90,7 +90,7 @@ app.get('/get-game-data', (req, res) => {
         else if (Object.keys(JSON.parse(data)).length !== 9) {
             console.log('Game data file is corrupted. Creating a new one...')
             const initialData = {
-                initialCash: 1000,
+                initialCash: 1200,
                 incomingCash: 0,
                 highestBaseLevel: 0,
                 latestBaseLevel: 0,
