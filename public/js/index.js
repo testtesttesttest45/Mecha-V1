@@ -711,7 +711,7 @@ class LoadingScene extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'character11', 'assets/sprites/character_11.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character12', 'assets/sprites/character_12.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character13', 'assets/sprites/character_13.png', 4000, 4400);
-        // loadDynamicSpriteSheet.call(this, 'character14', 'assets/sprites/character_14.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character14', 'assets/sprites/character_14.png', 4000, 4400);
 
         this.load.image('blueBullet', 'assets/projectiles/blue_bullet.png');
         this.load.image('fireball', 'assets/projectiles/fireball.png');
@@ -793,7 +793,7 @@ class Collections extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'character10Idle', 'assets/images/idleDisplays/character10_idle.png', 2250, 900, 5, 2);
         loadDynamicSpriteSheet.call(this, 'character11Idle', 'assets/images/idleDisplays/character11_idle.png', 2250, 900, 5, 2);
         loadDynamicSpriteSheet.call(this, 'character13Idle', 'assets/images/idleDisplays/character13_idle.png', 2250, 900, 5, 2);
-        // loadDynamicSpriteSheet.call(this, 'character14Idle', 'assets/images/idleDisplays/character14_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character14Idle', 'assets/images/idleDisplays/character14_idle.png', 2250, 900, 5, 2);
     }
 
     init(data) {
