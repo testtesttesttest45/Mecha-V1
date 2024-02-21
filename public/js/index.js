@@ -25,6 +25,7 @@ class GameScene extends Phaser.Scene {
         this.isGamePaused = false;
         this.characterInUse = null;
         this.isGameOver = false;
+        this.isWinterFrostActive = false;
     }
 
     create(data) {
@@ -281,7 +282,7 @@ class GameScene extends Phaser.Scene {
             for (let i = 0; i < enemiesCount; i++) {
                 const randomPosition = camp.getRandomPositionInRadius();
                 const characterCode = this.selectEnemyCharacterCode();
-                const enemy = new Enemy(this, randomPosition.x, randomPosition.y, characterCode, camp, this.player, this.base.baseLevel, this.base);
+                const enemy = new Enemy(this, randomPosition.x, randomPosition.y, characterCode, camp, this.player, this.base.baseLevel, this.base, this.isWinterFrostActive);
                 enemy.create();
                 this.enemies.push(enemy);
 

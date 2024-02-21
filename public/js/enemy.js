@@ -1,7 +1,7 @@
 import characterMap from './characters.js';
 
 class Enemy {
-    constructor(scene, x, y, characterCode = 2, originalCamp, player, level = 1, base) {
+    constructor(scene, x, y, characterCode = 2, originalCamp, player, level = 1, base, isWinterFrostActive = false) {
         this.scene = scene;
         this.x = x;
         this.y = y;
@@ -61,7 +61,7 @@ class Enemy {
         this.nextPatrolTime = 0;
         this.patrolInterval = 2000; // Change direction every 2000 milliseconds
         this.destination = { x: this.x, y: this.y };
-        this.isWinterFrosted = false;
+        this.isWinterFrosted = isWinterFrostActive;
         this.goldValue = 100;
     }
 
@@ -933,7 +933,7 @@ class Enemy {
         if (!this.isEnraged) {
             this.isEnraged = true;
             this.damage = this.damage * 2;
-            this.speed = this.isWinterFrosted ? this.speed * 0.9 : this.speed * 2;
+            this.speed = this.isWinterFrosted ? this.speed * 1.4 : this.speed * 2;
             this.enrageStartTime = this.scene.activeGameTime;
 
             this.customSquareContainer.remove(this.customSquare, false);
@@ -948,7 +948,7 @@ class Enemy {
     disenrage() {
         this.isEnraged = false;
         this.damage = Math.round(this.damage / 2);
-        this.speed = this.isWinterFrosted ? this.speed / 0.9 : this.speed / 2;
+        this.speed = this.isWinterFrosted ? this.speed / 1.4 : this.speed / 2;
 
         this.isAlert = true;
         this.timeInAlert = 0;

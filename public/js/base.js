@@ -121,7 +121,6 @@ class Base {
         }
     }
 
-
     takeDamage(damage, player) {
         this.attacker = player; // Store reference to the attacking player
         if (damage >= this.health) {
