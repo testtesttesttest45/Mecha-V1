@@ -16,9 +16,9 @@ class Enemy {
         this.maxHealth = this.health;
         this.isDead = false;
         this.healthBar = null;
-        this.speed = character.speed;
+        this.speed = Math.ceil(character.speed * 0.75);
         // this.attackSpeed = character.attackSpeed;
-        this.attackSpeed = Math.round(character.attackSpeed * 0.7 * 100) / 100; // 2.51 * 0.7 = 1.757
+        this.attackSpeed = Math.round(character.attackSpeed * 0.6 * 100) / 100; // 2.51 * 0.6 = 1.51
         this.attackRange = character.range;
         this.isMoving = false;
         this.moveTween = null;
@@ -948,7 +948,7 @@ class Enemy {
     disenrage() {
         this.isEnraged = false;
         this.damage = Math.round(this.damage / 2);
-        this.speed = Math.round(this.speed / 2);
+        this.speed = this.isWinterFrosted ? this.speed / 1.5 : this.speed / 2;
 
         this.isAlert = true;
         this.timeInAlert = 0;
@@ -973,7 +973,7 @@ class Enemy {
             this.nextPatrolTime = time + this.patrolInterval;
     
             let distance = Phaser.Math.Distance.Between(this.sprite.x, this.sprite.y, newX, newY);
-            let duration = (distance / (this.speed * 0.75)) * 1000;
+            let duration = (distance / (this.speed * 0.65)) * 1000;
             const direction = this.determineDirectionToPoint(newX, newY);
             const movingAnimationKey = `character${this.characterCode}Moving${direction}`;
 
