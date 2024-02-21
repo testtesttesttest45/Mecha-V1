@@ -933,7 +933,7 @@ class Enemy {
         if (!this.isEnraged) {
             this.isEnraged = true;
             this.damage = this.damage * 2;
-            this.speed = this.isWinterFrosted ? this.speed * 1.5 : this.speed * 2;
+            this.speed = this.isWinterFrosted ? this.speed * 0.9 : this.speed * 2;
             this.enrageStartTime = this.scene.activeGameTime;
 
             this.customSquareContainer.remove(this.customSquare, false);
@@ -948,7 +948,7 @@ class Enemy {
     disenrage() {
         this.isEnraged = false;
         this.damage = Math.round(this.damage / 2);
-        this.speed = this.isWinterFrosted ? this.speed / 1.5 : this.speed / 2;
+        this.speed = this.isWinterFrosted ? this.speed / 0.9 : this.speed / 2;
 
         this.isAlert = true;
         this.timeInAlert = 0;

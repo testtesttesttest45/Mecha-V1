@@ -1,7 +1,7 @@
 class BattleUI extends Phaser.Scene {
     constructor() {
         super({ key: 'BattleUI', active: false });
-        this.gold = 1200;
+        this.gold = 120000;
         this.score = 0;
         this.scoreText = null;
         this.multiplier = 5;
@@ -34,7 +34,7 @@ class BattleUI extends Phaser.Scene {
             "Thunderlord Seal": 0,
             "Elixir of Life": 0,
             "Winter Frost": 0,
-            "Treasure Finder": 0,
+            "Treasure Hunter": 0,
             "Forbidden Excalibur": 0,
             "Soul of the Phoenix": 0,
             "Cosmic Scimitar": 0,
@@ -82,7 +82,7 @@ class BattleUI extends Phaser.Scene {
             "Thunderlord Seal": 0,
             "Elixir of Life": 0,
             "Winter Frost": 0,
-            "Treasure Finder": 0,
+            "Treasure Hunter": 0,
             "Forbidden Excalibur": 0,
             "Soul of the Phoenix": 0,
             "Cosmic Scimitar": 0,
@@ -595,8 +595,8 @@ class BattleUI extends Phaser.Scene {
             { name: "Cash", description: "Exchange 300 Gold for 1 Cash", cost: 300, icon: 'cash' },
             { name: "Thunderlord Seal", description: "Permanent Immunity to Catastrophe storms", cost: 7000, icon: 'thunderlordSeal' },
             { name: "Elixir of Life", description: "Triple passive Heal amount", cost: 5400, icon: 'elixirOfLife' },
-            { name: "Winter Frost", description: "Enraged enemies move 50% slower raged speed", cost: 5600, icon: 'winterFrost' },
-            { name: "Treasure Finder", description: "Every Gold is worth 2 times more value", cost: 4800, icon: 'treasureFinder' },
+            { name: "Winter Frost", description: "Enraged enemies gain 0.9x original movement speed instead of 2x", cost: 5600, icon: 'winterFrost' },
+            { name: "Treasure Hunter", description: "Every Gold is worth 2 times more value", cost: 4800, icon: 'treasureFinder' },
             { name: "Forbidden Excalibur", description: "Gain Double Damage and Health for the next 5 Bases", cost: 9999, icon: 'sword2' },
             { name: "Soul of the Phoenix", description: "Revive once", cost: 9999, icon: 'attackSpeed2' },
             { name: "Cosmic Scimitar", description: "Gain additional 12% damage and max health for every bases destroyed", cost: 9999, icon: 'sword2' },
@@ -907,13 +907,13 @@ class BattleUI extends Phaser.Scene {
                     enemy.isWinterFrosted = true;
                 });
             }
-            if (upgradeName === "Treasure Finder") {
+            if (upgradeName === "Treasure Hunter") {
                 this.scene.get('GameScene').enemies.forEach(enemy => {
                     enemy.goldValue *= 2;
                 });
                 this.scene.get('GameScene').base.goldValue *= 2;
             }
-            if (upgradeName === "Thunderlord Seal" || upgradeName === "Elixir of Life" || upgradeName === "Winter Frost" || upgradeName === "Treasure Finder" || upgradeName === "Forbidden Excalibur" || upgradeName === "Soul of the Phoenix" || upgradeName === "Cosmic Scimitar") {
+            if (upgradeName === "Thunderlord Seal" || upgradeName === "Elixir of Life" || upgradeName === "Winter Frost" || upgradeName === "Treasure Hunter" || upgradeName === "Forbidden Excalibur" || upgradeName === "Soul of the Phoenix" || upgradeName === "Cosmic Scimitar") {
                 if (!this.legendaryIcons.some(icon => icon.name === upgradeName)) {
                     const iconX = this.playerSpeedBonusText.x - 180 + (this.legendaryIcons.length * 50);
                     const iconY = this.playerSpeedBonusText.y + 60;
