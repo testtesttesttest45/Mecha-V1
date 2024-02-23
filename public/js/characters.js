@@ -167,7 +167,7 @@ const characterMap = {
         range: 300,
         speed: 500,
         damage: 95,
-        health: 400,
+        health: 476,
         attackSpeed: 1.77,
         attackCount: 1,
         projectile: 'blueBullet',
@@ -218,6 +218,22 @@ const characterMap = {
         icon: 'ninja',
         idle: 'character14Idle',
         description: 'His name is Hayabusa. The greatest ninja of all time.'
+    },
+    15: {
+        spritesheetKey: 'character15',
+        name: 'Spartan Warrior Mech',
+        cost: 1200,
+        tier: 'hard',
+        range: 284,
+        speed: 254,
+        damage: 75,
+        health: 469,
+        attackSpeed: 1.48,
+        attackCount: 1,
+        projectile: '',
+        icon: 'spartanWarriorMech',
+        idle: 'character15Idle',
+        description: 'Legendary god warrior who some believe can slay even the terrifying Thunder Epic Dragon.'
     },
 };
 

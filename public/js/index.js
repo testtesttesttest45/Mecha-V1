@@ -708,6 +708,7 @@ class LoadingScene extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'character12', 'assets/sprites/character_12.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character13', 'assets/sprites/character_13.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character14', 'assets/sprites/character_14.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character15', 'assets/sprites/character_15.png', 4000, 4400);
 
         this.load.image('blueBullet', 'assets/projectiles/blue_bullet.png');
         this.load.image('fireball', 'assets/projectiles/fireball.png');
@@ -744,6 +745,7 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('thunderEpicDragon', 'assets/images/characterIcons/thunderEpicDragon.png');
         this.load.image('avengerMech', 'assets/images/characterIcons/avengerMech.png');
         this.load.image('ninja', 'assets/images/characterIcons/ninja.png');
+        this.load.image('spartanWarriorMech', 'assets/images/characterIcons/spartanWarriorMech.png');
     }
 }
 
@@ -770,6 +772,7 @@ class Collections extends Phaser.Scene {
         this.load.image('thunderEpicDragon', 'assets/images/characterIcons/thunderEpicDragon.png');
         this.load.image('avengerMech', 'assets/images/characterIcons/avengerMech.png');
         this.load.image('ninja', 'assets/images/characterIcons/ninja.png');
+        this.load.image('spartanWarriorMech', 'assets/images/characterIcons/spartanWarriorMech.png');
 
         this.load.image('health_icon', 'assets/images/collections/statsIcons/health_icon.png');
         this.load.image('damage_icon', 'assets/images/collections/statsIcons/damage_icon.png');
@@ -790,6 +793,7 @@ class Collections extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'character11Idle', 'assets/images/idleDisplays/character11_idle.png', 2250, 900, 5, 2);
         loadDynamicSpriteSheet.call(this, 'character13Idle', 'assets/images/idleDisplays/character13_idle.png', 2250, 900, 5, 2);
         loadDynamicSpriteSheet.call(this, 'character14Idle', 'assets/images/idleDisplays/character14_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character15Idle', 'assets/images/idleDisplays/character15_idle.png', 2250, 900, 5, 2);
     }
 
     init(data) {
