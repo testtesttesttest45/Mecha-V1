@@ -1,7 +1,7 @@
 class BattleUI extends Phaser.Scene {
     constructor() {
         super({ key: 'BattleUI', active: false });
-        this.gold = 150000;
+        this.gold = 1750;
         this.score = 0;
         this.scoreText = null;
         this.multiplier = 5;
@@ -49,7 +49,7 @@ class BattleUI extends Phaser.Scene {
 
     resetState() {
         console.log('State resetted');
-        this.gold = 1500;
+        this.gold = 1750;
         this.score = 0;
         this.scoreText = null;
         this.multiplier = 5;
