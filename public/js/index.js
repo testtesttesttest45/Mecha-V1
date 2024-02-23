@@ -26,6 +26,7 @@ class GameScene extends Phaser.Scene {
         this.characterInUse = null;
         this.isGameOver = false;
         this.isWinterFrostActive = false;
+        this.isTreasureHunterActive = false;
     }
 
     create(data) {
@@ -48,10 +49,6 @@ class GameScene extends Phaser.Scene {
 
         this.scene.launch('BattleUI');
         this.enableInputAfterDelay();
-    }
-
-    createPatrollingEnemies() {
-        
     }
 
     createStaticBackground() {
@@ -282,7 +279,7 @@ class GameScene extends Phaser.Scene {
             for (let i = 0; i < enemiesCount; i++) {
                 const randomPosition = camp.getRandomPositionInRadius();
                 const characterCode = this.selectEnemyCharacterCode();
-                const enemy = new Enemy(this, randomPosition.x, randomPosition.y, characterCode, camp, this.player, this.base.baseLevel, this.base, this.isWinterFrostActive);
+                const enemy = new Enemy(this, randomPosition.x, randomPosition.y, characterCode, camp, this.player, this.base.baseLevel, this.base, this.isWinterFrostActive, this.isTreasureHunterActive);
                 enemy.create();
                 this.enemies.push(enemy);
 
@@ -314,15 +311,13 @@ class GameScene extends Phaser.Scene {
                     });
                 });
 
-
-
             }
         });
 
         // patrolling enemies
         for (let i = 0; i < patrollerCount; i++) {
             const basePos = this.base.getPosition();
-            const enemy = new Enemy(this, basePos.x, basePos.y, 1, null, this.player, this.base.baseLevel, this.base);
+            const enemy = new Enemy(this, basePos.x, basePos.y, 1, null, this.player, this.base.baseLevel, this.base, this.isWinterFrostActive, this.isTreasureHunterActive);
             enemy.patrolling = true;
             enemy.create();
             this.enemies.push(enemy);

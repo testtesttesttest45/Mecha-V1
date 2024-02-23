@@ -1,7 +1,7 @@
 class BattleUI extends Phaser.Scene {
     constructor() {
         super({ key: 'BattleUI', active: false });
-        this.gold = 1500;
+        this.gold = 150000;
         this.score = 0;
         this.scoreText = null;
         this.multiplier = 5;
@@ -913,6 +913,7 @@ class BattleUI extends Phaser.Scene {
                     enemy.goldValue *= 2;
                 });
                 this.scene.get('GameScene').base.goldValue *= 2;
+                this.scene.get('GameScene').isTreasureHunterActive = true;
             }
             if (upgradeName === "Thunderlord Seal" || upgradeName === "Elixir of Life" || upgradeName === "Winter Frost" || upgradeName === "Treasure Hunter" || upgradeName === "Forbidden Excalibur" || upgradeName === "Soul of the Phoenix" || upgradeName === "Cosmic Scimitar") {
                 if (!this.legendaryIcons.some(icon => icon.name === upgradeName)) {

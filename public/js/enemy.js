@@ -1,7 +1,7 @@
 import characterMap from './characters.js';
 
 class Enemy {
-    constructor(scene, x, y, characterCode = 2, originalCamp, player, level = 1, base, isWinterFrostActive = false) {
+    constructor(scene, x, y, characterCode = 2, originalCamp, player, level = 1, base, isWinterFrostActive = false, isTreasureHunterActive = false) {
         this.scene = scene;
         this.x = x;
         this.y = y;
@@ -63,6 +63,7 @@ class Enemy {
         this.destination = { x: this.x, y: this.y };
         this.isWinterFrosted = isWinterFrostActive;
         this.goldValue = 100;
+        this.isTreasureHunted = isTreasureHunterActive;
     }
 
     startTimer() {
@@ -656,7 +657,8 @@ class Enemy {
             let goldY = this.sprite.y + (Math.random() * 100) - 50;
             let gold = this.scene.add.sprite(goldX, goldY, 'gold');
             gold.setScale(0.5);
-            gold.setData('value', this.goldValue);
+            // gold.setData('value', this.goldValue);
+            gold.setData('value', this.isTreasureHunted ? this.goldValue * 2 : this.goldValue);
             this.scene.time.delayedCall(1500, () => {
                 this.scene.collectGold(gold);
             }, [], this);
