@@ -763,27 +763,35 @@ class Enemy {
     }
 
     drawHexagon() {
+        const immuneToStorm = this.inCamp || this.returningToCamp || (this.patrolling && !this.hasPlayerBeenDetected);
+    
         this.strengthenedSquare.clear();
         if (this.patrolling) {
             this.strengthenedSquare.fillStyle(0x228b6c, 1);
         } else {
-            // forest green
             this.strengthenedSquare.fillStyle(0x000000, 1);
         }
-
-        // Draw a hexagon
+    
+        if (immuneToStorm) {
+            this.strengthenedSquare.lineStyle(3, 0xffffff, 1);
+        }
+    
         const radius = 15;
         this.strengthenedSquare.beginPath();
         for (let i = 0; i < 6; i++) {
-            // calculate vertex positions
-            const x = radius * Math.cos(2 * Math.PI * i / 6 - Math.PI / 2);
-            const y = radius * Math.sin(2 * Math.PI * i / 6 - Math.PI / 2);
+            const x = radius * Math.cos(2 * Math.PI * i / 6);
+            const y = radius * Math.sin(2 * Math.PI * i / 6);
             if (i === 0) this.strengthenedSquare.moveTo(x, y);
             else this.strengthenedSquare.lineTo(x, y);
         }
         this.strengthenedSquare.closePath();
         this.strengthenedSquare.fill();
+    
+        if (immuneToStorm) {
+            this.strengthenedSquare.strokePath();
+        }
     }
+    
 
     updateHealthBar() {
         if (this.isDead) return;
@@ -996,9 +1004,17 @@ class Enemy {
 
     update(time, delta) {
         if (this.isDead) return;
+    
         this.updateHealthBar();
         this.updatePatrol(time, delta);
+        
+        const wasImmuneToStorm = this.immuneToStorm;
+        this.immuneToStorm = this.inCamp || (this.patrolling && !this.hasPlayerBeenDetected) || this.returningToCamp;
     
+        if (this.immuneToStorm !== wasImmuneToStorm) {
+            this.drawHexagon();
+        }
+        
         if (this.originalCamp) {
             const distanceFromCamp = Phaser.Math.Distance.Between(
                 this.sprite.x, this.sprite.y,
