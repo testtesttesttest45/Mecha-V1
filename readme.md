@@ -4,6 +4,9 @@ A highscore-based game played on the web made by Javascript. Defeat as many enem
 
 **Game accessible on:** [https://mecha-v1.onrender.com/](https://mecha-v1.onrender.com/)
 
+### Demo
+A demo of the application is available on YouTube <a href="https://youtu.be/JSREUl9q_6A" target="_blank">here</a>.
+
 ## Main Menu
 - Displays the character you will be using, with animation.
 - Consist of the Play button which starts the game, the Collections button which starts the Collections scene to display characters.
