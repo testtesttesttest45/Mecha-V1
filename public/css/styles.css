@@ -293,3 +293,55 @@ img.centered {
     font-size: 1vw;
     cursor: default;
 }
+
+#promo-code-container {
+    margin-top: 2vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1vw;
+}
+
+#promo-code-input {
+    padding: 0.5vw 1vw;
+    font-size: 1vw;
+    border: 2px solid #00f3ff;
+    background-color: #082032;
+    color: #00f3ff;
+    border-radius: 0.5vw;
+    outline: none;
+    font-family: 'Orbitron', sans-serif;
+    width: 60%;
+}
+
+#promo-code-input::placeholder {
+    color: #00f3ff;
+    opacity: 0.7;
+}
+
+#promo-code-input:focus {
+    border-color: #ff4563;
+}
+
+#promo-code-submit {
+    padding: 0.5vw 2vw;
+    font-size: 1vw;
+    border: none;
+    border-radius: 0.5vw;
+    background-color: #00f3ff;
+    color: #082032;
+    cursor: pointer;
+    font-family: 'Orbitron', sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+#promo-code-submit:hover {
+    background-color: #ff4563;
+    color: #FFFFFF;
+}
+
+#promo-code-submit:disabled {
+    background-color: #555555;
+    cursor: not-allowed;
+}
+

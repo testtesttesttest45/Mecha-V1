@@ -553,6 +553,7 @@ class LoadingScene extends Phaser.Scene {
             "The Storm Shelter is a safe zone for players only, marked by a blue circle. Stay inside the circle to avoid Catastrophe damage while shopping.",
             "Patrolling enemies can be a nuisance if left unchecked. They are also immune to Catastrophe.",
             "The sole developer of this game would like to thank you for playing! Enjoy the game!",
+            "Here's a reward for reading this: The promo code is [abc123] Enter it in the Main Menu settings to claim your reward!"
         ];
         this.background = null;
         this.progressBar = null;
@@ -1191,6 +1192,8 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const collectionsScene = document.getElementById('collections-scene');
     const playButton = document.querySelector('.play-button');
     const collectionsButton = document.querySelector('.collections-button');
+    const promoCodeInput = document.getElementById('promo-code-input');
+    const promoCodeSubmitButton = document.getElementById('promo-code-submit');
     let game;
 
     function startGame() {
@@ -1249,7 +1252,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
             { threshold: 30000, divisions: 10000, name: 'GOLD', image: '/assets/images/ranks/rank_gold.png' },
             { threshold: 40000, divisions: 10000, name: 'PLATINUM', image: '/assets/images/ranks/rank_platinum.png' },
             { threshold: 50000, divisions: 10000, name: 'EMERALD', image: '/assets/images/ranks/rank_emerald.png' },
-            { threshold: 60000, name: 'DIAMOND', image: '/assets/images/ranks/rank_diamond.png' },
+            { threshold: 60000, divisions: 10000, name: 'DIAMOND', image: '/assets/images/ranks/rank_diamond.png' },
             { threshold: 70000, name: 'MASTER', image: '/assets/images/ranks/rank_master.png' },
             { threshold: 80000, name: 'GRANDMASTER', image: '/assets/images/ranks/rank_grandmaster.png' },
             { threshold: 90000, name: 'CHALLENGER', image: '/assets/images/ranks/rank_challenger.png' },
@@ -1285,9 +1288,12 @@ document.addEventListener('DOMContentLoaded', (event) => {
         fetch('/get-game-data')
             .then(response => response.json())
             .then(data => {
-                const { highestScore, incomingCash, initialCash, highestBaseLevel, characterInUse, newHighest } = data;
+                const { highestScore, incomingCash, initialCash, highestBaseLevel, characterInUse, newHighest, bonusClaimed } = data;
                 updateCharacterDisplay(characterInUse);
                 displayHighestScore(highestScore, incomingCash, initialCash, highestBaseLevel, newHighest);
+                if (bonusClaimed) {
+                    disablePromoCodeSubmission();
+                }
             })
             .catch(error => console.error('Error fetching saves:', error));
     };
@@ -1365,6 +1371,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
                         console.log('Game progress reset successfully');
                         modal.style.display = 'none';
                         window.fetchHighestScore();
+                        enablePromoCodeSubmission();
                     } else {
                         console.error('Failed to reset game progress');
                     }
@@ -1372,6 +1379,41 @@ document.addEventListener('DOMContentLoaded', (event) => {
                 .catch(error => console.error('Error:', error));
         }
     });
+
+    function disablePromoCodeSubmission() {
+        promoCodeInput.disabled = true;
+        promoCodeSubmitButton.disabled = true;
+        promoCodeSubmitButton.textContent = 'Bonus already claimed!';
+    }
+
+    function enablePromoCodeSubmission() {
+        promoCodeInput.disabled = false;
+        promoCodeSubmitButton.disabled = false;
+        promoCodeSubmitButton.textContent = 'Claim Bonus';
+        promoCodeInput.value = '';
+    }
+    
+
+    promoCodeSubmitButton.addEventListener('click', () => {
+        const promoCode = promoCodeInput.value;
+        fetch('/claim-promo-code', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ promoCode: promoCode }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+            if (data.message.includes('successfully')) {
+                disablePromoCodeSubmission();
+                window.fetchHighestScore();
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    });
+    
 });
 
 // set animation interval at a higher scope. then, ensure only 1 interval is running at a time. if the interval is already running, clear it and set it to null. if it's null, set it to a new interval.

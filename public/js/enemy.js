@@ -34,7 +34,7 @@ class Enemy {
         this.lastActionTime = 0;
         this.isAttacking = false;
         this.attackEvent = null;
-        this.damage = Math.round((character.damage * levelMultiplier) * 0.3);
+        this.damage = Math.ceil((character.damage * levelMultiplier) * 0.3);
         this.attackRangeRect = null;
         this.attackRangeArc = null;
         this.projectile = character.projectile;
@@ -78,7 +78,7 @@ class Enemy {
     }
 
     strengthenEnemies() {
-        const damageIncrease = Math.round(this.damage * 0.27);
+        const damageIncrease = Math.ceil(this.damage * 0.27);
         this.strengthenLevel++;
         this.damage += damageIncrease;
     

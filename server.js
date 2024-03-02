@@ -27,6 +27,7 @@ app.post('/save-game', (req, res) => {
             // If 'charactersOwned' does not exist, initialize as an empty array
             const charactersOwned = existingData.charactersOwned || [1]; // Character 1 owned by default
             const characterInUse = existingData.characterInUse || 1;
+            const bonusClaimed = existingData.bonusClaimed || false;
             saveData = {
                 initialCash: updatedInitialCash,
                 incomingCash: incomingCash,
@@ -36,7 +37,8 @@ app.post('/save-game', (req, res) => {
                 newHighest: false,
                 latestScore: score,
                 charactersOwned: charactersOwned,
-                characterInUse: characterInUse 
+                characterInUse: characterInUse,
+                bonusClaimed: bonusClaimed,
             };
 
             if (score > saveData.highestScore) {
@@ -74,7 +76,8 @@ app.get('/get-game-data', (req, res) => {
                     newHighest: false,
                     latestScore: 0,
                     charactersOwned: [1, 10], // Character 1 owned by default
-                    characterInUse: 1
+                    characterInUse: 1,
+                    bonusClaimed: false
                 };
                 fs.writeFile(saveFilePath, JSON.stringify(initialData, null, 2), 'utf8', (writeErr) => {
                     if (writeErr) {
@@ -87,7 +90,7 @@ app.get('/get-game-data', (req, res) => {
                 return res.status(500).json({ message: 'Error reading game data' });
             }
         }
-        else if (Object.keys(JSON.parse(data)).length !== 9) {
+        else if (Object.keys(JSON.parse(data)).length !== 10) {
             console.log('Game data file is corrupted. Creating a new one...')
             const initialData = {
                 initialCash: 750,
@@ -98,7 +101,8 @@ app.get('/get-game-data', (req, res) => {
                 newHighest: false,
                 latestScore: 0,
                 charactersOwned: [1, 10], // Character 1 owned by default
-                characterInUse: 1
+                characterInUse: 1,
+                bonusClaimed: false
             };
             fs.writeFile(saveFilePath, JSON.stringify(initialData, null, 2), 'utf8', (writeErr) => {
                 if (writeErr) {
@@ -193,6 +197,43 @@ app.delete('/reset-game', (req, res) => {
         res.json({ message: 'Save file deleted successfully' });
     });
 });
+
+app.post('/claim-promo-code', (req, res) => {
+    const { promoCode } = req.body;
+    const saveFilePath = path.join(__dirname, 'save_file.json');
+
+    if (!promoCode) {
+        return res.status(400).json({ message: 'No promo code provided' });
+    }
+
+    fs.readFile(saveFilePath, (err, data) => {
+        if (err) {
+            console.error('Error reading save file:', err);
+            return res.status(500).json({ message: 'Error reading game data' });
+        }
+
+        const gameData = JSON.parse(data);
+
+        // Check if the promo code is correct and hasn't been claimed yet
+        if (promoCode.toLowerCase() === 'abc123' && !gameData.bonusClaimed) {
+            gameData.incomingCash += 5000;
+            gameData.bonusClaimed = true;
+
+            fs.writeFile(saveFilePath, JSON.stringify(gameData, null, 2), 'utf8', (writeErr) => {
+                if (writeErr) {
+                    console.error('Error writing save file:', writeErr);
+                    return res.status(500).json({ message: 'Error saving game data' });
+                }
+                res.json({ message: 'Promo code successfully claimed', gameData });
+            });
+        } else if (gameData.bonusClaimed) {
+            res.status(400).json({ message: 'Promo code has already been claimed' });
+        } else {
+            res.status(400).json({ message: 'Invalid promo code' });
+        }
+    });
+});
+
 
 
 app.listen(PORT, () => {
