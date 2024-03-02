@@ -1100,6 +1100,7 @@ class Collections extends Phaser.Scene {
                         this.updateActionButtonState(character);
                         this.refreshCharacterList();
                         this.createPurchaseReceipt('success', character, character.cost);
+                        window.fetchHighestScore();
                     })
                     .catch(error => {
                         console.error('Error purchasing character:', error.message);
@@ -1389,11 +1390,10 @@ document.addEventListener('DOMContentLoaded', (event) => {
     function enablePromoCodeSubmission() {
         promoCodeInput.disabled = false;
         promoCodeSubmitButton.disabled = false;
-        promoCodeSubmitButton.textContent = 'Claim Bonus';
+        promoCodeSubmitButton.textContent = 'Claim Bonus Cash!';
         promoCodeInput.value = '';
     }
     
-
     promoCodeSubmitButton.addEventListener('click', () => {
         const promoCode = promoCodeInput.value;
         fetch('/claim-promo-code', {

@@ -68,7 +68,7 @@ app.get('/get-game-data', (req, res) => {
             console.error(err);
             if (err.code === 'ENOENT') { // if not found, create a new file with initial data
                 const initialData = {
-                    initialCash: 750,
+                    initialCash: 450,
                     incomingCash: 0,
                     highestBaseLevel: 0,
                     latestBaseLevel: 0,
@@ -93,7 +93,7 @@ app.get('/get-game-data', (req, res) => {
         else if (Object.keys(JSON.parse(data)).length !== 10) {
             console.log('Game data file is corrupted. Creating a new one...')
             const initialData = {
-                initialCash: 750,
+                initialCash: 450,
                 incomingCash: 0,
                 highestBaseLevel: 0,
                 latestBaseLevel: 0,
@@ -224,7 +224,7 @@ app.post('/claim-promo-code', (req, res) => {
                     console.error('Error writing save file:', writeErr);
                     return res.status(500).json({ message: 'Error saving game data' });
                 }
-                res.json({ message: 'Promo code successfully claimed', gameData });
+                res.json({ message: 'You have successfully claimed 5000 Cash!', gameData });
             });
         } else if (gameData.bonusClaimed) {
             res.status(400).json({ message: 'Promo code has already been claimed' });
