@@ -1,0 +1,15 @@
+{
+  "initialCash": 450,
+  "incomingCash": 1,
+  "latestBaseLevel": 14,
+  "highestBaseLevel": 8,
+  "highestScore": 69999,
+  "newHighest": true,
+  "latestScore": 69999,
+  "charactersOwned": [
+    1,
+    10
+  ],
+  "characterInUse": 10,
+  "bonusClaimed": false
+}
