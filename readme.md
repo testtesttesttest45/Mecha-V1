@@ -2,6 +2,7 @@
 
 - A highscore-based game played on the web made by Javascript. Defeat as many enemies as you can, destroy their base, watch out for catastrophe storms, spend your gold in the shop. Strategy is key! The most challenging and fun project I've ever done!
 - Project started on 9 September 2023 and completed on 24 February 2024.
+- **Note that the game is deployed on Render for free, thus there might be slow loading due to server taking time to wake up.**
 
 **Game accessible on:** [https://mecha-v1.onrender.com/](https://mecha-v1.onrender.com/)
 
