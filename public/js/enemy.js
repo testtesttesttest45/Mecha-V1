@@ -651,7 +651,7 @@ class Enemy {
     }
 
     dropGold(causedByBaseDestruction) {
-        const goldPieces = causedByBaseDestruction ? 2 : 4;
+        const goldPieces = causedByBaseDestruction ? 1: 2;
         for (let i = 0; i < goldPieces; i++) {
             let goldX = this.sprite.x + (Math.random() * 100) - 50; // random between -50 and 50
             let goldY = this.sprite.y + (Math.random() * 100) - 50;
