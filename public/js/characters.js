@@ -87,7 +87,7 @@ const characterMap = {
         range: 250,
         speed: 270,
         damage: 41,
-        health: 386,
+        health: 400,
         attackSpeed: 1.05,
         attackCount: 2,
         projectile: '',
