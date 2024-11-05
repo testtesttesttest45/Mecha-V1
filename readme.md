@@ -7,7 +7,9 @@
 **Game accessible on:** [https://mecha-v1.onrender.com/](https://mecha-v1.onrender.com/)
 
 ### Demo
-A demo of the application is available on YouTube <a href="https://youtu.be/JSREUl9q_6A" target="_blank">here</a>.
+A demo of the application is available on YouTube <a href="https://youtu.be/eOFEbtH1hJ4" target="_blank">here</a>.
+
+### Documentation attached <a href="https://drive.google.com/file/d/1ChXDNNHaxv-9ZKOAjJ5OQJeoJewqsEVW/view?usp=drive_link" target="_blank">here</a>.
 
 ## Main Menu
 - Displays the character you will be using, with animation.

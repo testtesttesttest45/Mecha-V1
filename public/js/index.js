@@ -1393,7 +1393,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
         promoCodeSubmitButton.textContent = 'Claim Bonus Cash!';
         promoCodeInput.value = '';
     }
-    
+
     promoCodeSubmitButton.addEventListener('click', () => {
         const promoCode = promoCodeInput.value;
         fetch('/claim-promo-code', {
@@ -1403,17 +1403,17 @@ document.addEventListener('DOMContentLoaded', (event) => {
             },
             body: JSON.stringify({ promoCode: promoCode }),
         })
-        .then(response => response.json())
-        .then(data => {
-            alert(data.message);
-            if (data.message.includes('successfully')) {
-                disablePromoCodeSubmission();
-                window.fetchHighestScore();
-            }
-        })
-        .catch(error => console.error('Error:', error));
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+                if (data.message.includes('successfully')) {
+                    disablePromoCodeSubmission();
+                    window.fetchHighestScore();
+                }
+            })
+            .catch(error => console.error('Error:', error));
     });
-    
+
 });
 
 // set animation interval at a higher scope. then, ensure only 1 interval is running at a time. if the interval is already running, clear it and set it to null. if it's null, set it to a new interval.
@@ -1448,4 +1448,86 @@ function updateCharacterDisplay(characterInUse) {
     }
 
     animationInterval = setInterval(animate, 100);
+
+    const guideButton = document.querySelector('.tutorial-button');
+    const guideModal = document.getElementById('guide-modal');
+    const closeButton = guideModal.querySelector('.close-button');
+    const leftButton = guideModal.querySelector('.left-button');
+    const rightButton = guideModal.querySelector('.right-button');
+    const guideImage = document.getElementById('guide-image');
+    const dotsContainer = guideModal.querySelector('.dots-container');
+
+    const guideImages = [
+        '/assets/images/guide/1.png',
+        '/assets/images/guide/2.png',
+        '/assets/images/guide/3.png',
+        '/assets/images/guide/4.png',
+        '/assets/images/guide/5.png',
+        '/assets/images/guide/6.png',
+        '/assets/images/guide/7.png',
+        '/assets/images/guide/8.png',
+        '/assets/images/guide/9.png',
+        '/assets/images/guide/10.png',
+        '/assets/images/guide/11.png',
+    ];
+    let currentImageIndex = 0;
+
+    function createDots() {
+        dotsContainer.innerHTML = '';
+        guideImages.forEach((_, idx) => {
+            const dot = document.createElement('span');
+            dot.classList.add('dot');
+            if (idx === currentImageIndex) dot.classList.add('active');
+            dotsContainer.appendChild(dot);
+            dot.addEventListener('click', () => {
+                currentImageIndex = idx;
+                displayCurrentImage();
+            });
+        });
+    }
+
+    function updateActiveDot() {
+        const dots = dotsContainer.querySelectorAll('.dot');
+        dots.forEach((dot, idx) => {
+            if (idx === currentImageIndex) {
+                dot.classList.add('active');
+            } else {
+                dot.classList.remove('active');
+            }
+        });
+    }
+
+    function displayCurrentImage() {
+        guideImage.src = guideImages[currentImageIndex];
+        updateActiveDot();
+    }
+
+    guideButton.addEventListener('click', () => {
+        guideModal.style.display = 'block';
+        if (!dotsContainer.hasChildNodes()) {
+            createDots();
+        }
+        displayCurrentImage();
+    });
+
+    closeButton.addEventListener('click', () => {
+        guideModal.style.display = 'none';
+    });
+
+    leftButton.addEventListener('click', () => {
+        currentImageIndex = (currentImageIndex + guideImages.length - 1) % guideImages.length;
+        displayCurrentImage();
+    });
+
+    rightButton.addEventListener('click', () => {
+        currentImageIndex = (currentImageIndex + 1) % guideImages.length;
+        displayCurrentImage();
+    });
+
+    window.onclick = function (event) {
+        if (event.target === guideModal) {
+            guideModal.style.display = 'none';
+        }
+    };
+
 }

@@ -55,6 +55,7 @@ html {
 
 .play-button,
 .collections-button,
+.tutorial-button,
 .resume-button {
     font-family: 'Orbitron', sans-serif;
     margin-top: 2vw;
@@ -84,6 +85,7 @@ html {
 
 .play-button:hover,
 .collections-button:hover,
+.tutorial-button:hover,
 .resume-button:hover {
     background: rgba(53, 129, 235, 0.8);
     color: #00e6e6;
@@ -345,3 +347,47 @@ img.centered {
     cursor: not-allowed;
 }
 
+.left-button, .right-button {
+    cursor: pointer;
+    background-color: transparent;
+    border: none;
+    color: #FFFFFF;
+    font-size: 2vw;
+    padding: 10px;
+}
+
+.left-button:hover, .right-button:hover {
+    color: #FF4563;
+}
+
+#guide-image {
+    max-width: 80%;
+    height: auto;
+}
+
+.guide-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 500px;
+}
+
+.dots-container {
+    text-align: center;
+    padding: 10px 0;
+}
+
+.dot {
+    height: 10px;
+    width: 10px;
+    margin: 0 5px;
+    background-color: #bbb;
+    border-radius: 50%;
+    display: inline-block;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.dot.active {
+    background-color: #FF4563;
+}
