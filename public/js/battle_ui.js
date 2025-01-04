@@ -1,7 +1,8 @@
+import musicManager from './music_manager.js';
 class BattleUI extends Phaser.Scene {
     constructor() {
         super({ key: 'BattleUI', active: false });
-        this.gold = 1750;
+        this.gold = 2250;
         this.score = 0;
         this.scoreText = null;
         this.multiplier = 5;
@@ -582,8 +583,8 @@ class BattleUI extends Phaser.Scene {
         ];
 
         const attackSpeedUpgrades = [
-            { name: "Energy Gun", description: "Increase attack speed by 6%", cost: 660, icon: 'attackSpeed1' },
-            { name: "Quickblade", description: "Increase attack speed by 12%", cost: 1250, icon: 'attackSpeed2' },
+            { name: "Energy Gun", description: "Increase attack speed by 9%", cost: 660, icon: 'attackSpeed1' },
+            { name: "Quickblade", description: "Increase attack speed by 18%", cost: 1250, icon: 'attackSpeed2' },
         ];
 
         const movementSpeedUpgrades = [
@@ -795,7 +796,7 @@ class BattleUI extends Phaser.Scene {
                     upgradeName: upgrade.name,
                     purchaseCountText: purchaseCountText
                 });
-            } 
+            }
             else { // non special items
                 this.buyButtons.push({
                     button: buyButton,
@@ -881,10 +882,10 @@ class BattleUI extends Phaser.Scene {
                 this.scene.get('GameScene').player.createHealingText(healAmount);
             }
             if (upgradeName === "Energy Gun") {
-                this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.06 * 100) / 100;
+                this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.09 * 100) / 100;
             }
             if (upgradeName === "Quickblade") {
-                this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.12 * 100) / 100;
+                this.scene.get('GameScene').player.attackSpeed = Math.round(this.scene.get('GameScene').player.attackSpeed * 1.18 * 100) / 100;
             }
             if (upgradeName === "Lightning Core") {
                 this.scene.get('GameScene').player.speed = Math.round(this.scene.get('GameScene').player.speed * 1.06);
@@ -920,13 +921,13 @@ class BattleUI extends Phaser.Scene {
                     const iconX = this.playerSpeedBonusText.x - 180 + (this.legendaryIcons.length * 50);
                     const iconY = this.playerSpeedBonusText.y + 60;
                     const icon = this.add.image(iconX, iconY, upgradeIcon).setScale(0.5).setInteractive({ useHandCursor: true });
-        
+
                     icon.on('pointerover', () => {
                         this.showUpgradeTooltip(upgradeName, iconX, iconY - 30);
                     }).on('pointerout', () => {
                         this.hideUpgradeTooltip();
                     });
-        
+
                     // Save icon and its upgrade name for future reference
                     this.legendaryIcons.push({ name: upgradeName, icon: icon });
                 }
@@ -1242,6 +1243,13 @@ class BattleUI extends Phaser.Scene {
         document.getElementById('battle-scene').style.display = 'none';
         document.querySelector('.new-highscore-icon').style.display = 'none';
         document.getElementById('main-menu').style.display = 'flex';
+
+        const isMuted = localStorage.getItem('isMuted') === 'true';
+        musicManager.stop();
+        if (!isMuted) {
+            musicManager.play('assets/audio/background_music.mp3');
+        }
+
         if (!this.gameDataSaved) {
             this.saveGameData().then(() => {
                 if (window.fetchHighestScore) {
@@ -1267,10 +1275,10 @@ class BattleUI extends Phaser.Scene {
         this.inputBlocker = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0.75)
             .setOrigin(0, 0)
             .setInteractive();
-
+    
         this.pauseContainer = this.add.container(0, 0);
         this.pauseContainer.add(this.inputBlocker);
-
+    
         let pauseText = this.add.text(this.scale.width / 2, this.scale.height / 2 - 200, 'Game Paused', {
             font: '64px Orbitron',
             fill: '#007bff',
@@ -1278,10 +1286,39 @@ class BattleUI extends Phaser.Scene {
             strokeThickness: 6
         }).setOrigin(0.5);
 
+        let audioButton = this.add.text(this.scale.width / 2, this.scale.height / 2 - 100, '', {
+            font: '32px Orbitron',
+            fill: '#ffffff',
+            backgroundColor: '#333333',
+            padding: { x: 10, y: 5 }
+        }).setOrigin(0.5).setInteractive();
+    
+        const updateAudioButton = () => {
+            const isMuted = localStorage.getItem('isMuted') === 'true';
+            audioButton.setText(isMuted ? 'Unmute Music' : 'Mute Music');
+        };
+    
+        audioButton.on('pointerdown', () => {
+            const isMuted = localStorage.getItem('isMuted') === 'true';
+            const newMutedState = !isMuted;
+            localStorage.setItem('isMuted', newMutedState);
+    
+            if (!newMutedState) {
+                musicManager.play('assets/audio/battle_music.mp3');
+            } else {
+                musicManager.stop();
+            }
+    
+            updateAudioButton();
+        });
+    
+        updateAudioButton();
+    
         let resumeButton = this.createStyledButton(this.scale.width / 2, this.scale.height / 2, 'Resume', '#4CAF50', () => this.resumeGame());
         let retryButton = this.createStyledButton(this.scale.width / 2, this.scale.height / 2 + 100, 'Retry', '#ff0000', () => this.restartGameScene());
         let mainMenuButton = this.createStyledButton(this.scale.width / 2, this.scale.height / 2 + 200, 'Main Menu', '#007bff', () => this.exitToMainMenu());
-        this.pauseContainer.add([pauseText, resumeButton, retryButton, mainMenuButton]);
+    
+        this.pauseContainer.add([pauseText, resumeButton, retryButton, mainMenuButton, audioButton]);
         this.pauseContainer.setDepth(100);
     }
 

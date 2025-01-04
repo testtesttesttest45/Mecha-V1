@@ -6,6 +6,7 @@ import Catastrophe from './catastrophe.js';
 import BattleUI from './battle_ui.js';
 import characterMap from './characters.js';
 import { rgbToHex, resize, loadDynamicSpriteSheet, setAttackCursor, setDefaultCursor } from './utilities.js';
+import musicManager from './music_manager.js';
 
 class GameScene extends Phaser.Scene {
     constructor() {
@@ -29,7 +30,17 @@ class GameScene extends Phaser.Scene {
         this.isTreasureHunterActive = false;
     }
 
+    preload() {
+        this.load.audio('battle_music', 'assets/audio/battle_music.mp3');
+    }
+
     create(data) {
+        const isMuted = localStorage.getItem('isMuted') === 'true';
+        musicManager.stop();
+        if (!isMuted) {
+            musicManager.play('assets/audio/battle_music.mp3');
+        }
+
         this.gameScreenWidth = this.sys.game.config.width;
         this.gameScreenHeight = this.sys.game.config.height;
         this.characterInUse = data.characterInUse;
@@ -296,7 +307,7 @@ class GameScene extends Phaser.Scene {
 
 
                 enemy.sprite.on('pointerdown', () => {
-                    console.log("Enemy clicked");
+                    // console.log("Enemy clicked");
                     this.enemyClicked = true;
                     this.player.targetedEnemy = enemy;
                     this.player.isMovingTowardsEnemy = true;
@@ -333,7 +344,7 @@ class GameScene extends Phaser.Scene {
             });
 
             enemy.sprite.on('pointerdown', () => {
-                console.log("Enemy clicked");
+                // console.log("Enemy clicked");
                 this.enemyClicked = true;
                 this.player.targetedEnemy = enemy;
                 this.player.isMovingTowardsEnemy = true;
@@ -356,12 +367,12 @@ class GameScene extends Phaser.Scene {
         // filter characterMap by 'easy' tier
         let easyEnemies = Object.entries(characterMap).filter(([key, value]) => value.tier === 'easy').map(([key]) => key);
 
-        // ff base level is 5 or higher, might have 'hard' tier enemies
-        if (this.base.baseLevel >= 5) {
+        // ff base level is 4 or higher, might have 'hard' tier enemies
+        if (this.base.baseLevel >= 4) {
             let hardEnemies = Object.entries(characterMap).filter(([key, value]) => value.tier === 'hard').map(([key]) => key);
 
-            // 50% chance to choose from 'hard' tier if base level >= 5
-            if (Math.random() < 0.5) {
+            // 40% chance to choose from 'hard' tier if base level >= 4
+            if (Math.random() < 0.4) {
                 return hardEnemies[Math.floor(Math.random() * hardEnemies.length)];
             }
         }
@@ -398,7 +409,7 @@ class GameScene extends Phaser.Scene {
 
 
         this.base.sprite.on('pointerdown', () => {
-            console.log("Base clicked");
+            // console.log("Base clicked");
             this.enemyClicked = true;
             this.player.targetedEnemy = this.base;
             this.player.isMovingTowardsEnemy = true;
@@ -424,7 +435,7 @@ class GameScene extends Phaser.Scene {
             scale: 2,
             ease: 'Power2',
             onComplete: () => {
-                console.log(goldSprite.getData('value') + ' gold collected');
+                // console.log(goldSprite.getData('value') + ' gold collected');
                 this.scene.get('BattleUI').addGold(goldSprite.getData('value'));
                 goldSprite.destroy();
             }
@@ -442,7 +453,7 @@ class GameScene extends Phaser.Scene {
             scale: 2,
             ease: 'Power2',
             onComplete: () => {
-                console.log(cashSprite.getData('value') + ' cash collected');
+                // console.log(cashSprite.getData('value') + ' cash collected');
                 this.scene.get('BattleUI').addCash(cashSprite.getData('value'));
                 cashSprite.destroy();
             }
@@ -518,6 +529,12 @@ class GameScene extends Phaser.Scene {
     togglePause() {
         this.isGamePaused = !this.isGamePaused;
     }
+
+    shutdown() {
+        musicManager.play('assets/audio/background_music.mp3');
+        super.shutdown();
+    }
+
 }
 
 class LoadingScene extends Phaser.Scene {
@@ -540,7 +557,7 @@ class LoadingScene extends Phaser.Scene {
             "Spend the gold you earned in the Battle Shop to purchase items that make you stronger!",
             "The Blue Square on the left of the health bar of enemies represents the stats they inherit from the current Base Level. The Black Hexagon on the right of the health bar of enemies represents additional stats they gain after periodic Enemy Strengthenings. Don't take too long to kill them, or they become too strong to kill!",
             "Every few seconds, the player heals back some amount of health based on his Max Health.",
-            "Stronger enemies appear on Base level 5 onwards. Beware!",
+            "Stronger enemies appear on Base level 4 onwards. Beware!",
             "Pay attention to the Catastrophe timer, avoid shopping when the Catastrophe is approaching!",
             "Every increase in the Base level amplifies the health and damage of all enemies.",
             "Each time the Base level increases, the damage from Catastrophe grows by an additional 20% from the last level!",
@@ -710,9 +727,21 @@ class LoadingScene extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'character13', 'assets/sprites/character_13.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character14', 'assets/sprites/character_14.png', 4000, 4400);
         loadDynamicSpriteSheet.call(this, 'character15', 'assets/sprites/character_15.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character16', 'assets/sprites/character_16.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character17', 'assets/sprites/character_17.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character18', 'assets/sprites/character_18.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character19', 'assets/sprites/character_19.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character20', 'assets/sprites/character_20.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character21', 'assets/sprites/character_21.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character22', 'assets/sprites/character_22.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character23', 'assets/sprites/character_23.png', 4000, 4400);
+        loadDynamicSpriteSheet.call(this, 'character24', 'assets/sprites/character_24.png', 4000, 4400);
 
         this.load.image('blueBullet', 'assets/projectiles/blue_bullet.png');
         this.load.image('fireball', 'assets/projectiles/fireball.png');
+        this.load.image('flame', 'assets/projectiles/flame.png');
+        this.load.image('bluePlasmaBall', 'assets/projectiles/blue_plasma_ball.png');
+        this.load.image('redPlasmaBall', 'assets/projectiles/red_plasma_ball.png');
 
         this.load.image('catastrophe', 'assets/images/catastrophe.png');
         this.load.image('strengthen', 'assets/images/strengthen.png');
@@ -747,6 +776,15 @@ class LoadingScene extends Phaser.Scene {
         this.load.image('avengerMech', 'assets/images/characterIcons/avengerMech.png');
         this.load.image('ninja', 'assets/images/characterIcons/ninja.png');
         this.load.image('spartanWarriorMech', 'assets/images/characterIcons/spartanWarriorMech.png');
+        this.load.image('executionerMech', 'assets/images/characterIcons/executionerMech.png');
+        this.load.image('primeAutomech', 'assets/images/characterIcons/primeAutomech.png');
+        this.load.image('ignition', 'assets/images/characterIcons/ignition.png');
+        this.load.image('razorMech', 'assets/images/characterIcons/razorMech.png');
+        this.load.image('harvester', 'assets/images/characterIcons/harvester.png');
+        this.load.image('fireGodzillaMech', 'assets/images/characterIcons/fireGodzillaMech.png');
+        this.load.image('steelGladiator', 'assets/images/characterIcons/steelGladiator.png');
+        this.load.image('zProjectMech', 'assets/images/characterIcons/zProjectMech.png');
+        this.load.image('glaivestormMech', 'assets/images/characterIcons/glaivestormMech.png');
     }
 }
 
@@ -759,6 +797,17 @@ class Collections extends Phaser.Scene {
     }
 
     preload() {
+        const { width, height } = this.sys.game.config;
+
+        this.cameras.main.setBackgroundColor('#000');
+
+        this.loadingText = this.add.text(
+            width / 2,
+            height / 2,
+            'Loading...',
+            { font: '36px Orbitron', fill: '#ffffff' }
+        ).setOrigin(0.5, 0.5);
+        this.load.audio('background_music', 'assets/audio/background_music.mp3');
         this.load.image('cash', 'assets/images/cash.png');
         this.load.image('darkEtherMessiah', 'assets/images/characterIcons/darkEtherMessiah.png');
         this.load.image('orc', 'assets/images/characterIcons/orc.png');
@@ -774,6 +823,15 @@ class Collections extends Phaser.Scene {
         this.load.image('avengerMech', 'assets/images/characterIcons/avengerMech.png');
         this.load.image('ninja', 'assets/images/characterIcons/ninja.png');
         this.load.image('spartanWarriorMech', 'assets/images/characterIcons/spartanWarriorMech.png');
+        this.load.image('executionerMech', 'assets/images/characterIcons/executionerMech.png');
+        this.load.image('primeAutomech', 'assets/images/characterIcons/primeAutomech.png');
+        this.load.image('ignition', 'assets/images/characterIcons/ignition.png');
+        this.load.image('razorMech', 'assets/images/characterIcons/razorMech.png');
+        this.load.image('harvester', 'assets/images/characterIcons/harvester.png');
+        this.load.image('fireGodzillaMech', 'assets/images/characterIcons/fireGodzillaMech.png');
+        this.load.image('steelGladiator', 'assets/images/characterIcons/steelGladiator.png');
+        this.load.image('zProjectMech', 'assets/images/characterIcons/zProjectMech.png');
+        this.load.image('glaivestormMech', 'assets/images/characterIcons/glaivestormMech.png');
 
         this.load.image('health_icon', 'assets/images/collections/statsIcons/health_icon.png');
         this.load.image('damage_icon', 'assets/images/collections/statsIcons/damage_icon.png');
@@ -795,6 +853,15 @@ class Collections extends Phaser.Scene {
         loadDynamicSpriteSheet.call(this, 'character13Idle', 'assets/images/idleDisplays/character13_idle.png', 2250, 900, 5, 2);
         loadDynamicSpriteSheet.call(this, 'character14Idle', 'assets/images/idleDisplays/character14_idle.png', 2250, 900, 5, 2);
         loadDynamicSpriteSheet.call(this, 'character15Idle', 'assets/images/idleDisplays/character15_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character16Idle', 'assets/images/idleDisplays/character16_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character17Idle', 'assets/images/idleDisplays/character17_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character18Idle', 'assets/images/idleDisplays/character18_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character19Idle', 'assets/images/idleDisplays/character19_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character20Idle', 'assets/images/idleDisplays/character20_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character21Idle', 'assets/images/idleDisplays/character21_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character22Idle', 'assets/images/idleDisplays/character22_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character23Idle', 'assets/images/idleDisplays/character23_idle.png', 2250, 900, 5, 2);
+        loadDynamicSpriteSheet.call(this, 'character24Idle', 'assets/images/idleDisplays/character24_idle.png', 2250, 900, 5, 2);
     }
 
     init(data) {
@@ -804,9 +871,12 @@ class Collections extends Phaser.Scene {
     }
 
     create() {
-        const { width, height } = this.sys.game.config;
-        this.cameras.main.setBackgroundColor('#000');
+        if (this.loadingText) {
+            this.loadingText.destroy();
+        }
+
         this.attributeTexts = [];
+        const { width, height } = this.sys.game.config;
         // vertical line to visually split the screen in half
         const verticalLine = this.add.graphics();
         verticalLine.lineStyle(2, 0xffffff, 1);
@@ -828,12 +898,12 @@ class Collections extends Phaser.Scene {
         // Character list
         const sortedCharacters = Object.entries(characterMap).sort((a, b) => a[1].cost - b[1].cost);
 
-        const squareSize = 150;
+        const squareSize = 100;
         const startX = 50;
         let x = startX;
         let y = 230;
         const padding = 20;
-        const perRow = 5;
+        const perRow = 7;
 
         sortedCharacters.forEach(([key, character], index) => {
             if (index % perRow === 0 && index !== 0) {
@@ -908,7 +978,7 @@ class Collections extends Phaser.Scene {
     }
 
     handleCharacterSelection(key, character, square) {
-        const squareSize = 150;
+        const squareSize = 100;
         if (this.selectedCharacterKey === key) {
             return;
         }
@@ -949,7 +1019,7 @@ class Collections extends Phaser.Scene {
             this.anims.create({
                 key: `${idleKey}Anim`,
                 frames: this.anims.generateFrameNumbers(idleKey, { start: 0, end: 9 }),
-                frameRate: 10,
+                frameRate: 5,
                 repeat: -1
             });
         }
@@ -1123,12 +1193,12 @@ class Collections extends Phaser.Scene {
             }
         });
 
-        const squareSize = 150;
+        const squareSize = 100;
         const startX = 50;
         let x = startX;
         let y = 230;
         const padding = 20;
-        const perRow = 5;
+        const perRow = 7;
 
         const sortedCharacters = Object.entries(characterMap).sort((a, b) => a[1].cost - b[1].cost);
 
@@ -1195,6 +1265,40 @@ document.addEventListener('DOMContentLoaded', (event) => {
     const collectionsButton = document.querySelector('.collections-button');
     const promoCodeInput = document.getElementById('promo-code-input');
     const promoCodeSubmitButton = document.getElementById('promo-code-submit');
+
+    const audioToggleButton = document.querySelector('.audio-toggle-button');
+    const audioIcon = audioToggleButton.querySelector('i');
+
+    localStorage.setItem('isMuted', true);
+    let isMuted = true;
+
+    function updateAudioButtonIcon() {
+        isMuted = localStorage.getItem('isMuted') === 'true';
+        if (isMuted) {
+            audioIcon.classList.remove('fa-volume-up');
+            audioIcon.classList.add('fa-volume-mute');
+            musicManager.stop();
+        } else {
+            audioIcon.classList.remove('fa-volume-mute');
+            audioIcon.classList.add('fa-volume-up');
+            musicManager.play('assets/audio/background_music.mp3');
+        }
+    }
+
+    function toggleAudio() {
+        isMuted = !isMuted;
+        localStorage.setItem('isMuted', isMuted);
+        updateAudioButtonIcon();
+    }
+
+    audioToggleButton.addEventListener('click', toggleAudio);
+
+    if (!isMuted) {
+        musicManager.play('assets/audio/background_music.mp3');
+    }
+    updateAudioButtonIcon();
+
+
     let game;
 
     function startGame() {
@@ -1233,6 +1337,14 @@ document.addEventListener('DOMContentLoaded', (event) => {
         battleScene.style.display = 'flex';
         startGame();
     });
+
+    const observer = new MutationObserver(() => {
+        if (gameScreen.style.display === 'flex') {
+            updateAudioButtonIcon();
+        }
+    });
+
+    observer.observe(gameScreen, { attributes: true, attributeFilter: ['style'] });
 
     function displayHighestScore(score, incomingCash, initialCash, highestBaseLevel, newHighestScore) {
         const highestScoreElement = document.querySelector('.highest-score');
@@ -1335,7 +1447,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
             })
             .catch(error => console.error('Error fetching saves:', error));
     }
-
 
     collectionsButton.addEventListener('click', () => {
         gameScreen.style.display = 'none';
@@ -1447,7 +1558,7 @@ function updateCharacterDisplay(characterInUse) {
         animationInterval = null;
     }
 
-    animationInterval = setInterval(animate, 100);
+    animationInterval = setInterval(animate, 250);
 
     const guideButton = document.querySelector('.tutorial-button');
     const guideModal = document.getElementById('guide-modal');

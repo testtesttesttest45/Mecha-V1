@@ -133,7 +133,7 @@ class Base {
 
         // every 10% health of the base, award 50 points
         if (this.health % (this.totalHealth / 10) > 0) {
-            console.log('Awarding 50 points');
+            // console.log('Awarding 50 points');
             this.scene.scene.get('BattleUI').updateScore(50);
         }
 
@@ -172,7 +172,7 @@ class Base {
 
         this.randomGoldDrop();
 
-        console.log('Base destroyed');
+        // console.log('Base destroyed');
         this.sprite.disableInteractive();
         this.scene.tweens.add({
             targets: this.sprite,
@@ -213,7 +213,7 @@ class Base {
             let gold = this.scene.add.sprite(goldX, goldY, 'gold');
             gold.setScale(0.5);
             gold.setData('value', this.goldValue);
-            this.scene.time.delayedCall(1500, () => {
+            this.scene.time.delayedCall(500, () => {
                 this.scene.collectGold(gold);
             }, [], this);
         }
@@ -223,7 +223,7 @@ class Base {
         if (Math.random() < 0.50) {
             let cash = this.scene.add.sprite(this.sprite.x - 70, this.sprite.y, 'cash');
             cash.setData('value', 1);
-            this.scene.time.delayedCall(1500, () => {
+            this.scene.time.delayedCall(500, () => {
                 this.scene.collectCash(cash);
             }, [], this);
         }

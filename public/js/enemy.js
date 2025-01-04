@@ -145,7 +145,7 @@ class Enemy {
             this.scene.anims.create({
                 key: deathKey,
                 frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 100, end: 104 }),
-                frameRate: 6,
+                frameRate: 4,
                 repeat: 0
             });
         }
@@ -659,7 +659,7 @@ class Enemy {
             gold.setScale(0.5);
             // gold.setData('value', this.goldValue);
             gold.setData('value', this.isTreasureHunted ? this.goldValue * 2 : this.goldValue);
-            this.scene.time.delayedCall(1500, () => {
+            this.scene.time.delayedCall(500, () => {
                 this.scene.collectGold(gold);
             }, [], this);
         }
@@ -669,7 +669,7 @@ class Enemy {
         if (Math.random() < 0.5) {
             let cash = this.scene.add.sprite(this.sprite.x - 70, this.sprite.y, 'cash');
             cash.setData('value', 1);
-            this.scene.time.delayedCall(1500, () => {
+            this.scene.time.delayedCall(500, () => {
                 this.scene.collectCash(cash);
             }, [], this);
         }

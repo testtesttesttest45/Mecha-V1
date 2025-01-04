@@ -91,7 +91,7 @@ class Player {
             this.scene.anims.create({
                 key: 'death',
                 frames: this.scene.anims.generateFrameNumbers(this.spritesheetKey, { start: 100, end: 105 }), // 105 does not exist. i use it to hide the final frame
-                frameRate: 6,
+                frameRate: 4,
                 repeat: 0
             });
         }
@@ -101,7 +101,7 @@ class Player {
         this.detectionField.setStrokeStyle(4, 0xff0000);
 
         this.healTimer = this.scene.time.addEvent({
-            delay: 4000,
+            delay: 3000,
             callback: this.autoHeal,
             callbackScope: this,
             loop: true,
@@ -506,8 +506,8 @@ class Player {
         const isAttacking = this.robotSprite.anims.isPlaying && this.robotSprite.anims.currentAnim.key.startsWith('attack');
 
         if (!isMoving && !isAttacking && !this.isDead) {
-            if (time - this.lastActionTime > 4000) { // 4 seconds of inactivity
-                if (time - this.lastAnimationChange > 4000) {
+            if (time - this.lastActionTime > 2500) { // 2.5 seconds of inactivity
+                if (time - this.lastAnimationChange > 2500) {
                     this.idleAnimationIndex = (this.idleAnimationIndex + 1) % 4;
                     this.robotSprite.play(`idle${this.idleAnimationIndex + 1}`);
                     this.lastAnimationChange = time;

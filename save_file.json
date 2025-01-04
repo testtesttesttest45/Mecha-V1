@@ -1,14 +1,16 @@
 {
-  "initialCash": 450,
-  "incomingCash": 1,
+  "initialCash": 1043,
+  "incomingCash": 0,
   "latestBaseLevel": 14,
   "highestBaseLevel": 14,
-  "highestScore": 69999,
+  "highestScore": 67999,
   "newHighest": true,
-  "latestScore": 69999,
+  "latestScore": 0,
   "charactersOwned": [
     1,
-    10
+    3,
+    10,
+    16
   ],
   "characterInUse": 10,
   "bonusClaimed": false

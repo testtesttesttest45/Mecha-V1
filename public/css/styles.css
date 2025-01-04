@@ -391,3 +391,20 @@ img.centered {
 .dot.active {
     background-color: #FF4563;
 }
+
+.audio-toggle-button {
+    position: absolute;
+    top: 90px;
+    right: 90px;
+    padding: 0.1vw;
+    background: transparent;
+    border: none;
+    color: #00f3ff;
+    font-size: 1.5vw;
+    cursor: pointer;
+}
+
+.audio-toggle-button:hover {
+    background: rgba(53, 129, 235, 0.8);
+    color: #00e6e6;
+}

@@ -216,7 +216,7 @@ app.post('/claim-promo-code', (req, res) => {
 
         // Check if the promo code is correct and hasn't been claimed yet
         if (promoCode.toLowerCase() === 'abc123' && !gameData.bonusClaimed) {
-            gameData.incomingCash += 5000;
+            gameData.incomingCash += 7500;
             gameData.bonusClaimed = true;
 
             fs.writeFile(saveFilePath, JSON.stringify(gameData, null, 2), 'utf8', (writeErr) => {
@@ -224,7 +224,7 @@ app.post('/claim-promo-code', (req, res) => {
                     console.error('Error writing save file:', writeErr);
                     return res.status(500).json({ message: 'Error saving game data' });
                 }
-                res.json({ message: 'You have successfully claimed 5000 Cash!', gameData });
+                res.json({ message: 'You have successfully claimed 7500 Cash!', gameData });
             });
         } else if (gameData.bonusClaimed) {
             res.status(400).json({ message: 'Promo code has already been claimed' });
