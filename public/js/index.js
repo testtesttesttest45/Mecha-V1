@@ -371,8 +371,8 @@ class GameScene extends Phaser.Scene {
         if (this.base.baseLevel >= 4) {
             let hardEnemies = Object.entries(characterMap).filter(([key, value]) => value.tier === 'hard').map(([key]) => key);
 
-            // 40% chance to choose from 'hard' tier if base level >= 4
-            if (Math.random() < 0.4) {
+            // 70% chance to choose from 'hard' tier if base level >= 4
+            if (Math.random() < 0.7) {
                 return hardEnemies[Math.floor(Math.random() * hardEnemies.length)];
             }
         }

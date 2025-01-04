@@ -578,7 +578,7 @@ class BattleUI extends Phaser.Scene {
         ];
 
         const healthUpgrades = [
-            { name: "Heaven's Rain", description: "Increase max health by 5%", cost: 750, icon: 'health1' },
+            { name: "Heaven's Rain", description: "Increase max health by 12%", cost: 750, icon: 'health1' },
             { name: "Health Potion", description: "Instantly heal back 50% Max Health", cost: 300, icon: 'health2' },
         ];
 
@@ -872,7 +872,7 @@ class BattleUI extends Phaser.Scene {
                 this.scene.get('GameScene').player.damage = Math.round(this.scene.get('GameScene').player.damage * 1.02);
             }
             if (upgradeName === "Heaven's Rain") {
-                this.scene.get('GameScene').player.maxHealth = Math.round(this.scene.get('GameScene').player.maxHealth * 1.05);
+                this.scene.get('GameScene').player.maxHealth = Math.round(this.scene.get('GameScene').player.maxHealth * 1.12);
             }
             if (upgradeName === "Health Potion") {
                 const healPercentage = 0.5;
