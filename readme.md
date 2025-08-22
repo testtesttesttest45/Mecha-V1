@@ -130,10 +130,12 @@ It is one of the most challenging and fun projects I’ve ever done.
 **Github Repository:**  
 [https://github.com/testtesttesttest45/Mecha-V1](https://github.com/testtesttesttest45/Mecha-V1)
 
+Documentation attached <a href="https://drive.google.com/file/d/1ChXDNNHaxv-9ZKOAjJ5OQJeoJewqsEVW/view?usp=drive_link" target="_blank">here</a>.
+
 **Play Online:**  
 [https://mecha-v1.onrender.com/](https://mecha-v1.onrender.com/)  
 
-> ⚠️ Note: The game is deployed on **Render (free tier)**.  
+> ⚠️ Note: The game is deployed on **Render free tier**.  
 > This may cause slow loading at first, as the server needs time to wake up.  
 
 ---
