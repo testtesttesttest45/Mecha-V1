@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://quek-wei-lin-website.in/wp-content/uploads/2025/08/mecha-v1-logo.png" alt="logo" width="300"/>
+  <img src="https://quek-wei-lin-website.in/wp-content/uploads/2024/02/mecha-v1-2.png" alt="logo" width="400"/>
 </p>
 
 ## Overview
@@ -101,19 +101,19 @@ It is one of the most challenging and fun projects I’ve ever done.
 <br/><br/>
 
 <div align="center">
-  <img src="https://quek-wei-lin-website.in/wp-content/uploads/2024/02/mecha-v1-content-image-4.png" alt="Game Scene" width="100%"/><br/>
+  <img src="https://quek-wei-lin-website.in/wp-content/uploads/2025/08/REUPLOAD-mecha-v1-content-image-4-1536x696.png" alt="Game Scene" width="100%"/><br/>
   <em>Game Scene</em>
 </div>
 <br/><br/>
 
 <div align="center">
-  <img src="https://quek-wei-lin-website.in/wp-content/uploads/2024/02/mecha-v1-content-image-5.png" alt="Attacking enemies with incoming Catastrophe" width="100%"/><br/>
+  <img src="https://quek-wei-lin-website.in/wp-content/uploads/2025/08/REUPLOAD-mecha-v1-content-image-5-1536x705.png" alt="Attacking enemies with incoming Catastrophe" width="100%"/><br/>
   <em>Attacking enemies with incoming Catastrophe</em>
 </div>
 <br/><br/>
 
 <div align="center">
-  <img src="https://quek-wei-lin-website.in/wp-content/uploads/2024/02/mecha-v1-content-image-6.png" alt="Attacking the Base with Enraged Enemies" width="100%"/><br/>
+  <img src="https://quek-wei-lin-website.in/wp-content/uploads/2025/08/REUPLOAD-mecha-v1-content-image-6-1536x708.png" alt="Attacking the Base with Enraged Enemies" width="100%"/><br/>
   <em>Attacking the Base and being attacked by Enraged Enemies</em>
 </div>
 <br/><br/>
