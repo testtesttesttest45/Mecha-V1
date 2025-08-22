@@ -132,6 +132,8 @@ It is one of the most challenging and fun projects I’ve ever done.
 
 Documentation attached <a href="https://drive.google.com/file/d/1ChXDNNHaxv-9ZKOAjJ5OQJeoJewqsEVW/view?usp=drive_link" target="_blank">here</a>.
 
+Youtube Demo: https://www.youtube.com/watch?v=eOFEbtH1hJ4
+
 **Play Online:**  
 [https://mecha-v1.onrender.com/](https://mecha-v1.onrender.com/)  
 
