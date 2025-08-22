@@ -13,8 +13,8 @@ It is one of the most challenging and fun projects I’ve ever done.
 
 ### Main Menu
 - Displays the character you will be using, with animation.  
-- Contains the **Play button** to start the game, **Collections button** to view characters, and **Settings button** to reset the game state.  
-- Includes a **scoreboard** that displays the highest score achieved and current Cash owned.  
+- Contains the Play button to start the game, Collections button to view characters, and Settings button to reset the game state.  
+- Includes a scoreboard that displays the highest score achieved and current Cash owned.  
 
 ### Collections Scene
 - Displays all character icons neatly.  
@@ -23,8 +23,8 @@ It is one of the most challenging and fun projects I’ve ever done.
 - If you already own it, click **Use** to set it as your playable character in the Main Menu.  
 
 ### Game Scene
-- Begins with a **Loading screen** that displays random tooltips/instructions.  
-- A **Start button** ensures you are ready before gameplay begins.  
+- Begins with a Loading screen that displays random tooltips/instructions.  
+- A Start button ensures you are ready before gameplay begins.  
 - The island contains **3 enemy camps**, each with 1 enemy, a patrolling enemy, and a randomly placed enemy Base (never near the player).  
 - Includes a **Battle Panel** showing countdowns for Catastrophes, Enemy Strengthening, Score Multiplier, Player Stats, Score, Cash, and a **Shop button**.  
 
