@@ -127,9 +127,6 @@ It is one of the most challenging and fun projects I’ve ever done.
 
 ## Links
 
-**Github Repository:**  
-[https://github.com/testtesttesttest45/Mecha-V1](https://github.com/testtesttesttest45/Mecha-V1)
-
 Documentation attached <a href="https://drive.google.com/file/d/1ChXDNNHaxv-9ZKOAjJ5OQJeoJewqsEVW/view?usp=drive_link" target="_blank">here</a>.
 
 Youtube Demo: https://www.youtube.com/watch?v=eOFEbtH1hJ4
