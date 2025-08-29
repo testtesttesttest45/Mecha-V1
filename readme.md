@@ -77,7 +77,7 @@ It is one of the most challenging and fun projects I’ve ever done.
 ## Screenshots
 
 <div align="center">
-  <img src="https://quek-wei-lin-website.in/wp-content/uploads/2024/02/mecha-v1-content-image-1.png" alt="Main Menu" width="100%"/><br/>
+  <img src="https://quek-wei-lin-website.in/wp-content/uploads/2025/08/mecha-v1-main-menu1-1536x855.png" alt="Main Menu" width="100%"/><br/>
   <em>Main Menu</em>
 </div>
 <br/><br/>
@@ -89,7 +89,7 @@ It is one of the most challenging and fun projects I’ve ever done.
 <br/><br/>
 
 <div align="center">
-  <img src="https://quek-wei-lin-website.in/wp-content/uploads/2024/12/tutorial.png" alt="Tutorial" width="100%"/><br/>
+  <img src="https://quek-wei-lin-website.in/wp-content/uploads/2025/08/mecha-v1-tutorial1-1536x708.png" alt="Tutorial" width="100%"/><br/>
   <em>Tutorial</em>
 </div>
 <br/><br/>
